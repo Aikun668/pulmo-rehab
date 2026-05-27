@@ -26,6 +26,11 @@ class Settings:
     db_name: str = os.getenv("DB_NAME", "pulmo_rehab")
     database_url: str = os.getenv("DATABASE_URL", "")
     cors_origins: list[str] = None
+    ai_summary_enabled: bool = os.getenv("AI_SUMMARY_ENABLED", "false").lower() == "true"
+    ai_summary_cron: str = os.getenv("AI_SUMMARY_CRON", "0 0 * * 1")
+    deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
+    deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
     def __post_init__(self) -> None:
         origins = os.getenv("CORS_ORIGINS", "*")

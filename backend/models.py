@@ -153,7 +153,7 @@ class AiSummary(Base):
     )
     summary_week_start: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     summary_week_end: Mapped[date] = mapped_column(Date, nullable=False)
-    content: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,

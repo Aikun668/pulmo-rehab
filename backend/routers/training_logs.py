@@ -4,14 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.responses import success_response
 from database import get_db
 from models import TrainingLog, User, UserRole
 from schemas import (
+    ApiResponse,
     TrainingLogResponse,
-    TrainingLogUpsertRequest,
     TrainingLogUpsertResponse,
-    TrainingProgress30dResponse,
     TrainingProgressDay,
+    TrainingProgress30dResponse,
+    TrainingLogUpsertRequest,
 )
 
 
@@ -30,11 +32,17 @@ def _get_patient_or_raise(db: Session, patient_id: int) -> User:
     return patient
 
 
-@router.post("", response_model=TrainingLogUpsertResponse, status_code=status.HTTP_200_OK)
+@router.post(
+    "",
+    response_model=ApiResponse[TrainingLogUpsertResponse],
+    status_code=status.HTTP_200_OK,
+    summary="新增或覆盖当日打卡",
+    description="按 patient_id + train_date 查找打卡记录；若当天已有记录则覆盖更新，否则新增一条记录。",
+)
 def upsert_training_log(
     payload: TrainingLogUpsertRequest,
     db: Session = Depends(get_db),
-) -> TrainingLogUpsertResponse:
+) -> ApiResponse[TrainingLogUpsertResponse]:
     _get_patient_or_raise(db, payload.patient_id)
 
     existing_log = db.scalar(
@@ -64,19 +72,26 @@ def upsert_training_log(
     db.commit()
     db.refresh(training_log)
 
-    return TrainingLogUpsertResponse(
-        action=action,
-        data=TrainingLogResponse.model_validate(training_log),
+    return success_response(
+        TrainingLogUpsertResponse(
+            action=action,
+            data=TrainingLogResponse.model_validate(training_log),
+        )
     )
 
 
-@router.get("", response_model=list[TrainingLogResponse])
+@router.get(
+    "",
+    response_model=ApiResponse[list[TrainingLogResponse]],
+    summary="查询训练打卡列表",
+    description="按患者和可选日期范围查询训练打卡记录，结果按 train_date 倒序返回。",
+)
 def list_training_logs(
-    patient_id: int = Query(gt=0),
-    start_date: date | None = Query(default=None),
-    end_date: date | None = Query(default=None),
+    patient_id: int = Query(gt=0, description="患者 ID"),
+    start_date: date | None = Query(default=None, description="开始日期，格式 YYYY-MM-DD"),
+    end_date: date | None = Query(default=None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
-) -> list[TrainingLogResponse]:
+) -> ApiResponse[list[TrainingLogResponse]]:
     _get_patient_or_raise(db, patient_id)
 
     if start_date and end_date and start_date > end_date:
@@ -92,14 +107,19 @@ def list_training_logs(
         stmt = stmt.where(TrainingLog.train_date <= end_date)
 
     training_logs = db.scalars(stmt.order_by(TrainingLog.train_date.desc())).all()
-    return [TrainingLogResponse.model_validate(item) for item in training_logs]
+    return success_response([TrainingLogResponse.model_validate(item) for item in training_logs])
 
 
-@router.get("/progress-30d", response_model=TrainingProgress30dResponse)
+@router.get(
+    "/progress-30d",
+    response_model=ApiResponse[TrainingProgress30dResponse],
+    summary="查询近30天训练进度",
+    description="返回包含今天在内的近 30 天训练进度数据，无打卡日期会自动补 0，前端可直接用于折线图展示。",
+)
 def get_training_progress_30d(
-    patient_id: int = Query(gt=0),
+    patient_id: int = Query(gt=0, description="患者 ID"),
     db: Session = Depends(get_db),
-) -> TrainingProgress30dResponse:
+) -> ApiResponse[TrainingProgress30dResponse]:
     _get_patient_or_raise(db, patient_id)
 
     end_date = date.today()
@@ -140,4 +160,4 @@ def get_training_progress_30d(
         )
         current_date += timedelta(days=1)
 
-    return TrainingProgress30dResponse(patient_id=patient_id, days=days)
+    return success_response(TrainingProgress30dResponse(patient_id=patient_id, days=days))
