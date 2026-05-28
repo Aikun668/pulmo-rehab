@@ -1,0 +1,6 @@
+{
+  "name": "肺康复管理后台",
+  "description": "肺康复管理医生端Web端管理后台MVP，提供患者列表看板、康复进度分析、训练方案下发与AI周报汇总。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

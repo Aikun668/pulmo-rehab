@@ -5,12 +5,12 @@
 ## 项目概览
 
 - 患者端：`Uniapp` 微信小程序
-- 医生端：`Vue3 + Element Plus` Web 后台
+- 医生端：`React + Vite + TypeScript` Web 后台（目录：`doctor-web/`）
 - 后端：`FastAPI + SQLAlchemy`
 - 数据库：`MySQL 8+`
 - 部署目标：腾讯云轻量服务器
 
-## 当前后端能力
+## 当前能力
 
 已完成：
 
@@ -24,6 +24,16 @@
 - 医生端患者列表与 3 个核心指标接口
 - AI 周报最新一条查询接口
 - AI 周报定时任务骨架与 DeepSeek 客户端封装
+- 医生端 Web 三页主流程骨架：
+  - 登录页
+  - 患者列表页
+  - 患者详情页
+- 医生端患者详情页已接入真实后端数据块：
+  - 患者基础信息
+  - 近 30 天训练进度
+  - 训练记录列表
+  - 训练方案历史与下发
+  - 最新 AI 小结
 
 待完成：
 
@@ -103,7 +113,19 @@ uvicorn main:app --reload
 - `http://127.0.0.1:8000/api/docs`
 - `http://127.0.0.1:8000/api/health`
 
-5. AI 周报定时任务说明
+5. 启动医生端 Web（可选）
+
+```bash
+cd doctor-web
+npm install
+npm run dev
+```
+
+- 默认使用 Vite 开发服务
+- `doctor-web/src/App.tsx` 维护三页主流程状态切换
+- `doctor-web/src/components/PatientDetailView.tsx` 已按真实后端接口展示详情块
+
+6. AI 周报定时任务说明
 
 - 默认 `AI_SUMMARY_ENABLED=false`，不会自动启动任务
 - 打开后端服务时会挂载 `APScheduler`
@@ -153,6 +175,20 @@ uvicorn main:app --reload
 
 - `GET /api/ai-summaries/latest`
   - 查询患者最新一条 AI 周报
+
+## 医生端 Web 当前说明
+
+- 当前优先目标是医生端 Web 三页主流程，不扩页：
+  - 登录 -> 患者列表 -> 患者详情
+- `DirectorDashboard` 暂不纳入当前 MVP 验收范围：
+  - 不删除源码
+  - 不作为默认首页
+  - 不出现在正式导航
+- 当前详情页优先保证 3 个核心信息块稳定可见：
+  - 患者基础信息
+  - 近 30 天进度图
+  - 训练记录列表
+- 训练方案与 AI 小结也已保留在详情页中，但以真实接口联调和稳定展示为先
 
 ## 页面维度接口清单
 

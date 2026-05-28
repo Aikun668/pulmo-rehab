@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", "Microsoft YaHei", -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Custom Professional Medical Design Tokens */
+  --color-med-primary: #2F5D7C;
+  --color-med-primary-md: #4F7A94;
+  --color-med-primary-light: #6D93A8;
+  
+  --color-med-bg: #F4F7FA;
+  --color-med-card: #FFFFFF;
+  --color-med-border: #D9E2EC;
+  --color-med-divider: #E7EDF3;
+  --color-med-hover: #EEF3F7;
+  
+  --color-med-text-primary: #243447;
+  --color-med-text-secondary: #5B6B7A;
+  --color-med-text-meta: #8A97A6;
+  
+  --color-med-success: #5B9B7A;
+  --color-med-warning: #D9A441;
+  --color-med-danger: #D95C5C;
+  --color-med-info: #5C8FD9;
+  
+  --color-med-sidebar: #13293D;
+  --color-med-sidebar-hover: #1B3A52;
+  --color-med-sidebar-active: #244B68;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-med-bg);
+  color: var(--color-med-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tight table styles & high reliability scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-med-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-med-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-med-primary-light);
+}
+
+/* Custom CSS helper for table density and clean borders */
+.medical-card {
+  background-color: var(--color-med-card);
+  border: 1px solid var(--color-med-border);
+  border-radius: 12px;
+}
+
+.medical-border-focus {
+  border-color: var(--color-med-primary);
+}
