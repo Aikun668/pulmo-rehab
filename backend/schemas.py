@@ -177,7 +177,7 @@ class DoctorPatientStatsResponse(BaseModel):
             "example": {
                 "check_in_count_7d": 5,
                 "total_duration_minutes": 320,
-                "last_check_in_at": "2026-05-23T08:00:00Z",
+                "last_check_in_at": "2026-05-23T00:00:00Z",
             }
         }
     )
@@ -196,7 +196,7 @@ class DoctorPatientItemResponse(BaseModel):
                 "stats": {
                     "check_in_count_7d": 5,
                     "total_duration_minutes": 320,
-                    "last_check_in_at": "2026-05-23T08:00:00Z",
+                    "last_check_in_at": "2026-05-23T00:00:00Z",
                 },
             }
         }

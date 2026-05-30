@@ -23,6 +23,14 @@ def _get_user_or_raise(db: Session, user_id: int, expected_role: UserRole, detai
     return user
 
 
+def _ensure_patient_belongs_to_doctor(patient: User, doctor_id: int) -> None:
+    if patient.doctor_id != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="当前医生无权访问该患者的训练方案。",
+        )
+
+
 @router.post(
     "",
     response_model=ApiResponse[RehabPlanResponse],
@@ -34,8 +42,9 @@ def create_rehab_plan(
     payload: RehabPlanCreateRequest,
     db: Session = Depends(get_db),
 ) -> ApiResponse[RehabPlanResponse]:
-    _get_user_or_raise(db, payload.patient_id, UserRole.PATIENT, "Patient not found.")
+    patient = _get_user_or_raise(db, payload.patient_id, UserRole.PATIENT, "Patient not found.")
     _get_user_or_raise(db, payload.doctor_id, UserRole.DOCTOR, "Doctor not found.")
+    _ensure_patient_belongs_to_doctor(patient, payload.doctor_id)
 
     rehab_plan = RehabPlan(
         patient_id=payload.patient_id,
@@ -57,13 +66,16 @@ def create_rehab_plan(
 )
 def list_rehab_plans(
     patient_id: int = Query(gt=0, description="患者 ID"),
+    doctor_id: int = Query(gt=0, description="医生 ID"),
     db: Session = Depends(get_db),
 ) -> ApiResponse[list[RehabPlanResponse]]:
-    _get_user_or_raise(db, patient_id, UserRole.PATIENT, "Patient not found.")
+    patient = _get_user_or_raise(db, patient_id, UserRole.PATIENT, "Patient not found.")
+    _get_user_or_raise(db, doctor_id, UserRole.DOCTOR, "Doctor not found.")
+    _ensure_patient_belongs_to_doctor(patient, doctor_id)
 
     rehab_plans = db.scalars(
         select(RehabPlan)
-        .where(RehabPlan.patient_id == patient_id)
+        .where(RehabPlan.patient_id == patient_id, RehabPlan.doctor_id == doctor_id)
         .order_by(RehabPlan.created_at.desc(), RehabPlan.id.desc())
     ).all()
     return success_response([RehabPlanResponse.model_validate(item) for item in rehab_plans])
