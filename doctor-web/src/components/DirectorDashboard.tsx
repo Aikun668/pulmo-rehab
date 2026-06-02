@@ -3,21 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
-import { 
-  Building, 
-  Users, 
-  Percent, 
-  TrendingUp, 
-  Award, 
+import { useState } from "react";
+import {
+  Building,
+  Users,
+  Percent,
+  TrendingUp,
   ArrowRight,
-  ChevronRight, 
-  Activity, 
-  Layers, 
-  FileCheck,
+  ChevronRight,
+  Activity,
+  Layers,
   ShieldAlert,
   Calendar,
-  Sparkles,
   Search
 } from "lucide-react";
 

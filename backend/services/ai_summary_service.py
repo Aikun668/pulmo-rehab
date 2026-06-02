@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -114,7 +114,7 @@ class AiSummaryService:
             summary_week_start=week_start,
             summary_week_end=week_end,
             content=content,
-            created_at=datetime.combine(week_end + timedelta(days=1), time.min),
+            created_at=datetime.combine(week_end + timedelta(days=1), time.min, tzinfo=timezone.utc),
         )
         self.db.add(summary)
         self.db.commit()

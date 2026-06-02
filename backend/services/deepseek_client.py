@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from urllib import request
+from urllib.error import HTTPError, URLError
 
 
 SYSTEM_PROMPT = (
@@ -44,8 +45,14 @@ class DeepSeekClient:
             method="POST",
         )
 
-        with request.urlopen(http_request, timeout=self.timeout_seconds) as response:
-            raw_body = response.read().decode("utf-8")
+        try:
+            with request.urlopen(http_request, timeout=self.timeout_seconds) as response:
+                raw_body = response.read().decode("utf-8")
+        except HTTPError as exc:
+            error_body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"DeepSeek API returned {exc.code}: {error_body}") from exc
+        except URLError as exc:
+            raise RuntimeError(f"Failed to reach DeepSeek API: {exc.reason}") from exc
 
         response_body = json.loads(raw_body)
         summary = response_body["choices"][0]["message"]["content"].strip()

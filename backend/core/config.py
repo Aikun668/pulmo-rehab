@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 
@@ -25,7 +26,7 @@ class Settings:
     db_password: str = os.getenv("DB_PASSWORD", "")
     db_name: str = os.getenv("DB_NAME", "pulmo_rehab")
     database_url: str = os.getenv("DATABASE_URL", "")
-    cors_origins: list[str] = None
+    cors_origins: list[str] | None = None
     ai_summary_enabled: bool = os.getenv("AI_SUMMARY_ENABLED", "false").lower() == "true"
     ai_summary_cron: str = os.getenv("AI_SUMMARY_CRON", "0 0 * * 1")
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
@@ -37,7 +38,7 @@ class Settings:
         self.cors_origins = _parse_csv(origins) if origins != "*" else ["*"]
 
         if not self.database_url:
-            password = f":{self.db_password}" if self.db_password else ""
+            password = f":{quote_plus(self.db_password)}" if self.db_password else ""
             self.database_url = (
                 f"mysql+pymysql://{self.db_user}{password}"
                 f"@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4"
