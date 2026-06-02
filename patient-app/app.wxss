@@ -1,0 +1,10 @@
+/** app.wxss **/
+page {
+  background: #f4f7fb;
+  color: #1f2937;
+  font-size: 28rpx;
+}
+
+button {
+  border: none;
+}

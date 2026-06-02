@@ -1,0 +1,11 @@
+<navigation-bar title="AI 小结" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+
+<view class="page">
+  <view class="card">
+    <view class="card__title">最新周期</view>
+    <view class="card__meta">{{summaryPeriod}}</view>
+    <view class="card__desc">{{summaryContent}}</view>
+  </view>
+
+  <view class="disclaimer">{{disclaimer}}</view>
+</view>

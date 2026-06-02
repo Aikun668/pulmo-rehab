@@ -1,0 +1,32 @@
+<navigation-bar title="训练打卡" back="{{false}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+
+<view class="page">
+  <view class="tip-card">
+    <view class="tip-card__title">今日训练记录</view>
+    <view class="tip-card__desc">{{todayStatusLabel}}</view>
+  </view>
+
+  <view class="form-card">
+    <view class="field">
+      <view class="field__label">训练日期</view>
+      <view class="field__static">{{trainDate}}</view>
+    </view>
+
+    <view class="field">
+      <view class="field__label">训练时长（分钟）</view>
+      <input class="field__input" type="number" value="{{durationMinutes}}" bindinput="handleDurationInput" placeholder="请输入训练时长" />
+    </view>
+
+    <view class="field">
+      <view class="field__label">训练组数</view>
+      <input class="field__input" type="number" value="{{setsCount}}" bindinput="handleSetsInput" placeholder="请输入训练组数" />
+    </view>
+
+    <view class="field">
+      <view class="field__label">备注</view>
+      <textarea class="field__textarea" value="{{note}}" bindinput="handleNoteInput" maxlength="200" placeholder="如有不适或特殊情况，可补充说明"></textarea>
+    </view>
+
+    <button class="submit-button" bindtap="handleSubmit">提交今天的训练记录</button>
+  </view>
+</view>

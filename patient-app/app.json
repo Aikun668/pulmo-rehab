@@ -1,0 +1,55 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/check-in/index",
+    "pages/rehab/index",
+    "pages/plan-detail/index",
+    "pages/progress/index",
+    "pages/ai-summary/index"
+  ],
+  "tabBar": {
+    "color": "#7A8A9A",
+    "selectedColor": "#2563EB",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "images/tabbar/home.png",
+        "selectedIconPath": "images/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/check-in/index",
+        "text": "打卡",
+        "iconPath": "images/tabbar/checkin.png",
+        "selectedIconPath": "images/tabbar/checkin-active.png"
+      },
+      {
+        "pagePath": "pages/rehab/index",
+        "text": "康复",
+        "iconPath": "images/tabbar/rehab.png",
+        "selectedIconPath": "images/tabbar/rehab-active.png"
+      }
+    ]
+  },
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "style": "v2",
+  "renderer": "skyline",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "tagNameStyleIsolation": "legacy",
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

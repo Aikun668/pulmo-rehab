@@ -1,0 +1,227 @@
+.page {
+  padding: 24rpx 28rpx 32rpx;
+}
+
+.header-section {
+  margin-bottom: 22rpx;
+  padding: 8rpx 4rpx 0;
+}
+
+.header-section__eyebrow {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.header-section__title {
+  margin-top: 10rpx;
+  font-size: 42rpx;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #243447;
+}
+
+.hero-card,
+.quick-action,
+.tips-card {
+  border-radius: 28rpx;
+  box-sizing: border-box;
+}
+
+.hero-card {
+  padding: 30rpx 26rpx 26rpx;
+  background: #ffffff;
+  box-shadow: 0 10rpx 24rpx rgba(31, 41, 55, 0.04);
+}
+
+.hero-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-card__eyebrow {
+  font-size: 22rpx;
+  color: #5b6b7a;
+}
+
+.hero-card__progress-row {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 8rpx;
+}
+
+.hero-card__progress-number {
+  font-size: 64rpx;
+  line-height: 1;
+  font-weight: 700;
+  color: #243447;
+}
+
+.hero-card__progress-unit {
+  margin-left: 8rpx;
+  margin-bottom: 8rpx;
+  font-size: 26rpx;
+  color: #5b6b7a;
+}
+
+.progress-ring {
+  width: 128rpx;
+  height: 128rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring__image {
+  width: 128rpx;
+  height: 128rpx;
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  margin-top: 26rpx;
+  padding: 0;
+}
+
+.task-card__icon {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-card__icon-image {
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.task-card__content {
+  flex: 1;
+  margin-left: 18rpx;
+}
+
+.task-card__title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.task-card__meta {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #6483c2;
+}
+
+.task-card__button {
+  margin: 0;
+  min-width: 140rpx;
+  padding: 0 24rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 999rpx;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.task-card__button::after {
+  border: none;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 18rpx;
+  margin-top: 30rpx;
+}
+
+.quick-action {
+  flex: 1;
+  padding: 4rpx 0 8rpx;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quick-action__icon-circle {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: #eaf8f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-action__icon-image {
+  width: 34rpx;
+  height: 34rpx;
+}
+
+.quick-action__title {
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #243447;
+  text-align: center;
+}
+
+.tips-card {
+  margin-top: 28rpx;
+  padding: 28rpx 24rpx 30rpx;
+  background: #dff7ec;
+  border: none;
+}
+
+.tips-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tips-card__title-group {
+  display: flex;
+  align-items: center;
+}
+
+.tips-card__badge {
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 12rpx;
+  background: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tips-card__badge-image {
+  width: 24rpx;
+  height: 24rpx;
+}
+
+.tips-card__tag {
+  margin-left: 12rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1d7f53;
+}
+
+.tips-card__time {
+  font-size: 22rpx;
+  color: #4f8a6b;
+}
+
+.tips-card__content {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.9;
+  color: #356a4f;
+}

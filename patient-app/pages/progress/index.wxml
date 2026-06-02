@@ -1,0 +1,23 @@
+<navigation-bar title="30天进度" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+
+<view class="page">
+  <view class="summary-card">
+    <view class="summary-card__title">训练趋势摘要</view>
+    <view class="summary-card__desc">{{progressSummary}}</view>
+  </view>
+
+  <view class="chart-card">
+    <view class="chart-card__title">近7天示意图</view>
+    <view class="bar-list">
+      <block wx:for="{{days}}" wx:key="label">
+        <view class="bar-item">
+          <view class="bar-item__column">
+            <view class="bar-item__bar" style="height: {{item.value * 4}}rpx;"></view>
+          </view>
+          <view class="bar-item__value">{{item.value}}</view>
+          <view class="bar-item__label">{{item.label}}</view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

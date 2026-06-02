@@ -1,0 +1,81 @@
+.page {
+  padding: 24rpx;
+}
+
+.tip-card,
+.form-card {
+  border-radius: 24rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 30rpx rgba(31, 41, 55, 0.05);
+  border: 1rpx solid #e3ebf5;
+}
+
+.tip-card {
+  padding: 28rpx 24rpx;
+}
+
+.tip-card__title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #243447;
+}
+
+.tip-card__desc {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: #5b6b7a;
+}
+
+.form-card {
+  margin-top: 24rpx;
+  padding: 28rpx 24rpx;
+}
+
+.field + .field {
+  margin-top: 24rpx;
+}
+
+.field__label {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #243447;
+}
+
+.field__static,
+.field__input,
+.field__textarea {
+  margin-top: 12rpx;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  background: #f8fafc;
+  border: 1rpx solid #d9e2ec;
+  color: #243447;
+}
+
+.field__static,
+.field__input {
+  min-height: 84rpx;
+  padding: 0 20rpx;
+  line-height: 84rpx;
+}
+
+.field__textarea {
+  min-height: 220rpx;
+  padding: 20rpx;
+  line-height: 1.7;
+}
+
+.submit-button {
+  margin-top: 32rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: #ffffff;
+  font-size: 28rpx;
+  line-height: 88rpx;
+}
+
+.submit-button::after {
+  border: none;
+}

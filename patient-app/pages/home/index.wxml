@@ -1,0 +1,62 @@
+<navigation-bar title="肺康复训练" back="{{false}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+
+<view class="page">
+  <view class="header-section">
+    <view class="header-section__eyebrow">{{welcomeLabel}}</view>
+    <view class="header-section__title">{{patientName}}，今天继续加油</view>
+  </view>
+
+  <view class="hero-card">
+    <view class="hero-card__top">
+      <view>
+        <view class="hero-card__eyebrow">今日康复进度</view>
+        <view class="hero-card__progress-row">
+          <text class="hero-card__progress-number">{{progressPercent}}</text>
+          <text class="hero-card__progress-unit">%</text>
+        </view>
+      </view>
+      <view class="progress-ring">
+        <image class="progress-ring__image" src="/images/home/progress-33.png" mode="aspectFit"></image>
+      </view>
+    </view>
+
+    <view class="task-card">
+      <view class="task-card__icon">
+        <image class="task-card__icon-image" src="/images/home/walk.png" mode="aspectFit"></image>
+      </view>
+      <view class="task-card__content">
+        <view class="task-card__title">{{currentTaskTitle}}</view>
+        <view class="task-card__meta">{{currentTaskMeta}}</view>
+      </view>
+      <button class="task-card__button" bindtap="handleGoCheckIn">去打卡</button>
+    </view>
+    </view>
+
+  <view class="quick-actions">
+    <block wx:for="{{quickActions}}" wx:key="key">
+      <view class="quick-action" data-key="{{item.key}}" bindtap="handleQuickActionTap">
+        <view class="quick-action__icon-circle">
+          <image
+            class="quick-action__icon-image"
+            src="{{item.key === 'progress' ? '/images/home/trend.png' : '/images/home/check.png'}}"
+            mode="aspectFit"
+          ></image>
+        </view>
+        <view class="quick-action__title">{{item.title}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view class="tips-card">
+    <view class="tips-card__top">
+      <view class="tips-card__title-group">
+        <view class="tips-card__badge">
+          <image class="tips-card__badge-image" src="/images/home/sparkle.png" mode="aspectFit"></image>
+        </view>
+        <view class="tips-card__tag">AI 康复小结</view>
+      </view>
+      <view class="tips-card__time">{{aiTipUpdatedAt}}</view>
+    </view>
+    <view class="tips-card__content">{{aiTip}}</view>
+  </view>
+  </view>

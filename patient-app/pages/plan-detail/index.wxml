@@ -1,0 +1,11 @@
+<navigation-bar title="训练方案" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+
+<view class="page">
+  <block wx:for="{{plans}}" wx:key="id">
+    <view class="card">
+      <view class="card__title">{{item.title}}</view>
+      <view class="card__desc">{{item.content}}</view>
+      <view class="card__meta">{{item.createdAt}}</view>
+    </view>
+  </block>
+</view>
