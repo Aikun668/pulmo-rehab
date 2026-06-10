@@ -1,10 +1,10 @@
 .page {
-  padding: 24rpx 28rpx 32rpx;
+  padding: 48rpx 42rpx 56rpx;
 }
 
 .header-section {
-  margin-bottom: 22rpx;
-  padding: 8rpx 4rpx 0;
+  margin-bottom: 30rpx;
+  padding: 20rpx 2rpx 0;
 }
 
 .header-section__eyebrow {
@@ -14,30 +14,28 @@
 }
 
 .header-section__title {
-  margin-top: 10rpx;
+  margin-top: 16rpx;
   font-size: 42rpx;
   line-height: 1.4;
   font-weight: 700;
   color: #243447;
 }
 
-.hero-card,
-.quick-action,
-.tips-card {
-  border-radius: 28rpx;
-  box-sizing: border-box;
-}
-
 .hero-card {
-  padding: 30rpx 26rpx 26rpx;
-  background: #ffffff;
-  box-shadow: 0 10rpx 24rpx rgba(31, 41, 55, 0.04);
+  padding: 0 10rpx;
+  background: transparent;
+  box-shadow: none;
 }
 
 .hero-card__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 176rpx;
+  column-gap: 18rpx;
+  align-items: start;
+}
+
+.hero-card__progress-block {
+  justify-self: start;
 }
 
 .hero-card__eyebrow {
@@ -48,7 +46,7 @@
 .hero-card__progress-row {
   display: flex;
   align-items: flex-end;
-  margin-top: 8rpx;
+  margin-top: 12rpx;
 }
 
 .hero-card__progress-number {
@@ -59,50 +57,55 @@
 }
 
 .hero-card__progress-unit {
-  margin-left: 8rpx;
+  margin-left: 6rpx;
   margin-bottom: 8rpx;
   font-size: 26rpx;
   color: #5b6b7a;
 }
 
 .progress-ring {
-  width: 128rpx;
-  height: 128rpx;
+  width: 124rpx;
+  height: 124rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: start;
+  margin-top: -18rpx;
+  margin-left: -4rpx;
 }
 
-.progress-ring__image {
-  width: 128rpx;
-  height: 128rpx;
+.progress-ring__canvas {
+  width: 124rpx;
+  height: 124rpx;
+  display: block;
 }
 
 .task-card {
   display: flex;
   align-items: center;
-  margin-top: 26rpx;
-  padding: 0;
+  margin-top: 34rpx;
+  padding: 0 8rpx 0 6rpx;
 }
 
 .task-card__icon {
   width: 76rpx;
   height: 76rpx;
-  border-radius: 50%;
-  background: #2563eb;
+  border-radius: 22rpx;
+  background: #2a6bff;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .task-card__icon-image {
-  width: 44rpx;
-  height: 44rpx;
+  width: 56rpx;
+  height: 56rpx;
 }
 
 .task-card__content {
   flex: 1;
-  margin-left: 18rpx;
+  margin-left: 16rpx;
+  margin-right: 24rpx;
 }
 
 .task-card__title {
@@ -112,73 +115,82 @@
 }
 
 .task-card__meta {
-  margin-top: 6rpx;
+  margin-top: 8rpx;
   font-size: 24rpx;
+  line-height: 1.2;
+  white-space: nowrap;
   color: #6483c2;
 }
 
 .task-card__button {
   margin: 0;
-  min-width: 140rpx;
-  padding: 0 24rpx;
-  height: 72rpx;
-  line-height: 72rpx;
-  border-radius: 999rpx;
-  background: #2563eb;
+  min-width: 112rpx;
+  padding: 0 14rpx;
+  height: 44rpx;
+  border-radius: 20rpx;
+  background: #2a6bff;
   color: #ffffff;
-  font-size: 24rpx;
-  font-weight: 600;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
-.task-card__button::after {
-  border: none;
+.task-card__button-text {
+  color: #ffffff;
+  font-size: 16rpx;
+  line-height: 1;
+  font-weight: 500;
+  text-align: center;
 }
 
 .quick-actions {
   display: flex;
-  gap: 18rpx;
-  margin-top: 30rpx;
+  gap: 64rpx;
+  margin-top: 56rpx;
 }
 
 .quick-action {
   flex: 1;
-  padding: 4rpx 0 8rpx;
+  padding: 0;
   background: transparent;
-  border-radius: 0;
-  box-shadow: none;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .quick-action__icon-circle {
-  width: 76rpx;
-  height: 76rpx;
+  width: 82rpx;
+  height: 82rpx;
   border-radius: 50%;
-  background: #eaf8f2;
+  background: #eef8f2;
+  border: 1rpx solid #d4eadc;
+  box-shadow: inset 0 0 0 1rpx rgba(111, 187, 140, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .quick-action__icon-image {
-  width: 34rpx;
-  height: 34rpx;
+  width: 46rpx;
+  height: 46rpx;
 }
 
 .quick-action__title {
-  margin-top: 14rpx;
+  margin-top: 16rpx;
   font-size: 26rpx;
   font-weight: 600;
   color: #243447;
   text-align: center;
+  line-height: 1.4;
 }
 
 .tips-card {
-  margin-top: 28rpx;
-  padding: 28rpx 24rpx 30rpx;
-  background: #dff7ec;
-  border: none;
+  margin-top: 58rpx;
+  padding: 28rpx 28rpx 30rpx;
+  background: #d8f4e7;
+  border-radius: 26rpx;
 }
 
 .tips-card__top {
@@ -208,7 +220,7 @@
 }
 
 .tips-card__tag {
-  margin-left: 12rpx;
+  margin-left: 14rpx;
   font-size: 28rpx;
   font-weight: 700;
   color: #1d7f53;
@@ -217,11 +229,14 @@
 .tips-card__time {
   font-size: 22rpx;
   color: #4f8a6b;
+  margin-left: 20rpx;
+  white-space: nowrap;
 }
 
 .tips-card__content {
-  margin-top: 16rpx;
+  margin-top: 18rpx;
   font-size: 24rpx;
-  line-height: 1.9;
+  line-height: 1.82;
+  letter-spacing: -0.2rpx;
   color: #356a4f;
 }

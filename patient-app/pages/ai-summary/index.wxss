@@ -27,6 +27,22 @@
   color: #8a9aad;
 }
 
+.card__created-at {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.card__status {
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: #5b6b7a;
+}
+
+.card__status--error {
+  color: #c65b5b;
+}
+
 .card__desc {
   margin-top: 16rpx;
   font-size: 24rpx;

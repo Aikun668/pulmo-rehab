@@ -4,20 +4,44 @@
   <view class="summary-card">
     <view class="summary-card__title">训练趋势摘要</view>
     <view class="summary-card__desc">{{progressSummary}}</view>
+    <view class="summary-metrics" wx:if="{{!isLoading && !errorMessage}}">
+      <view class="summary-metric">
+        <view class="summary-metric__value">{{trainedDays}}</view>
+        <view class="summary-metric__label">训练天数</view>
+      </view>
+      <view class="summary-metric">
+        <view class="summary-metric__value">{{totalDuration}}</view>
+        <view class="summary-metric__label">累计分钟</view>
+      </view>
+      <view class="summary-metric">
+        <view class="summary-metric__value">{{totalSets}}</view>
+        <view class="summary-metric__label">累计组数</view>
+      </view>
+    </view>
   </view>
 
   <view class="chart-card">
-    <view class="chart-card__title">近7天示意图</view>
-    <view class="bar-list">
-      <block wx:for="{{days}}" wx:key="label">
-        <view class="bar-item">
-          <view class="bar-item__column">
-            <view class="bar-item__bar" style="height: {{item.value * 4}}rpx;"></view>
-          </view>
-          <view class="bar-item__value">{{item.value}}</view>
-          <view class="bar-item__label">{{item.label}}</view>
-        </view>
-      </block>
+    <view class="chart-card__title">近30天训练趋势</view>
+
+    <view class="chart-card__state" wx:if="{{isLoading}}">正在同步近30天训练数据...</view>
+    <view class="chart-card__state chart-card__state--error" wx:elif="{{errorMessage}}">
+      {{errorMessage}}
     </view>
+    <scroll-view scroll-x class="chart-scroll" wx:else>
+      <view class="bar-list">
+        <block wx:for="{{days}}" wx:key="fullDate">
+          <view class="bar-item">
+            <view class="bar-item__column">
+              <view
+                class="bar-item__bar {{item.durationMinutes > 0 ? 'bar-item__bar--active' : 'bar-item__bar--idle'}}"
+                style="height: {{item.barHeight}}rpx;"
+              ></view>
+            </view>
+            <view class="bar-item__value">{{item.durationMinutes}}</view>
+            <view class="bar-item__label">{{item.label}}</view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
   </view>
 </view>

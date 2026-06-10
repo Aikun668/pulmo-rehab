@@ -2,6 +2,18 @@
   padding: 24rpx;
 }
 
+.section-title {
+  margin: 0 0 16rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #5b6b7a;
+}
+
+.section-title--history {
+  margin-top: 28rpx;
+}
+
+.state-card,
 .card {
   padding: 28rpx 24rpx;
   border-radius: 24rpx;
@@ -12,6 +24,11 @@
 
 .card + .card {
   margin-top: 20rpx;
+}
+
+.card--latest {
+  border-color: #bfdbfe;
+  background: #f8fbff;
 }
 
 .card__title {
@@ -31,4 +48,14 @@
   margin-top: 16rpx;
   font-size: 22rpx;
   color: #8a9aad;
+}
+
+.state-card {
+  font-size: 24rpx;
+  line-height: 1.8;
+  color: #5b6b7a;
+}
+
+.state-card--error {
+  color: #c65b5b;
 }

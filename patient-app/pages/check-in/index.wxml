@@ -27,6 +27,8 @@
       <textarea class="field__textarea" value="{{note}}" bindinput="handleNoteInput" maxlength="200" placeholder="如有不适或特殊情况，可补充说明"></textarea>
     </view>
 
-    <button class="submit-button" bindtap="handleSubmit">提交今天的训练记录</button>
+    <button class="submit-button" bindtap="handleSubmit" loading="{{isSubmitting}}" disabled="{{isSubmitting}}">
+      提交今天的训练记录
+    </button>
   </view>
 </view>

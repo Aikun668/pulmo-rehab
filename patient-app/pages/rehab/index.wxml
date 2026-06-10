@@ -5,6 +5,12 @@
     <view class="card__title">我的训练方案</view>
     <view class="card__desc">{{latestPlanTitle}}</view>
     <view class="card__meta">{{latestPlanDescription}}</view>
+    <view class="card__status" wx:if="{{isLoadingPlan}}">正在同步最新方案...</view>
+    <view class="card__status card__status--error" wx:elif="{{planErrorMessage}}">
+      {{planErrorMessage}}
+    </view>
+    <view class="card__status" wx:elif="{{hasPlan}}">{{latestPlanUpdatedAt}}</view>
+    <view class="card__status" wx:else>当前还没有医生下发的训练方案</view>
     <view class="card__link">查看方案详情</view>
   </view>
 

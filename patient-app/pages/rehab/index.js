@@ -1,9 +1,188 @@
+const TEST_PATIENT_ID = 1
+const TEST_DOCTOR_ID = 13
+const API_BASE_URL = "http://127.0.0.1:8000/api"
+
+function truncateText(value, maxLength) {
+  if (!value) {
+    return ""
+  }
+
+  return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "暂无更新时间"
+  }
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+  return `更新于 ${month}-${day} ${hours}:${minutes}`
+}
+
+function createPlanPreview(plan) {
+  if (!plan) {
+    return {
+      title: "当前暂无训练方案",
+      description: "医生暂未下发训练方案，建议先查看30天进度并等待方案更新。",
+      updatedAt: "暂无更新时间",
+      hasPlan: false,
+    }
+  }
+
+  return {
+    title: plan.title,
+    description: plan.content,
+    updatedAt: formatDateTime(plan.created_at),
+    hasPlan: true,
+  }
+}
+
+function buildProgressSummary(days) {
+  const trainedDays = days.filter((item) => item.duration_minutes > 0).length
+  const totalDuration = days.reduce((sum, item) => sum + item.duration_minutes, 0)
+  return `近30天已训练 ${trainedDays} 天，累计 ${totalDuration} 分钟。`
+}
+
+function createAiPreview(summary) {
+  if (!summary) {
+    return "当前暂无 AI 康复小结，可继续完成训练打卡并等待后续生成。"
+  }
+
+  return truncateText(summary.content, 34)
+}
+
 Page({
   data: {
-    latestPlanTitle: "呼吸耐力基础训练",
-    latestPlanDescription: "当前先按低强度训练节奏执行，每次训练后完成打卡。",
-    progressSummary: "过去30天已训练 12 天，累计 260 分钟。",
-    aiSummaryPreview: "最近一周训练节奏基本稳定，建议继续按当前方案坚持训练。",
+    patientId: TEST_PATIENT_ID,
+    doctorId: TEST_DOCTOR_ID,
+    latestPlanTitle: "正在同步训练方案",
+    latestPlanDescription: "正在读取医生最新下发的训练方案，请稍候。",
+    latestPlanUpdatedAt: "请稍候",
+    hasPlan: false,
+    isLoadingPlan: true,
+    planErrorMessage: "",
+    progressSummary: "正在同步30天进度摘要。",
+    aiSummaryPreview: "正在同步最新 AI 康复小结。",
+  },
+
+  onShow() {
+    this.loadLatestPlan()
+    this.loadProgressSummary()
+    this.loadLatestAiPreview()
+  },
+
+  loadLatestPlan() {
+    const { patientId, doctorId } = this.data
+
+    this.setData({
+      isLoadingPlan: true,
+      planErrorMessage: "",
+    })
+
+    wx.request({
+      url: `${API_BASE_URL}/rehab-plans`,
+      method: "GET",
+      data: {
+        patient_id: patientId,
+        doctor_id: doctorId,
+      },
+      success: (response) => {
+        const { data } = response
+        const plans =
+          response.statusCode === 200 &&
+          data &&
+          data.code === 200 &&
+          Array.isArray(data.data)
+            ? data.data
+            : []
+        const latestPlan = plans[0] || null
+        const preview = createPlanPreview(latestPlan)
+
+        this.setData({
+          latestPlanTitle: preview.title,
+          latestPlanDescription: preview.description,
+          latestPlanUpdatedAt: preview.updatedAt,
+          hasPlan: preview.hasPlan,
+          isLoadingPlan: false,
+        })
+      },
+      fail: () => {
+        this.setData({
+          isLoadingPlan: false,
+          hasPlan: false,
+          planErrorMessage: "暂时无法读取训练方案，请稍后重试。",
+          latestPlanTitle: "训练方案暂不可用",
+          latestPlanDescription: "当前无法同步医生下发的训练方案，请稍后再看。",
+          latestPlanUpdatedAt: "请稍后重试",
+        })
+      },
+    })
+  },
+
+  loadProgressSummary() {
+    wx.request({
+      url: `${API_BASE_URL}/training-logs/progress-30d`,
+      method: "GET",
+      data: {
+        patient_id: this.data.patientId,
+      },
+      success: (response) => {
+        const { data } = response
+        const days =
+          response.statusCode === 200 &&
+          data &&
+          data.code === 200 &&
+          data.data &&
+          Array.isArray(data.data.days)
+            ? data.data.days
+            : []
+
+        this.setData({
+          progressSummary: buildProgressSummary(days),
+        })
+      },
+      fail: () => {
+        this.setData({
+          progressSummary: "暂时无法读取30天进度摘要，请稍后重试。",
+        })
+      },
+    })
+  },
+
+  loadLatestAiPreview() {
+    wx.request({
+      url: `${API_BASE_URL}/ai-summaries/latest`,
+      method: "GET",
+      data: {
+        patient_id: this.data.patientId,
+      },
+      success: (response) => {
+        const { data } = response
+        const summary =
+          response.statusCode === 200 &&
+          data &&
+          data.code === 200
+            ? data.data
+            : null
+
+        this.setData({
+          aiSummaryPreview: createAiPreview(summary),
+        })
+      },
+      fail: () => {
+        this.setData({
+          aiSummaryPreview: "暂时无法读取 AI 康复小结，请稍后重试。",
+        })
+      },
+    })
   },
 
   handleOpenPlanDetail() {

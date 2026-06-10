@@ -46,6 +46,16 @@
   color: #2563eb;
 }
 
+.card__status {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.card__status--error {
+  color: #c65b5b;
+}
+
 .disclaimer {
   margin-top: 24rpx;
   padding: 24rpx;

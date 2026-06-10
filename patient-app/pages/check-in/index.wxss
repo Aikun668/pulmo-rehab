@@ -68,12 +68,14 @@
 }
 
 .submit-button {
-  margin-top: 32rpx;
-  border-radius: 20rpx;
+  margin-top: 28rpx;
+  min-height: 72rpx;
+  border-radius: 18rpx;
   background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
   color: #ffffff;
-  font-size: 28rpx;
-  line-height: 88rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 72rpx;
 }
 
 .submit-button::after {

@@ -1,0 +1,6 @@
+{
+  "name": "呼吸康复",
+  "description": "肺康复患者端管理工具，提供每日训练打卡、训练方案查看、阶段总结等功能。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

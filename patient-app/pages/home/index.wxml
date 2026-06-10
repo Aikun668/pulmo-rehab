@@ -3,12 +3,12 @@
 <view class="page">
   <view class="header-section">
     <view class="header-section__eyebrow">{{welcomeLabel}}</view>
-    <view class="header-section__title">{{patientName}}，今天继续加油</view>
+    <view class="header-section__title">{{patientName}}</view>
   </view>
 
   <view class="hero-card">
-    <view class="hero-card__top">
-      <view>
+    <view class="hero-card__top" style="position: relative; left: 0rpx; top: 34rpx">
+      <view class="hero-card__progress-block">
         <view class="hero-card__eyebrow">今日康复进度</view>
         <view class="hero-card__progress-row">
           <text class="hero-card__progress-number">{{progressPercent}}</text>
@@ -16,38 +16,40 @@
         </view>
       </view>
       <view class="progress-ring">
-        <image class="progress-ring__image" src="/images/home/progress-33.png" mode="aspectFit"></image>
+        <canvas canvas-id="progressRing" class="progress-ring__canvas"></canvas>
       </view>
     </view>
 
     <view class="task-card">
-      <view class="task-card__icon">
-        <image class="task-card__icon-image" src="/images/home/walk.png" mode="aspectFit"></image>
+      <view class="task-card__icon" style="position: relative; left: 55rpx; top: 70rpx; width: 67rpx; height: 70rpx; display: flex; box-sizing: border-box">
+        <image class="task-card__icon-image" src="/images/home/walk.png" mode="aspectFit" style="position: relative; left: 2rpx; top: -2rpx; width: 63rpx; height: 67rpx; display: block; box-sizing: border-box"></image>
       </view>
       <view class="task-card__content">
-        <view class="task-card__title">{{currentTaskTitle}}</view>
-        <view class="task-card__meta">{{currentTaskMeta}}</view>
+        <view class="task-card__title" style="position: relative; left: 75rpx; top: 70rpx">{{currentTaskTitle}}</view>
+        <view class="task-card__meta" style="position: relative; left: 75rpx; top: 63rpx">{{currentTaskMeta}}</view>
       </view>
-      <button class="task-card__button" bindtap="handleGoCheckIn">去打卡</button>
+      <view class="task-card__button" bindtap="handleGoCheckIn" style="width: 112rpx; height: 44rpx; display: flex; box-sizing: border-box; left: -42rpx; top: 70rpx; position: relative">
+        <text class="task-card__button-text">去打卡</text>
+      </view>
     </view>
     </view>
 
   <view class="quick-actions">
     <block wx:for="{{quickActions}}" wx:key="key">
-      <view class="quick-action" data-key="{{item.key}}" bindtap="handleQuickActionTap">
-        <view class="quick-action__icon-circle">
+      <view class="quick-action" data-key="{{item.key}}" bindtap="handleQuickActionTap" style="position: relative; left: 0rpx; top: 82rpx">
+        <view class="quick-action__icon-circle" style="width: 72rpx; height: 72rpx; display: flex; box-sizing: border-box">
           <image
             class="quick-action__icon-image"
             src="{{item.key === 'progress' ? '/images/home/trend.png' : '/images/home/check.png'}}"
             mode="aspectFit"
-          ></image>
+           style="width: 67rpx; height: 55rpx; display: block; box-sizing: border-box"></image>
         </view>
         <view class="quick-action__title">{{item.title}}</view>
       </view>
     </block>
   </view>
 
-  <view class="tips-card">
+  <view class="tips-card" style="position: relative; left: 0rpx; top: 100rpx">
     <view class="tips-card__top">
       <view class="tips-card__title-group">
         <view class="tips-card__badge">
