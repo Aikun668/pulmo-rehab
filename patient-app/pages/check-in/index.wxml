@@ -1,34 +1,59 @@
 <navigation-bar title="训练打卡" back="{{false}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
 
 <view class="page">
-  <view class="tip-card">
-    <view class="tip-card__title">今日训练记录</view>
-    <view class="tip-card__desc">{{todayStatusLabel}}</view>
+  <!-- 成功反馈浮层 -->
+  <view class="success-overlay" wx:if="{{showSuccessFeedback}}">
+    <view class="success-card">
+      <view class="success-card__icon"></view>
+      <view class="success-card__text">太棒了！今日训练全部完成，继续坚持！</view>
+    </view>
   </view>
 
-  <view class="form-card">
-    <view class="field">
-      <view class="field__label">训练日期</view>
-      <view class="field__static">{{trainDate}}</view>
-    </view>
-
-    <view class="field">
-      <view class="field__label">训练时长（分钟）</view>
-      <input class="field__input" type="number" value="{{durationMinutes}}" bindinput="handleDurationInput" placeholder="请输入训练时长" />
-    </view>
-
-    <view class="field">
-      <view class="field__label">训练组数</view>
-      <input class="field__input" type="number" value="{{setsCount}}" bindinput="handleSetsInput" placeholder="请输入训练组数" />
-    </view>
-
-    <view class="field">
-      <view class="field__label">备注</view>
-      <textarea class="field__textarea" value="{{note}}" bindinput="handleNoteInput" maxlength="200" placeholder="如有不适或特殊情况，可补充说明"></textarea>
-    </view>
-
-    <button class="submit-button" bindtap="handleSubmit" loading="{{isSubmitting}}" disabled="{{isSubmitting}}">
-      提交今天的训练记录
-    </button>
+  <!-- 今日状态 -->
+  <view class="status-card">
+    <view class="status-card__label">训练日期</view>
+    <view class="status-card__date">{{trainDate}}</view>
+    <view class="status-card__summary {{hasSubmittedToday ? 'status-card__summary--done' : ''}}">{{todaySummaryText}}</view>
   </view>
+
+  <!-- 任务清单 -->
+  <view class="task-list">
+    <view class="task-list__header">今日训练任务</view>
+
+    <view class="task-item {{item.checked ? 'task-item--checked' : ''}}" wx:for="{{tasks}}" wx:key="id">
+      <view class="task-item__left" data-index="{{index}}" bindtap="handleTaskCheck">
+        <view class="task-checkbox {{item.checked ? 'task-checkbox--checked' : ''}}">
+          <text wx:if="{{item.checked}}">✓</text>
+        </view>
+      </view>
+      <view class="task-item__body">
+        <view class="task-item__name">{{item.name}}</view>
+        <view class="task-item__desc">{{item.description}}</view>
+        <view class="task-item__target">目标 {{item.targetMinutes}} 分钟 · {{item.targetSets}} 组</view>
+        <!-- 勾选后出现实际时长输入 -->
+        <view class="task-item__duration" wx:if="{{item.checked}}">
+          <text class="task-item__duration-label">实际时长</text>
+          <input
+            class="task-item__duration-input"
+            type="number"
+            value="{{item.actualMinutes}}"
+            data-index="{{index}}"
+            bindinput="handleDurationInput"
+            placeholder="分钟"
+          />
+          <text class="task-item__duration-unit">分钟</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <button
+    class="submit-button {{allChecked ? '' : 'submit-button--disabled'}}"
+    bindtap="handleSubmit"
+    loading="{{isSubmitting}}"
+    disabled="{{isSubmitting || !allChecked}}"
+  >
+    {{allChecked ? '完成今日打卡' : '请先完成所有任务'}}
+  </button>
 </view>

@@ -16,7 +16,7 @@
         </view>
       </view>
       <view class="progress-ring">
-        <canvas canvas-id="progressRing" class="progress-ring__canvas"></canvas>
+        <image class="progress-ring__image" src="/images/home/progress-33.png" mode="aspectFit" style="position: relative; left: 20rpx; top: 21rpx; width: 144rpx; height: 166rpx; display: block; box-sizing: border-box"></image>
       </view>
     </view>
 
