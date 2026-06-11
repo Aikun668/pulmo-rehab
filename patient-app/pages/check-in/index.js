@@ -1,5 +1,4 @@
-const TEST_PATIENT_ID = 1
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+var auth = require("../../utils/auth.js")
 
 const DEFAULT_TASKS = [
   {
@@ -46,7 +45,7 @@ var formatToday = function () {
 
 Page({
   data: {
-    patientId: TEST_PATIENT_ID,
+    patientId: 0,
     trainDate: "",
     tasks: [],
     allChecked: false,
@@ -91,6 +90,7 @@ Page({
   },
 
   onShow: function () {
+    this.setData({ patientId: auth.getPatientId() })
     this.loadTodayLog()
   },
 
@@ -121,8 +121,8 @@ Page({
 
     if (!trainDate) return
 
-    wx.request({
-      url: API_BASE_URL + "/training-logs",
+    auth.request({
+      url: auth.API_BASE + "/training-logs",
       method: "GET",
       data: {
         patient_id: patientId,
@@ -444,8 +444,8 @@ Page({
 
     this.setData({ isSubmitting: true })
 
-    wx.request({
-      url: API_BASE_URL + "/training-logs",
+    auth.request({
+      url: auth.API_BASE + "/training-logs",
       method: "POST",
       header: {
         "Content-Type": "application/json",

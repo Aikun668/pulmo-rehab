@@ -228,3 +228,43 @@ class AiSummaryResponse(BaseModel):
     summary_week_end: date
     content: str
     created_at: datetime
+
+
+class DevLoginRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"patient_id": 1}
+        }
+    )
+
+    patient_id: int = Field(gt=0)
+
+
+class WxLoginRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {"code": "0a1b2c3d4e5f"}
+        }
+    )
+
+    code: str = Field(min_length=1)
+
+
+class LoginResponse(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "user_id": 1,
+                "role": "patient",
+                "name": "张三",
+                "doctor_id": 13,
+            }
+        }
+    )
+
+    token: str
+    user_id: int
+    role: str
+    name: str
+    doctor_id: int | None

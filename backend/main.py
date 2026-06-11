@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from database import Base, engine
 from routers.ai_summaries import router as ai_summaries_router
+from routers.auth import router as auth_router
 from routers.doctors import router as doctors_router
 from routers.health import router as health_router
 from routers.rehab_plans import router as rehab_plans_router
@@ -43,6 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(health_router, prefix=settings.api_prefix)
 app.include_router(ai_summaries_router, prefix=settings.api_prefix)
 app.include_router(doctors_router, prefix=settings.api_prefix)

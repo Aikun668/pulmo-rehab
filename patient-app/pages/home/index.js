@@ -1,6 +1,5 @@
-const TEST_PATIENT_ID = 1
+var auth = require("../../utils/auth.js")
 const TARGET_DURATION_MINUTES = 20
-const API_BASE_URL = "http://127.0.0.1:8000/api"
 const RING_CANVAS_SIZE = 200
 const RING_CENTER = RING_CANVAS_SIZE / 2
 const RING_RADIUS = 64
@@ -91,7 +90,7 @@ function calculateStreakDays(days) {
 
 Page({
   data: {
-    patientId: TEST_PATIENT_ID,
+    patientId: 0,
     patientName: "早上好，张先生",
     welcomeLabel: "肺康复助手",
     todayStatusLabel: "今日尚未打卡",
@@ -122,6 +121,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ patientId: auth.getPatientId() })
     this.loadTodayProgress()
     this.loadStreakDays()
     this.loadLatestAiTip()
@@ -130,8 +130,8 @@ Page({
   loadTodayProgress() {
     const today = formatToday()
 
-    wx.request({
-      url: `${API_BASE_URL}/training-logs`,
+    auth.request({
+      url: `${auth.API_BASE}/training-logs`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,
@@ -168,8 +168,8 @@ Page({
   loadStreakDays() {
     var that = this
 
-    wx.request({
-      url: `${API_BASE_URL}/training-logs/progress-30d`,
+    auth.request({
+      url: `${auth.API_BASE}/training-logs/progress-30d`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,
@@ -197,8 +197,8 @@ Page({
   },
 
   loadLatestAiTip() {
-    wx.request({
-      url: `${API_BASE_URL}/ai-summaries/latest`,
+    auth.request({
+      url: `${auth.API_BASE}/ai-summaries/latest`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,

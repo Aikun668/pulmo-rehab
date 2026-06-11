@@ -33,6 +33,15 @@ class Settings:
     deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
+    # JWT
+    jwt_secret: str = os.getenv("JWT_SECRET", "pulmo-rehab-dev-key-2026")
+    jwt_algorithm: str = os.getenv("JWT_ALGORITHM", "HS256")
+    jwt_expire_minutes: int = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))
+
+    # WeChat Mini Program
+    wechat_appid: str = os.getenv("WECHAT_APPID", "")
+    wechat_secret: str = os.getenv("WECHAT_SECRET", "")
+
     def __post_init__(self) -> None:
         origins = os.getenv("CORS_ORIGINS", "*")
         self.cors_origins = _parse_csv(origins) if origins != "*" else ["*"]

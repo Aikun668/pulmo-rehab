@@ -1,5 +1,4 @@
-const TEST_PATIENT_ID = 1
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+var auth = require("../../utils/auth.js")
 
 function formatLabel(dateString) {
   if (!dateString) {
@@ -29,7 +28,7 @@ function buildSummary(days) {
 
 Page({
   data: {
-    patientId: TEST_PATIENT_ID,
+    patientId: 0,
     progressSummary: "正在同步近30天训练趋势。",
     trainedDays: 0,
     totalDuration: 0,
@@ -40,6 +39,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ patientId: auth.getPatientId() })
     this.loadProgress30d()
   },
 
@@ -48,8 +48,8 @@ Page({
       isLoading: true,
     })
 
-    wx.request({
-      url: `${API_BASE_URL}/training-logs/progress-30d`,
+    auth.request({
+      url: `${auth.API_BASE}/training-logs/progress-30d`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,

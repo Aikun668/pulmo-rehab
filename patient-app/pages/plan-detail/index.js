@@ -1,6 +1,4 @@
-const TEST_PATIENT_ID = 1
-const TEST_DOCTOR_ID = 13
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+var auth = require("../../utils/auth.js")
 
 var EXERCISE_GUIDES = [
   {
@@ -69,8 +67,8 @@ function formatDateTime(value) {
 
 Page({
   data: {
-    patientId: TEST_PATIENT_ID,
-    doctorId: TEST_DOCTOR_ID,
+    patientId: 0,
+    doctorId: null,
     isLoading: true,
     errorMessage: "",
     latestPlan: null,
@@ -94,6 +92,7 @@ Page({
   },
 
   onShow: function () {
+    this.setData({ patientId: auth.getPatientId(), doctorId: auth.getDoctorId() })
     this.loadPlans()
   },
 
@@ -107,8 +106,8 @@ Page({
       errorMessage: "",
     })
 
-    wx.request({
-      url: API_BASE_URL + "/rehab-plans",
+    auth.request({
+      url: auth.API_BASE + "/rehab-plans",
       method: "GET",
       data: {
         patient_id: patientId,

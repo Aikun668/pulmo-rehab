@@ -36,6 +36,7 @@ class User(Base):
     )
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(20), unique=True, nullable=True)
+    openid: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True, index=True)
     doctor_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id"),
         nullable=True,

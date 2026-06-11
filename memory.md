@@ -230,7 +230,8 @@
   2. **BUG（中等）**：呼吸计时器 `_calcCircleScale` 始终传 `BREATH_PHASES[0].duration`（4秒），导致呼气阶段圆圈缩放动画错误，改为动态查找当前阶段 duration
   3. **一致性**：30天进度页的错误态文案/样式仍为旧式"暂时无法读取...请稍后重试"，改为空态友好引导"暂无训练记录"，清理 `errorMessage` 字段和 `--error` 样式
   4. **BUG（严重）**：首页进度环用的是静态 `progress-33.png` 图片，JS 中 `drawProgressRing()` Canvas 代码写了但 WXML 没接 `<canvas>` 元素，导致进度永远显示 33%。已改为 `<canvas canvas-id="progressRing">`
-- 所有页面 API URL 一致（`http://127.0.0.1:8000/api`）、patient_id 一致（1）、doctor_id 一致（13）
+- 所有页面 API URL 统一通过 `auth.API_BASE`、patient_id 通过 `auth.getPatientId()` 动态获取、doctor_id 通过 `auth.getDoctorId()` 动态获取
+- 所有 `wx.request` 统一改为 `auth.request`，自动携带 `Authorization: Bearer <token>` header
 - 页面导航链路完整，无死链
 - 空态/错误态全部统一为友好引导风格
 
@@ -280,3 +281,23 @@
   - 首页 / 康复页 AI 预览
 - 如果下一位 Agent 继续改 UI，先确认用户是否要"先功能还是先样式"；用户当前最新偏好是：先把功能和逻辑打通，再做联调收口。
 - 如果业务定义不清楚，必须先问用户，不要自行扩需求。
+
+### 登录鉴权模块（已完成）
+
+**后端：**
+- `models.py` User 模型新增 `openid` 字段（String(100), unique, nullable）
+- `core/config.py` 新增 JWT 配置（`jwt_secret`, `jwt_algorithm`, `jwt_expire_minutes`）和微信配置（`wechat_appid`, `wechat_secret`）
+- `core/security.py` 实现 `create_token()`, `verify_token()`, `get_current_user()` 依赖
+- `routers/auth.py` 三个端点：
+  - `POST /api/auth/dev-login` — 开发模式，传 `patient_id` 直接登录（仅 DEBUG=true）
+  - `POST /api/auth/wx-login` — 微信登录，code → openid → 查找/创建 User → JWT
+  - `GET /api/auth/me` — 获取当前用户信息（需 Bearer token）
+- `main.py` 注册 auth_router
+- `requirements.txt` 新增 httpx
+- `.env` 新增 JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES, WECHAT_APPID, WECHAT_SECRET
+
+**前端：**
+- 新建 `utils/auth.js`：封装 `login()`, `checkLogin()`, `getToken()`, `getPatientId()`, `getDoctorId()`, `logout()`, `request()`（自动加 Authorization header）
+- `app.js` onLaunch 自动登录：先检查本地缓存，未登录则 dev-login(patient_id=1)
+- 6 个页面全部去硬编码：删 `TEST_PATIENT_ID`/`TEST_DOCTOR_ID`/`API_BASE_URL`，改用 `auth.*` 动态获取
+- 所有 `wx.request` → `auth.request`，自动携带 Bearer token

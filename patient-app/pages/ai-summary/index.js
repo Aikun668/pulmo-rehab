@@ -1,5 +1,4 @@
-const TEST_PATIENT_ID = 1
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+var auth = require("../../utils/auth.js")
 
 function formatDate(value) {
   if (!value) {
@@ -45,7 +44,7 @@ function formatPeriod(summaryWeekStart, summaryWeekEnd) {
 
 Page({
   data: {
-    patientId: TEST_PATIENT_ID,
+    patientId: 0,
     isLoading: true,
     hasSummary: false,
     summaryPeriod: "正在同步 AI 康复小结",
@@ -54,6 +53,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ patientId: auth.getPatientId() })
     this.loadLatestAiSummary()
   },
 
@@ -62,8 +62,8 @@ Page({
       isLoading: true,
     })
 
-    wx.request({
-      url: `${API_BASE_URL}/ai-summaries/latest`,
+    auth.request({
+      url: `${auth.API_BASE}/ai-summaries/latest`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,

@@ -1,6 +1,4 @@
-const TEST_PATIENT_ID = 1
-const TEST_DOCTOR_ID = 13
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+var auth = require("../../utils/auth.js")
 
 function truncateText(value, maxLength) {
   if (!value) {
@@ -75,8 +73,8 @@ function createAiPreview(summary) {
 
 Page({
   data: {
-    patientId: TEST_PATIENT_ID,
-    doctorId: TEST_DOCTOR_ID,
+    patientId: 0,
+    doctorId: null,
     latestPlanTitle: "正在同步训练方案",
     latestPlanDescription: "正在读取医生最新下发的训练方案，请稍候。",
     latestPlanUpdatedAt: "请稍候",
@@ -90,6 +88,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ patientId: auth.getPatientId(), doctorId: auth.getDoctorId() })
     this.loadLatestPlan()
     this.loadProgressSummary()
     this.loadLatestAiPreview()
@@ -102,8 +101,8 @@ Page({
       isLoadingPlan: true,
     })
 
-    wx.request({
-      url: `${API_BASE_URL}/rehab-plans`,
+    auth.request({
+      url: `${auth.API_BASE}/rehab-plans`,
       method: "GET",
       data: {
         patient_id: patientId,
@@ -142,8 +141,8 @@ Page({
   },
 
   loadProgressSummary() {
-    wx.request({
-      url: `${API_BASE_URL}/training-logs/progress-30d`,
+    auth.request({
+      url: `${auth.API_BASE}/training-logs/progress-30d`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,
@@ -177,8 +176,8 @@ Page({
   },
 
   loadLatestAiPreview() {
-    wx.request({
-      url: `${API_BASE_URL}/ai-summaries/latest`,
+    auth.request({
+      url: `${auth.API_BASE}/ai-summaries/latest`,
       method: "GET",
       data: {
         patient_id: this.data.patientId,
