@@ -1,74 +1,87 @@
+/* ===== 页面基础 ===== */
 .page {
-  padding: 48rpx 42rpx 56rpx;
+  padding: 48rpx 36rpx 80rpx;
+  background: #F4F7FB;
+  min-height: 100vh;
 }
 
+/* ===== 问候区 ===== */
 .header-section {
-  margin-bottom: 30rpx;
-  padding: 20rpx 2rpx 0;
+  margin-bottom: 28rpx;
+  padding: 12rpx 4rpx 0;
 }
 
 .header-section__eyebrow {
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   color: #2563eb;
 }
 
 .header-section__title {
-  margin-top: 16rpx;
-  font-size: 42rpx;
-  line-height: 1.4;
+  margin-top: 8rpx;
+  font-size: 44rpx;
+  line-height: 1.3;
   font-weight: 700;
-  color: #243447;
+  color: #1f2937;
 }
 
 .header-section__streak {
-  margin-top: 12rpx;
+  margin-top: 8rpx;
   font-size: 24rpx;
   font-weight: 600;
   color: #16a34a;
   line-height: 1.4;
 }
 
-.hero-card {
-  padding: 0 10rpx;
-  background: transparent;
-  box-shadow: none;
+/* ===== 通用卡片 ===== */
+.card {
+  margin-top: 20rpx;
+  padding: 28rpx 28rpx 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
-.hero-card__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 176rpx;
-  column-gap: 18rpx;
-  align-items: start;
+/* ===== 卡片1：进度 + 任务速览 ===== */
+.card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
-.hero-card__progress-block {
-  justify-self: start;
+.card__progress-block {
+  flex: 1;
 }
 
-.hero-card__eyebrow {
-  font-size: 22rpx;
-  color: #5b6b7a;
+.card__eyebrow {
+  font-size: 24rpx;
+  color: #6b7a8a;
 }
 
-.hero-card__progress-row {
+.card__progress-row {
   display: flex;
   align-items: flex-end;
-  margin-top: 12rpx;
+  margin-top: 10rpx;
 }
 
-.hero-card__progress-number {
+.card__progress-number {
   font-size: 64rpx;
   line-height: 1;
   font-weight: 700;
-  color: #243447;
+  color: #1f2937;
 }
 
-.hero-card__progress-unit {
-  margin-left: 6rpx;
+.card__progress-unit {
+  margin-left: 4rpx;
   margin-bottom: 8rpx;
   font-size: 26rpx;
-  color: #5b6b7a;
+  color: #6b7a8a;
+}
+
+.card__progress-label {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
 }
 
 .progress-ring {
@@ -77,9 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  justify-self: start;
-  margin-top: -18rpx;
-  margin-left: -4rpx;
+  flex-shrink: 0;
 }
 
 .progress-ring__canvas {
@@ -88,117 +99,135 @@
   display: block;
 }
 
-.task-card {
-  display: flex;
-  align-items: center;
-  margin-top: 34rpx;
-  padding: 0 8rpx 0 6rpx;
+.card__divider {
+  margin: 22rpx 0 18rpx;
+  height: 1rpx;
+  background: #eef1f6;
 }
 
-.task-card__icon {
-  width: 76rpx;
-  height: 76rpx;
-  border-radius: 22rpx;
-  background: #2a6bff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.task-card__icon-image {
-  width: 56rpx;
-  height: 56rpx;
-}
-
-.task-card__content {
-  flex: 1;
-  margin-left: 16rpx;
-  margin-right: 24rpx;
-}
-
-.task-card__title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #1f2d3d;
-}
-
-.task-card__meta {
-  margin-top: 8rpx;
+.card__section-title {
   font-size: 24rpx;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: #6483c2;
+  font-weight: 600;
+  color: #3a4a5c;
+  margin-bottom: 16rpx;
 }
 
-.task-card__button {
-  margin: 0;
-  min-width: 112rpx;
-  padding: 0 14rpx;
-  height: 44rpx;
-  border-radius: 20rpx;
-  background: #2a6bff;
-  color: #ffffff;
-  font-weight: 500;
+/* ===== 任务速览列表 ===== */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.task-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
+  padding: 12rpx 16rpx;
+  background: #f8fafc;
+  border-radius: 14rpx;
 }
 
-.task-card__button-text {
-  color: #ffffff;
-  font-size: 16rpx;
-  line-height: 1;
-  font-weight: 500;
-  text-align: center;
+.task-item__dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #d1d5db;
+  flex-shrink: 0;
+  margin-right: 16rpx;
 }
 
-.quick-actions {
-  display: flex;
-  gap: 64rpx;
-  margin-top: 56rpx;
+.task-item__dot--done {
+  background: #16a34a;
 }
 
-.quick-action {
+.task-item__info {
   flex: 1;
-  padding: 0;
-  background: transparent;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.task-item__name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.task-item__name--done {
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.task-item__target {
+  font-size: 22rpx;
+  color: #6b7a8a;
+}
+
+/* ===== 打卡按钮 ===== */
+.card__action-row {
+  margin-top: 20rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.card__btn-primary {
+  padding: 16rpx 48rpx;
+  border-radius: 32rpx;
+  background: #2a6bff;
+}
+
+.card__btn-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1;
+}
+
+/* ===== 卡片2：快速操作 ===== */
+.card--actions {
+  display: flex;
+  padding: 24rpx 16rpx;
+}
+
+.action-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 8rpx 0;
 }
 
-.quick-action__icon-circle {
-  width: 82rpx;
-  height: 82rpx;
+.action-item__icon-circle {
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 50%;
   background: #eef8f2;
   border: 1rpx solid #d4eadc;
-  box-shadow: inset 0 0 0 1rpx rgba(111, 187, 140, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.quick-action__icon-image {
-  width: 46rpx;
-  height: 46rpx;
+.action-item__icon-image {
+  width: 44rpx;
+  height: 44rpx;
 }
 
-.quick-action__title {
-  margin-top: 16rpx;
-  font-size: 26rpx;
+.action-item__title {
+  margin-top: 12rpx;
+  font-size: 24rpx;
   font-weight: 600;
   color: #243447;
-  text-align: center;
   line-height: 1.4;
 }
 
+/* ===== 卡片3：AI 小结 ===== */
 .tips-card {
-  margin-top: 58rpx;
+  margin-top: 20rpx;
   padding: 28rpx 28rpx 30rpx;
   background: #d8f4e7;
-  border-radius: 26rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
 .tips-card__top {
@@ -242,7 +271,7 @@
 }
 
 .tips-card__content {
-  margin-top: 18rpx;
+  margin-top: 16rpx;
   font-size: 24rpx;
   line-height: 1.82;
   letter-spacing: -0.2rpx;

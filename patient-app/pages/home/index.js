@@ -54,10 +54,6 @@ function buildTodayProgressState(todayDurationMinutes) {
       safeDuration > 0
         ? `今日已训练 ${safeDuration} 分钟`
         : "今日尚未打卡",
-    currentTaskMeta:
-      safeDuration > 0
-        ? `目标 20 分钟 · 已完成 ${safeDuration} 分钟`
-        : "预计 20 分钟 · 待开始",
   }
 }
 
@@ -98,9 +94,12 @@ Page({
     progressSummaryText: "0/" + TARGET_DURATION_MINUTES,
     todayDurationMinutes: 0,
     targetDurationMinutes: TARGET_DURATION_MINUTES,
-    currentTaskTitle: "平地行走 (II 期)",
-    currentTaskMeta: "预计 20 分钟 · 待开始",
     streakDays: 0,
+    todayTasks: [
+      { id: "breathing", name: "缩唇腹式呼吸", target: "10分钟 · 2组", done: false },
+      { id: "walking", name: "平地行走", target: "20分钟 · 1组", done: false },
+      { id: "cough", name: "有效咳嗽排痰", target: "5分钟 · 2组", done: false },
+    ],
     aiTip:
       "正在同步最新 AI 康复小结，请稍候。",
     aiTipUpdatedAt: "请稍候",
@@ -153,6 +152,8 @@ Page({
         )
 
         this.setData(nextState, () => {
+          this._updateTaskDoneState(todayLog)
+          this.drawProgressRing()
           this.drawProgressRing()
         })
       },
@@ -163,6 +164,14 @@ Page({
         })
       },
     })
+  },
+
+  _updateTaskDoneState(todayLog) {
+    if (!todayLog) return
+    var tasks = this.data.todayTasks.map(function (t) {
+      return { id: t.id, name: t.name, target: t.target, done: true }
+    })
+    this.setData({ todayTasks: tasks })
   },
 
   loadStreakDays() {
