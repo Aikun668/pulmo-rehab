@@ -51,6 +51,20 @@ function buildProgressSummary(days) {
   return `近30天已训练 ${trainedDays} 天，累计 ${totalDuration} 分钟。`
 }
 
+function buildStatsFromDays(days) {
+  if (!Array.isArray(days) || days.length === 0) {
+    return { trainedDays: "--", completionRate: "--", totalDuration: "--" }
+  }
+  var trainedDays = days.filter(function (item) { return item.duration_minutes > 0 }).length
+  var totalDuration = days.reduce(function (sum, item) { return sum + item.duration_minutes }, 0)
+  var completionRate = Math.round((trainedDays / days.length) * 100)
+  return {
+    trainedDays: String(trainedDays),
+    completionRate: String(completionRate) + "%",
+    totalDuration: String(totalDuration),
+  }
+}
+
 function createAiPreview(summary) {
   if (!summary) {
     return "当前暂无 AI 康复小结，可继续完成训练打卡并等待后续生成。"
@@ -68,7 +82,9 @@ Page({
     latestPlanUpdatedAt: "请稍候",
     hasPlan: false,
     isLoadingPlan: true,
-    planErrorMessage: "",
+    trainedDays: "--",
+    completionRate: "--",
+    totalDuration: "--",
     progressSummary: "正在同步30天进度摘要。",
     aiSummaryPreview: "正在同步最新 AI 康复小结。",
   },
@@ -84,7 +100,6 @@ Page({
 
     this.setData({
       isLoadingPlan: true,
-      planErrorMessage: "",
     })
 
     wx.request({
@@ -118,10 +133,9 @@ Page({
         this.setData({
           isLoadingPlan: false,
           hasPlan: false,
-          planErrorMessage: "暂时无法读取训练方案，请稍后重试。",
-          latestPlanTitle: "训练方案暂不可用",
-          latestPlanDescription: "当前无法同步医生下发的训练方案，请稍后再看。",
-          latestPlanUpdatedAt: "请稍后重试",
+          latestPlanTitle: "暂无训练方案",
+          latestPlanDescription: "医生尚未下发训练方案，建议先完成训练打卡，医生将更有依据为您制定方案。",
+          latestPlanUpdatedAt: "",
         })
       },
     })
@@ -145,13 +159,18 @@ Page({
             ? data.data.days
             : []
 
+        const stats = buildStatsFromDays(days)
+
         this.setData({
           progressSummary: buildProgressSummary(days),
+          trainedDays: stats.trainedDays,
+          completionRate: stats.completionRate,
+          totalDuration: stats.totalDuration,
         })
       },
       fail: () => {
         this.setData({
-          progressSummary: "暂时无法读取30天进度摘要，请稍后重试。",
+          progressSummary: "暂无训练记录，开始训练后将在这里展示进度。",
         })
       },
     })
@@ -179,7 +198,7 @@ Page({
       },
       fail: () => {
         this.setData({
-          aiSummaryPreview: "暂时无法读取 AI 康复小结，请稍后重试。",
+          aiSummaryPreview: "暂无 AI 康复小结，继续完成训练打卡后将自动生成。",
         })
       },
     })

@@ -6,7 +6,14 @@
     <view class="success-card">
       <view class="success-card__icon"></view>
       <view class="success-card__text">太棒了！今日训练全部完成，继续坚持！</view>
+      <view class="success-card__tip">💡 小知识：坚持缩唇呼吸训练 6 周，可显著改善日常活动中的气短症状。</view>
     </view>
+  </view>
+
+  <!-- 安全提示 -->
+  <view class="safety-tip">
+    <text class="safety-tip__icon">⚠</text>
+    <text class="safety-tip__text">训练中出现严重气喘、头晕或胸痛，请立即停止并联系医生</text>
   </view>
 
   <!-- 今日状态 -->
@@ -14,6 +21,68 @@
     <view class="status-card__label">训练日期</view>
     <view class="status-card__date">{{trainDate}}</view>
     <view class="status-card__summary {{hasSubmittedToday ? 'status-card__summary--done' : ''}}">{{todaySummaryText}}</view>
+  </view>
+
+  <!-- 呼吸陪练入口 -->
+  <view class="breath-entry" bindtap="handleOpenBreathTimer" wx:if="{{!showBreathTimer}}">
+    <view class="breath-entry__left">
+      <view class="breath-entry__icon-wrap">
+        <view class="breath-entry__dot"></view>
+      </view>
+      <view class="breath-entry__info">
+        <view class="breath-entry__title">呼吸陪练</view>
+        <view class="breath-entry__desc">吸气4秒 · 屏气2秒 · 呼气6秒 · 共5轮</view>
+      </view>
+    </view>
+    <view class="breath-entry__action">开始</view>
+  </view>
+
+  <!-- 呼吸计时器面板 -->
+  <view class="breath-panel" wx:if="{{showBreathTimer}}">
+    <!-- 顶部标题栏 -->
+    <view class="breath-panel__header">
+      <view class="breath-panel__title">呼吸训练</view>
+      <view class="breath-panel__close" bindtap="handleCloseBreathTimer">✕</view>
+    </view>
+
+    <!-- 完成状态 -->
+    <view class="breath-done" wx:if="{{breathCompleted}}">
+      <view class="breath-done__icon"></view>
+      <view class="breath-done__text">呼吸训练完成！</view>
+      <view class="breath-done__time">用时 {{breathElapsedSeconds}} 秒（约 {{breathTotalMinutes}} 分钟）</view>
+      <view class="breath-done__hint">已自动填入"缩唇腹式呼吸"训练时长</view>
+      <button class="breath-done__btn" bindtap="handleCloseBreathTimer">返回打卡</button>
+    </view>
+
+    <!-- 计时进行中 -->
+    <view class="breath-active" wx:if="{{!breathCompleted}}">
+      <!-- 圆圈 -->
+      <view class="breath-circle-wrap">
+        <view class="breath-circle breath-circle--{{breathPhase}}" style="transform: scale({{breathCircleScale}})">
+          <view class="breath-circle__countdown">{{breathCountdown}}</view>
+          <view class="breath-circle__label">
+            <text wx:if="{{breathPhase === 'inhale'}}">吸气</text>
+            <text wx:elif="{{breathPhase === 'hold'}}">屏气</text>
+            <text wx:elif="{{breathPhase === 'exhale'}}">呼气</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 轮次进度 -->
+      <view class="breath-progress">
+        <text>第 {{breathRound}} / {{breathTotalRounds}} 轮</text>
+      </view>
+      <view class="breath-progress-bar">
+        <view class="breath-progress-bar__fill" style="width: {{breathRound / breathTotalRounds * 100}}%"></view>
+      </view>
+
+      <!-- 控制按钮 -->
+      <view class="breath-controls">
+        <button class="breath-controls__btn breath-controls__btn--reset" bindtap="handleResetBreath">重置</button>
+        <button wx:if="{{!breathRunning}}" class="breath-controls__btn breath-controls__btn--start" bindtap="handleStartBreath">开始</button>
+        <button wx:if="{{breathRunning}}" class="breath-controls__btn breath-controls__btn--pause" bindtap="handlePauseBreath">暂停</button>
+      </view>
+    </view>
   </view>
 
   <!-- 任务清单 -->
@@ -29,6 +98,7 @@
       <view class="task-item__body">
         <view class="task-item__name">{{item.name}}</view>
         <view class="task-item__desc">{{item.description}}</view>
+        <view class="task-item__benefit">💡 {{item.benefit}}</view>
         <view class="task-item__target">目标 {{item.targetMinutes}} 分钟 · {{item.targetSets}} 组</view>
         <!-- 勾选后出现实际时长输入 -->
         <view class="task-item__duration" wx:if="{{item.checked}}">

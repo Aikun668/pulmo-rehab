@@ -2,8 +2,7 @@
   padding: 24rpx;
 }
 
-.card,
-.disclaimer {
+.card {
   border-radius: 24rpx;
   box-sizing: border-box;
 }
@@ -39,23 +38,9 @@
   color: #5b6b7a;
 }
 
-.card__status--error {
-  color: #c65b5b;
-}
-
 .card__desc {
   margin-top: 16rpx;
   font-size: 24rpx;
   line-height: 1.9;
   color: #5b6b7a;
-}
-
-.disclaimer {
-  margin-top: 24rpx;
-  padding: 24rpx;
-  background: #fff7ed;
-  border: 1rpx solid #fed7aa;
-  font-size: 22rpx;
-  line-height: 1.8;
-  color: #c2410c;
 }

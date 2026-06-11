@@ -4,6 +4,7 @@
   <view class="header-section">
     <view class="header-section__eyebrow">{{welcomeLabel}}</view>
     <view class="header-section__title">{{patientName}}</view>
+    <view class="header-section__streak" wx:if="{{streakDays > 0}}">已连续打卡 {{streakDays}} 天</view>
   </view>
 
   <view class="hero-card">
@@ -16,7 +17,7 @@
         </view>
       </view>
       <view class="progress-ring">
-        <image class="progress-ring__image" src="/images/home/progress-33.png" mode="aspectFit" style="position: relative; left: 20rpx; top: 21rpx; width: 144rpx; height: 166rpx; display: block; box-sizing: border-box"></image>
+        <canvas class="progress-ring__canvas" canvas-id="progressRing" style="width: 124rpx; height: 124rpx;"></canvas>
       </view>
     </view>
 

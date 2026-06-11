@@ -62,6 +62,33 @@ function buildTodayProgressState(todayDurationMinutes) {
   }
 }
 
+function calculateStreakDays(days) {
+  if (!Array.isArray(days) || days.length === 0) {
+    return 0
+  }
+
+  // days 按日期升序，倒过来从最近一天开始数
+  var sorted = days.slice().reverse()
+  var today = formatToday()
+
+  // 如果今天还没打卡，从昨天开始数
+  var startIndex = 0
+  if (sorted[0] && sorted[0].date === today && sorted[0].duration_minutes <= 0) {
+    startIndex = 1
+  }
+
+  var streak = 0
+  for (var i = startIndex; i < sorted.length; i++) {
+    if (sorted[i].duration_minutes > 0) {
+      streak++
+    } else {
+      break
+    }
+  }
+
+  return streak
+}
+
 Page({
   data: {
     patientId: TEST_PATIENT_ID,
@@ -69,11 +96,12 @@ Page({
     welcomeLabel: "肺康复助手",
     todayStatusLabel: "今日尚未打卡",
     progressPercent: 0,
-    progressSummaryText: `0/${TARGET_DURATION_MINUTES}`,
+    progressSummaryText: "0/" + TARGET_DURATION_MINUTES,
     todayDurationMinutes: 0,
     targetDurationMinutes: TARGET_DURATION_MINUTES,
     currentTaskTitle: "平地行走 (II 期)",
     currentTaskMeta: "预计 20 分钟 · 待开始",
+    streakDays: 0,
     aiTip:
       "正在同步最新 AI 康复小结，请稍候。",
     aiTipUpdatedAt: "请稍候",
@@ -95,6 +123,7 @@ Page({
 
   onShow() {
     this.loadTodayProgress()
+    this.loadStreakDays()
     this.loadLatestAiTip()
   },
 
@@ -128,14 +157,41 @@ Page({
         })
       },
       fail: () => {
-        this.setData(
-          {
-            todayStatusLabel: "今日进度暂不可用",
-          },
-          () => {
-            this.drawProgressRing()
-          },
-        )
+        // 网络失败时保持默认空态（0%进度），不显示错误信息
+        this.setData(buildTodayProgressState(0), () => {
+          this.drawProgressRing()
+        })
+      },
+    })
+  },
+
+  loadStreakDays() {
+    var that = this
+
+    wx.request({
+      url: `${API_BASE_URL}/training-logs/progress-30d`,
+      method: "GET",
+      data: {
+        patient_id: this.data.patientId,
+      },
+      success: function (response) {
+        var respData = response.data
+        var days = []
+        if (
+          response.statusCode === 200 &&
+          respData &&
+          respData.code === 200 &&
+          respData.data &&
+          Array.isArray(respData.data.days)
+        ) {
+          days = respData.data.days
+        }
+
+        var streak = calculateStreakDays(days)
+        that.setData({ streakDays: streak })
+      },
+      fail: function () {
+        // 连续天数加载失败不影响页面，保持默认 0
       },
     })
   },
@@ -171,8 +227,8 @@ Page({
       },
       fail: () => {
         this.setData({
-          aiTip: "暂时无法读取 AI 康复小结，请稍后重试。",
-          aiTipUpdatedAt: "请稍后重试",
+          aiTip: "暂无 AI 康复小结，继续完成训练打卡后将自动生成。",
+          aiTipUpdatedAt: "等待生成",
         })
       },
     })

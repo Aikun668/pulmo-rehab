@@ -24,9 +24,7 @@
     <view class="chart-card__title">近30天训练趋势</view>
 
     <view class="chart-card__state" wx:if="{{isLoading}}">正在同步近30天训练数据...</view>
-    <view class="chart-card__state chart-card__state--error" wx:elif="{{errorMessage}}">
-      {{errorMessage}}
-    </view>
+    <view class="chart-card__state" wx:elif="{{days.length === 0}}">暂无训练记录，开始训练后将在这里展示趋势</view>
     <scroll-view scroll-x class="chart-scroll" wx:else>
       <view class="bar-list">
         <block wx:for="{{days}}" wx:key="fullDate">

@@ -3,7 +3,31 @@
   position: relative;
 }
 
-/* 成功反馈浮层 */
+/* ===== 安全提示 ===== */
+.safety-tip {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 20rpx;
+  border-radius: 16rpx;
+  background: #fffbeb;
+  border: 1rpx solid #fde68a;
+  margin-bottom: 20rpx;
+}
+
+.safety-tip__icon {
+  font-size: 22rpx;
+  margin-right: 10rpx;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.safety-tip__text {
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #92400e;
+}
+
+/* ===== 成功反馈浮层 ===== */
 .success-overlay {
   position: fixed;
   top: 0;
@@ -37,7 +61,6 @@
   justify-content: center;
 }
 
-/* 用伪元素画勾号 */
 .success-card__icon::after {
   content: "";
   display: block;
@@ -56,13 +79,21 @@
   line-height: 1.6;
 }
 
-/* 今日状态卡 */
+.success-card__tip {
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #5b6b7a;
+}
+
+/* ===== 今日状态卡 ===== */
 .status-card {
   border-radius: 24rpx;
   background: #ffffff;
   padding: 28rpx 24rpx;
   box-shadow: 0 12rpx 30rpx rgba(31, 41, 55, 0.05);
   border: 1rpx solid #e3ebf5;
+  margin-bottom: 20rpx;
 }
 
 .status-card__label {
@@ -91,9 +122,267 @@
   font-weight: 600;
 }
 
-/* 任务清单 */
-.task-list {
+/* ===== 呼吸陪练入口 ===== */
+.breath-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  background: #f0fdf4;
+  border-radius: 20rpx;
+  border: 1rpx solid #bbf7d0;
+  margin-bottom: 20rpx;
+}
+
+.breath-entry__left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.breath-entry__icon-wrap {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #dcfce7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.breath-entry__dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.breath-entry__title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.breath-entry__desc {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #4ade80;
+}
+
+.breath-entry__action {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  flex-shrink: 0;
+}
+
+/* ===== 呼吸计时器面板 ===== */
+.breath-panel {
+  background: #ffffff;
+  border-radius: 24rpx;
+  border: 1rpx solid #e3ebf5;
+  box-shadow: 0 12rpx 30rpx rgba(31, 41, 55, 0.05);
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.breath-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.breath-panel__title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #243447;
+}
+
+.breath-panel__close {
+  font-size: 32rpx;
+  color: #8a9aad;
+  padding: 8rpx;
+}
+
+/* 圆圈 */
+.breath-circle-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+.breath-circle {
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.8s ease;
+}
+
+.breath-circle--inhale {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 4rpx solid #4ade80;
+}
+
+.breath-circle--hold {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 4rpx solid #60a5fa;
+}
+
+.breath-circle--exhale {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 4rpx solid #4ade80;
+}
+
+.breath-circle__countdown {
+  font-size: 64rpx;
+  font-weight: 700;
+  color: #243447;
+  line-height: 1;
+}
+
+.breath-circle__label {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #5b6b7a;
+}
+
+/* 轮次进度 */
+.breath-progress {
+  text-align: center;
+  font-size: 24rpx;
+  color: #5b6b7a;
+  margin-top: 16rpx;
+}
+
+.breath-progress-bar {
+  margin: 12rpx 40rpx 0;
+  height: 8rpx;
+  border-radius: 4rpx;
+  background: #e3ebf5;
+  overflow: hidden;
+}
+
+.breath-progress-bar__fill {
+  height: 100%;
+  border-radius: 4rpx;
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  transition: width 0.3s ease;
+}
+
+/* 控制按钮 */
+.breath-controls {
+  display: flex;
+  justify-content: center;
+  gap: 24rpx;
+  margin-top: 28rpx;
+}
+
+.breath-controls__btn {
+  min-width: 160rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 72rpx;
+  padding: 0 32rpx;
+}
+
+.breath-controls__btn::after {
+  border: none;
+}
+
+.breath-controls__btn--reset {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.breath-controls__btn--start {
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: #ffffff;
+}
+
+.breath-controls__btn--pause {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #ffffff;
+}
+
+/* 完成状态 */
+.breath-done {
+  text-align: center;
+  padding: 32rpx 0;
+}
+
+.breath-done__icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 50%;
+  background: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breath-done__icon::after {
+  content: "";
+  display: block;
+  width: 24rpx;
+  height: 40rpx;
+  border: solid #ffffff;
+  border-width: 0 6rpx 6rpx 0;
+  transform: rotate(45deg);
+  margin-top: -6rpx;
+}
+
+.breath-done__text {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.breath-done__time {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #5b6b7a;
+}
+
+.breath-done__hint {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.breath-done__btn {
   margin-top: 24rpx;
+  width: 240rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 600;
+  line-height: 72rpx;
+}
+
+.breath-done__btn::after {
+  border: none;
+}
+
+/* ===== 任务清单 ===== */
+.task-list {
+  margin-top: 4rpx;
 }
 
 .task-list__header {
@@ -144,13 +433,9 @@
 .task-checkbox--checked {
   border-color: #16a34a;
   background: #16a34a;
-}
-
-.task-checkbox__mark {
-  font-size: 24rpx;
   color: #ffffff;
+  font-size: 24rpx;
   font-weight: 700;
-  line-height: 1;
 }
 
 .task-item__body {
@@ -173,6 +458,13 @@
   margin-top: 6rpx;
   font-size: 22rpx;
   color: #6b7a8a;
+  line-height: 1.5;
+}
+
+.task-item__benefit {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #8a9aad;
   line-height: 1.5;
 }
 
@@ -220,7 +512,7 @@
   flex-shrink: 0;
 }
 
-/* 提交按钮 */
+/* ===== 提交按钮 ===== */
 .submit-button {
   margin-top: 32rpx;
   min-height: 80rpx;

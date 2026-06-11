@@ -47,12 +47,10 @@ Page({
   data: {
     patientId: TEST_PATIENT_ID,
     isLoading: true,
-    errorMessage: "",
     hasSummary: false,
     summaryPeriod: "正在同步 AI 康复小结",
     summaryCreatedAt: "请稍候",
     summaryContent: "正在读取最新 AI 康复小结，请稍候。",
-    disclaimer: "AI 内容仅作康复训练管理参考，不构成医疗建议。",
   },
 
   onShow() {
@@ -62,7 +60,6 @@ Page({
   loadLatestAiSummary() {
     this.setData({
       isLoading: true,
-      errorMessage: "",
     })
 
     wx.request({
@@ -106,10 +103,9 @@ Page({
         this.setData({
           isLoading: false,
           hasSummary: false,
-          errorMessage: "暂时无法读取 AI 康复小结，请稍后重试。",
-          summaryPeriod: "AI 康复小结暂不可用",
-          summaryCreatedAt: "请稍后重试",
-          summaryContent: "当前无法同步最新 AI 康复小结，请先继续查看训练方案和30天进度。",
+          summaryPeriod: "暂无 AI 康复小结",
+          summaryCreatedAt: "等待生成",
+          summaryContent: "暂未生成 AI 康复小结，继续完成训练打卡后将自动生成。",
         })
       },
     })

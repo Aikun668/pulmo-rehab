@@ -6,12 +6,7 @@
     <view class="card__meta">{{summaryPeriod}}</view>
     <view class="card__created-at">{{summaryCreatedAt}}</view>
     <view class="card__status" wx:if="{{isLoading}}">正在同步最新 AI 康复小结...</view>
-    <view class="card__status card__status--error" wx:elif="{{errorMessage}}">
-      {{errorMessage}}
-    </view>
-    <view class="card__status" wx:elif="{{!hasSummary}}">当前还没有可查看的 AI 小结</view>
+    <view class="card__status" wx:elif="{{!hasSummary}}">暂未生成 AI 小结</view>
     <view class="card__desc">{{summaryContent}}</view>
   </view>
-
-  <view class="disclaimer">{{disclaimer}}</view>
 </view>

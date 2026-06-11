@@ -9,6 +9,10 @@
   color: #5b6b7a;
 }
 
+.section-title--guide {
+  margin-top: 32rpx;
+}
+
 .section-title--history {
   margin-top: 28rpx;
 }
@@ -58,4 +62,123 @@
 
 .state-card--error {
   color: #c65b5b;
+}
+
+/* 训练动作指导卡片 */
+.guide-card {
+  margin-top: 16rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  border: 1rpx solid #e3ebf5;
+  box-shadow: 0 8rpx 24rpx rgba(31, 41, 55, 0.04);
+  overflow: hidden;
+}
+
+.guide-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 24rpx;
+}
+
+.guide-card__header-left {
+  flex: 1;
+}
+
+.guide-card__name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #243447;
+}
+
+.guide-card__target {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.guide-card__arrow {
+  font-size: 22rpx;
+  color: #8a9aad;
+  transition: transform 0.2s;
+  transform: rotate(0deg);
+}
+
+.guide-card__arrow--up {
+  transform: rotate(180deg);
+}
+
+.guide-card__body {
+  padding: 0 24rpx 24rpx;
+  border-top: 1rpx solid #f0f4f8;
+}
+
+.guide-card__steps {
+  padding-top: 20rpx;
+}
+
+.guide-card__step-label {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #16a34a;
+  margin-bottom: 12rpx;
+}
+
+.guide-card__step {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12rpx;
+}
+
+.guide-card__step-num {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 22rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12rpx;
+}
+
+.guide-card__step-text {
+  flex: 1;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: #374151;
+  padding-top: 4rpx;
+}
+
+.guide-card__precautions {
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
+  background: #fffbeb;
+  border-radius: 12rpx;
+  border: 1rpx solid #fde68a;
+}
+
+.guide-card__precautions-label {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #b45309;
+  margin-bottom: 8rpx;
+}
+
+.guide-card__precautions-text {
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: #92400e;
+}
+
+.guide-disclaimer {
+  margin-top: 20rpx;
+  padding: 16rpx 20rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: #6b7280;
+  text-align: center;
 }

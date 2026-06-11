@@ -6,6 +6,7 @@ const DEFAULT_TASKS = [
     id: "breathing",
     name: "缩唇腹式呼吸",
     description: "吸气2秒，缩唇呼气4-6秒",
+    benefit: "缩唇呼吸可改善通气效率，缓解气短",
     targetMinutes: 10,
     targetSets: 2,
   },
@@ -13,6 +14,7 @@ const DEFAULT_TASKS = [
     id: "walking",
     name: "平地行走",
     description: "维持轻度气短水平行走",
+    benefit: "规律行走可提升运动耐力，减少日常气喘",
     targetMinutes: 20,
     targetSets: 1,
   },
@@ -20,17 +22,26 @@ const DEFAULT_TASKS = [
     id: "cough",
     name: "有效咳嗽排痰",
     description: "早晚各1次，配合深呼吸",
+    benefit: "有效排痰可减少肺部感染风险",
     targetMinutes: 5,
     targetSets: 2,
   },
 ]
 
-const formatToday = () => {
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, "0")
-  const day = String(date.getDate()).padStart(2, "0")
-  return `${year}-${month}-${day}`
+// 呼吸计时器节拍配置
+var BREATH_PHASES = [
+  { key: "inhale", label: "吸气", duration: 4 },
+  { key: "hold", label: "屏气", duration: 2 },
+  { key: "exhale", label: "呼气", duration: 6 },
+]
+var TOTAL_ROUNDS = 5
+
+var formatToday = function () {
+  var date = new Date()
+  var year = date.getFullYear()
+  var month = String(date.getMonth() + 1).padStart(2, "0")
+  var day = String(date.getDate()).padStart(2, "0")
+  return year + "-" + month + "-" + day
 }
 
 Page({
@@ -43,9 +54,22 @@ Page({
     todaySummaryText: "正在加载...",
     isSubmitting: false,
     showSuccessFeedback: false,
+    // 呼吸计时器
+    showBreathTimer: false,
+    breathRunning: false,
+    breathPhase: "inhale",
+    breathCountdown: 4,
+    breathRound: 1,
+    breathTotalRounds: TOTAL_ROUNDS,
+    breathCircleScale: 1,
+    breathCompleted: false,
+    breathElapsedSeconds: 0,
+    breathTotalMinutes: 1,
   },
 
-  onLoad() {
+  _breathTimer: null,
+
+  onLoad: function () {
     this.setData({
       trainDate: formatToday(),
       tasks: DEFAULT_TASKS.map(function (task) {
@@ -53,6 +77,7 @@ Page({
           id: task.id,
           name: task.name,
           description: task.description,
+          benefit: task.benefit,
           targetMinutes: task.targetMinutes,
           targetSets: task.targetSets,
           checked: false,
@@ -65,11 +90,19 @@ Page({
     })
   },
 
-  onShow() {
+  onShow: function () {
     this.loadTodayLog()
   },
 
-  updateCheckState() {
+  onUnload: function () {
+    this.clearBreathTimer()
+  },
+
+  onHide: function () {
+    this.clearBreathTimer()
+  },
+
+  updateCheckState: function () {
     var allChecked = true
     var tasks = this.data.tasks
     for (var i = 0; i < tasks.length; i++) {
@@ -81,7 +114,7 @@ Page({
     this.setData({ allChecked: allChecked })
   },
 
-  loadTodayLog() {
+  loadTodayLog: function () {
     var that = this
     var patientId = this.data.patientId
     var trainDate = this.data.trainDate
@@ -89,7 +122,7 @@ Page({
     if (!trainDate) return
 
     wx.request({
-      url: `${API_BASE_URL}/training-logs`,
+      url: API_BASE_URL + "/training-logs",
       method: "GET",
       data: {
         patient_id: patientId,
@@ -122,6 +155,7 @@ Page({
             id: task.id,
             name: task.name,
             description: task.description,
+            benefit: task.benefit,
             targetMinutes: task.targetMinutes,
             targetSets: task.targetSets,
             checked: true,
@@ -138,13 +172,185 @@ Page({
       },
       fail: function () {
         that.setData({
-          todaySummaryText: "暂时无法读取今天的训练记录",
+          todaySummaryText: "今天还没有提交训练记录",
         })
       },
     })
   },
 
-  handleTaskCheck(event) {
+  // ===== 呼吸计时器 =====
+
+  handleOpenBreathTimer: function () {
+    this.setData({
+      showBreathTimer: true,
+      breathRunning: false,
+      breathPhase: "inhale",
+      breathCountdown: BREATH_PHASES[0].duration,
+      breathRound: 1,
+      breathCompleted: false,
+      breathCircleScale: 1,
+      breathElapsedSeconds: 0,
+    })
+  },
+
+  handleCloseBreathTimer: function () {
+    this.clearBreathTimer()
+    this.setData({ showBreathTimer: false })
+  },
+
+  handleStartBreath: function () {
+    var that = this
+    this.clearBreathTimer()
+
+    this.setData({ breathRunning: true })
+
+    this._breathTimer = setInterval(function () {
+      var phase = that.data.breathPhase
+      var countdown = that.data.breathCountdown
+      var round = that.data.breathRound
+      var elapsed = that.data.breathElapsedSeconds
+
+      // 计算下一个状态
+      if (countdown > 1) {
+        // 当前阶段继续倒计时
+        var newCountdown = countdown - 1
+        var currentPhaseDuration = 0
+        for (var p = 0; p < BREATH_PHASES.length; p++) {
+          if (BREATH_PHASES[p].key === phase) {
+            currentPhaseDuration = BREATH_PHASES[p].duration
+            break
+          }
+        }
+        var scale = that._calcCircleScale(phase, currentPhaseDuration, newCountdown)
+        that.setData({
+          breathCountdown: newCountdown,
+          breathCircleScale: scale,
+          breathElapsedSeconds: elapsed + 1,
+        })
+        return
+      }
+
+      // 当前阶段结束，进入下一阶段
+      var currentPhaseIndex = -1
+      for (var i = 0; i < BREATH_PHASES.length; i++) {
+        if (BREATH_PHASES[i].key === phase) {
+          currentPhaseIndex = i
+          break
+        }
+      }
+
+      var nextPhaseIndex = currentPhaseIndex + 1
+
+      if (nextPhaseIndex < BREATH_PHASES.length) {
+        // 进入下一个阶段
+        var nextPhase = BREATH_PHASES[nextPhaseIndex]
+        var scale = that._calcCircleScale(nextPhase.key, nextPhase.duration, nextPhase.duration)
+        that.setData({
+          breathPhase: nextPhase.key,
+          breathCountdown: nextPhase.duration,
+          breathCircleScale: scale,
+          breathElapsedSeconds: elapsed + 1,
+        })
+      } else {
+        // 一轮结束
+        if (round < TOTAL_ROUNDS) {
+          // 进入下一轮
+          var firstPhase = BREATH_PHASES[0]
+          var scale = that._calcCircleScale(firstPhase.key, firstPhase.duration, firstPhase.duration)
+          that.setData({
+            breathRound: round + 1,
+            breathPhase: firstPhase.key,
+            breathCountdown: firstPhase.duration,
+            breathCircleScale: scale,
+            breathElapsedSeconds: elapsed + 1,
+          })
+        } else {
+          // 全部完成
+          that.clearBreathTimer()
+          var totalMinutes = Math.ceil((elapsed + 1) / 60)
+          that.setData({
+            breathRunning: false,
+            breathCompleted: true,
+            breathCircleScale: 1,
+            breathElapsedSeconds: elapsed + 1,
+            breathTotalMinutes: totalMinutes,
+          })
+
+          // 自动填充 breathing 任务的时长
+          that._fillBreathingTaskDuration(totalMinutes)
+        }
+      }
+    }, 1000)
+  },
+
+  handlePauseBreath: function () {
+    this.clearBreathTimer()
+    this.setData({ breathRunning: false })
+  },
+
+  handleResumeBreath: function () {
+    this.handleStartBreath()
+  },
+
+  handleResetBreath: function () {
+    this.clearBreathTimer()
+    this.setData({
+      breathRunning: false,
+      breathPhase: "inhale",
+      breathCountdown: BREATH_PHASES[0].duration,
+      breathRound: 1,
+      breathCompleted: false,
+      breathCircleScale: 1,
+      breathElapsedSeconds: 0,
+    })
+  },
+
+  _calcCircleScale: function (phase, totalDuration, countdown) {
+    if (phase === "inhale") {
+      var progress = (totalDuration - countdown) / totalDuration
+      return 1 + progress * 0.5 // 1 → 1.5
+    } else if (phase === "hold") {
+      return 1.5
+    } else if (phase === "exhale") {
+      var progress = (totalDuration - countdown) / totalDuration
+      return 1.5 - progress * 0.5 // 1.5 → 1
+    }
+    return 1
+  },
+
+  _fillBreathingTaskDuration: function (minutes) {
+    var tasks = this.data.tasks
+    var newTasks = []
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].id === "breathing") {
+        newTasks.push({
+          id: tasks[i].id,
+          name: tasks[i].name,
+          description: tasks[i].description,
+          benefit: tasks[i].benefit,
+          targetMinutes: tasks[i].targetMinutes,
+          targetSets: tasks[i].targetSets,
+          checked: true,
+          actualMinutes: String(minutes),
+        })
+      } else {
+        newTasks.push(tasks[i])
+      }
+    }
+    this.setData({ tasks: newTasks })
+    this.updateCheckState()
+  },
+
+  clearBreathTimer: function () {
+    if (this._breathTimer) {
+      clearInterval(this._breathTimer)
+      this._breathTimer = null
+    }
+  },
+
+  // ===== 任务操作 =====
+
+  handleTaskCheck: function (event) {
     var idx = event.currentTarget.dataset.index
     var tasks = this.data.tasks
     var task = tasks[idx]
@@ -154,6 +360,7 @@ Page({
       id: task.id,
       name: task.name,
       description: task.description,
+      benefit: task.benefit,
       targetMinutes: task.targetMinutes,
       targetSets: task.targetSets,
       checked: newChecked,
@@ -166,7 +373,7 @@ Page({
     this.updateCheckState()
   },
 
-  handleDurationInput(event) {
+  handleDurationInput: function (event) {
     var idx = event.currentTarget.dataset.index
     var tasks = this.data.tasks
     var newTasks = []
@@ -176,6 +383,7 @@ Page({
           id: tasks[i].id,
           name: tasks[i].name,
           description: tasks[i].description,
+          benefit: tasks[i].benefit,
           targetMinutes: tasks[i].targetMinutes,
           targetSets: tasks[i].targetSets,
           checked: tasks[i].checked,
@@ -188,7 +396,7 @@ Page({
     this.setData({ tasks: newTasks })
   },
 
-  handleSubmit() {
+  handleSubmit: function () {
     var that = this
     var patientId = this.data.patientId
     var trainDate = this.data.trainDate
@@ -237,7 +445,7 @@ Page({
     this.setData({ isSubmitting: true })
 
     wx.request({
-      url: `${API_BASE_URL}/training-logs`,
+      url: API_BASE_URL + "/training-logs",
       method: "POST",
       header: {
         "Content-Type": "application/json",

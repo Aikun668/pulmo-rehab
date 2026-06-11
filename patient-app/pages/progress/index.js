@@ -36,7 +36,6 @@ Page({
     totalSets: 0,
     maxDuration: 1,
     isLoading: true,
-    errorMessage: "",
     days: [],
   },
 
@@ -47,7 +46,6 @@ Page({
   loadProgress30d() {
     this.setData({
       isLoading: true,
-      errorMessage: "",
     })
 
     wx.request({
@@ -94,8 +92,8 @@ Page({
       fail: () => {
         this.setData({
           isLoading: false,
-          errorMessage: "暂时无法读取近30天训练趋势，请稍后重试。",
-          progressSummary: "近30天训练趋势暂不可用。",
+          errorMessage: "",
+          progressSummary: "暂无训练记录，开始训练后将在这里展示趋势。",
           days: [],
         })
       },

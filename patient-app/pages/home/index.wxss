@@ -21,6 +21,14 @@
   color: #243447;
 }
 
+.header-section__streak {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #16a34a;
+  line-height: 1.4;
+}
+
 .hero-card {
   padding: 0 10rpx;
   background: transparent;

@@ -63,10 +63,6 @@
   color: #5b6b7a;
 }
 
-.chart-card__state--error {
-  color: #c65b5b;
-}
-
 .chart-scroll {
   width: 100%;
   margin-top: 28rpx;

@@ -1,8 +1,8 @@
 <navigation-bar title="训练方案" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
 
 <view class="page">
+  <!-- 方案数据区域：加载态 / 错误态 / 有方案 / 无方案 -->
   <view class="state-card" wx:if="{{isLoading}}">正在同步训练方案，请稍候...</view>
-  <view class="state-card state-card--error" wx:elif="{{errorMessage}}">{{errorMessage}}</view>
   <block wx:elif="{{latestPlan}}">
     <view class="section-title">最新方案</view>
     <view class="card card--latest">
@@ -20,5 +20,34 @@
       </view>
     </block>
   </block>
-  <view class="state-card" wx:else>当前暂无训练方案，请等待医生下发。</view>
+  <view class="state-card state-card--error" wx:elif="{{errorMessage}}">网络异常，训练方案暂时无法加载，请稍后再试。</view>
+  <view class="state-card" wx:else>暂无训练方案，医生尚未下发。建议先完成训练打卡，医生将更有依据为您制定方案。</view>
+
+  <!-- 训练动作指导：始终展示，不依赖方案接口 -->
+  <view class="section-title section-title--guide">训练动作指导</view>
+  <block wx:for="{{exerciseGuides}}" wx:key="id">
+    <view class="guide-card">
+      <view class="guide-card__header" bindtap="handleToggleGuide" data-index="{{index}}">
+        <view class="guide-card__header-left">
+          <view class="guide-card__name">{{item.name}}</view>
+          <view class="guide-card__target">{{item.target}}</view>
+        </view>
+        <view class="guide-card__arrow {{item.expanded ? 'guide-card__arrow--up' : ''}}">&#x25BC;</view>
+      </view>
+      <view class="guide-card__body" wx:if="{{item.expanded}}">
+        <view class="guide-card__steps">
+          <view class="guide-card__step-label">动作步骤</view>
+          <view class="guide-card__step" wx:for="{{item.steps}}" wx:for-item="step" wx:for-index="stepIdx" wx:key="stepIdx">
+            <view class="guide-card__step-num">{{stepIdx + 1}}</view>
+            <view class="guide-card__step-text">{{step}}</view>
+          </view>
+        </view>
+        <view class="guide-card__precautions">
+          <view class="guide-card__precautions-label">注意事项</view>
+          <view class="guide-card__precautions-text">{{item.precautions}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+  <view class="guide-disclaimer">以上为基础肺康复训练指导，具体训练方案请遵循医嘱</view>
 </view>
