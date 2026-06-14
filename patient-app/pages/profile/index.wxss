@@ -1,0 +1,100 @@
+.page {
+  padding: 24rpx;
+  background: #F4F7FB;
+  min-height: 100vh;
+}
+
+/* ===== 用户信息卡片 ===== */
+.user-card {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 28rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.user-card__avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2a6bff, #5b9bff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-card__avatar-text {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.user-card__info {
+  margin-left: 24rpx;
+}
+
+.user-card__name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.user-card__id {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #6b7a8a;
+}
+
+.user-card__doctor {
+  margin-top: 4rpx;
+  font-size: 24rpx;
+  color: #6b7a8a;
+}
+
+/* ===== 功能菜单 ===== */
+.menu-card {
+  margin-top: 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 28rpx;
+}
+
+.menu-item__left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-item__icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+}
+
+.menu-item__label {
+  font-size: 28rpx;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.menu-item__arrow {
+  font-size: 32rpx;
+  color: #c0c8d4;
+  font-weight: 300;
+}
+
+/* ===== 版本 ===== */
+.version-info {
+  margin-top: 48rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #b0b8c4;
+}

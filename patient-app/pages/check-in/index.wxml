@@ -106,6 +106,7 @@
           <input
             class="task-item__duration-input"
             type="number"
+            min="1"
             value="{{item.actualMinutes}}"
             data-index="{{index}}"
             bindinput="handleDurationInput"

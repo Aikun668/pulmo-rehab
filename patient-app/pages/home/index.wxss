@@ -2,12 +2,13 @@
 .page {
   padding: 48rpx 36rpx 80rpx;
   background: #F4F7FB;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ===== 问候区 ===== */
 .header-section {
-  margin-bottom: 28rpx;
+  margin-bottom: 16rpx;
   padding: 12rpx 4rpx 0;
 }
 
@@ -35,8 +36,8 @@
 
 /* ===== 通用卡片 ===== */
 .card {
-  margin-top: 20rpx;
-  padding: 28rpx 28rpx 24rpx;
+  margin-top: 32rpx;
+  padding: 32rpx 28rpx 24rpx;
   background: #ffffff;
   border-radius: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
@@ -85,8 +86,8 @@
 }
 
 .progress-ring {
-  width: 124rpx;
-  height: 124rpx;
+  width: 150rpx;
+  height: 150rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,13 +95,13 @@
 }
 
 .progress-ring__canvas {
-  width: 124rpx;
-  height: 124rpx;
+  width: 150rpx;
+  height: 150rpx;
   display: block;
 }
 
 .card__divider {
-  margin: 22rpx 0 18rpx;
+  margin: 24rpx 0 20rpx;
   height: 1rpx;
   background: #eef1f6;
 }
@@ -163,11 +164,31 @@
   color: #6b7a8a;
 }
 
-/* ===== 打卡按钮 ===== */
+/* ===== 底部操作行：快捷入口 + 打卡按钮 ===== */
 .card__action-row {
-  margin-top: 20rpx;
+  margin-top: 24rpx;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card__quick-links {
+  display: flex;
+  gap: 28rpx;
+}
+
+.card__quick-link {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  font-size: 24rpx;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.card__quick-link-icon {
+  width: 28rpx;
+  height: 28rpx;
 }
 
 .card__btn-primary {
@@ -183,48 +204,10 @@
   line-height: 1;
 }
 
-/* ===== 卡片2：快速操作 ===== */
-.card--actions {
-  display: flex;
-  padding: 24rpx 16rpx;
-}
-
-.action-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8rpx 0;
-}
-
-.action-item__icon-circle {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  background: #eef8f2;
-  border: 1rpx solid #d4eadc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.action-item__icon-image {
-  width: 44rpx;
-  height: 44rpx;
-}
-
-.action-item__title {
-  margin-top: 12rpx;
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #243447;
-  line-height: 1.4;
-}
-
-/* ===== 卡片3：AI 小结 ===== */
+/* ===== AI 小结卡片 ===== */
 .tips-card {
-  margin-top: 20rpx;
-  padding: 28rpx 28rpx 30rpx;
+  margin-top: 32rpx;
+  padding: 24rpx 28rpx 26rpx;
   background: #d8f4e7;
   border-radius: 24rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);

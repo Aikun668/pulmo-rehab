@@ -20,7 +20,7 @@
         <view class="card__progress-label">{{todayStatusLabel}}</view>
       </view>
       <view class="progress-ring">
-        <canvas class="progress-ring__canvas" canvas-id="progressRing" style="width: 124rpx; height: 124rpx;"></canvas>
+        <canvas class="progress-ring__canvas" type="2d" id="progressRing" style="width: 150rpx; height: 150rpx;"></canvas>
       </view>
     </view>
 
@@ -39,29 +39,23 @@
     </view>
 
     <view class="card__action-row">
+      <view class="card__quick-links">
+        <view class="card__quick-link" data-key="progress" bindtap="handleQuickActionTap">
+          <image class="card__quick-link-icon" src="/images/home/trend.png" mode="aspectFit"></image>
+          <text>30天进度</text>
+        </view>
+        <view class="card__quick-link" data-key="ai-summary" bindtap="handleQuickActionTap">
+          <image class="card__quick-link-icon" src="/images/home/check.png" mode="aspectFit"></image>
+          <text>AI小结</text>
+        </view>
+      </view>
       <view class="card__btn-primary" bindtap="handleGoCheckIn">
         <text class="card__btn-text">去打卡</text>
       </view>
     </view>
   </view>
 
-  <!-- 卡片2：快速入口 -->
-  <view class="card card--actions">
-    <block wx:for="{{quickActions}}" wx:key="key">
-      <view class="action-item" data-key="{{item.key}}" bindtap="handleQuickActionTap">
-        <view class="action-item__icon-circle">
-          <image
-            class="action-item__icon-image"
-            src="{{item.key === 'progress' ? '/images/home/trend.png' : '/images/home/check.png'}}"
-            mode="aspectFit"
-          ></image>
-        </view>
-        <view class="action-item__title">{{item.title}}</view>
-      </view>
-    </block>
-  </view>
-
-  <!-- 卡片3：AI 康复小结 -->
+  <!-- 卡片2：AI 康复小结 -->
   <view class="tips-card">
     <view class="tips-card__top">
       <view class="tips-card__title-group">

@@ -1,12 +1,33 @@
 <navigation-bar title="AI 小结" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
 
 <view class="page">
-  <view class="card">
+  <!-- 加载态 -->
+  <view class="loading-hint" wx:if="{{isLoading}}">正在同步最新 AI 康复小结...</view>
+
+  <!-- 最新一期 -->
+  <view class="card card--latest" wx:if="{{hasSummary}}">
+    <view class="card__badge">最新</view>
     <view class="card__title">最新周期</view>
-    <view class="card__meta">{{summaryPeriod}}</view>
-    <view class="card__created-at">{{summaryCreatedAt}}</view>
-    <view class="card__status" wx:if="{{isLoading}}">正在同步最新 AI 康复小结...</view>
-    <view class="card__status" wx:elif="{{!hasSummary}}">暂未生成 AI 小结</view>
-    <view class="card__desc">{{summaryContent}}</view>
+    <view class="card__meta">{{latestPeriod}}</view>
+    <view class="card__created-at">{{latestCreatedAt}}</view>
+    <view class="card__desc">{{latestContent}}</view>
+  </view>
+
+  <!-- 空态 -->
+  <view class="card" wx:if="{{!isLoading && !hasSummary}}">
+    <view class="card__title">最新周期</view>
+    <view class="card__meta">{{latestPeriod}}</view>
+    <view class="card__created-at">{{latestCreatedAt}}</view>
+    <view class="card__desc">{{latestContent}}</view>
+  </view>
+
+  <!-- 历史列表 -->
+  <view class="history-section" wx:if="{{summaries.length > 0}}">
+    <view class="history-section__title">历史小结</view>
+    <view class="history-item" wx:for="{{summaries}}" wx:key="id">
+      <view class="history-item__meta">{{item.period}}</view>
+      <view class="history-item__time">{{item.createdAt}}</view>
+      <view class="history-item__content">{{item.content}}</view>
+    </view>
   </view>
 </view>

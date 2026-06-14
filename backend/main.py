@@ -7,15 +7,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from database import Base, engine
 from routers.ai_summaries import router as ai_summaries_router
+from routers.assessments import router as assessments_router
 from routers.auth import router as auth_router
 from routers.doctors import router as doctors_router
 from routers.health import router as health_router
+from routers.patients import router as patients_router
+from routers.prescriptions import router as prescriptions_router
 from routers.rehab_plans import router as rehab_plans_router
 from routers.training_logs import router as training_logs_router
+from routers.warnings import router as warnings_router
 from tasks.ai_summary_job import start_ai_summary_scheduler, stop_ai_summary_scheduler
 
 # Import models before create_all so SQLAlchemy can register table metadata.
-from models import AiSummary, RehabPlan, TrainingLog, User  # noqa: F401
+from models import Assessment, AiSummary, RehabPlan, TrainingLog, User, Warning  # noqa: F401
 
 
 @asynccontextmanager
@@ -47,6 +51,10 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(health_router, prefix=settings.api_prefix)
 app.include_router(ai_summaries_router, prefix=settings.api_prefix)
+app.include_router(assessments_router, prefix=settings.api_prefix)
 app.include_router(doctors_router, prefix=settings.api_prefix)
+app.include_router(patients_router, prefix=settings.api_prefix)
+app.include_router(prescriptions_router, prefix=settings.api_prefix)
 app.include_router(rehab_plans_router, prefix=settings.api_prefix)
 app.include_router(training_logs_router, prefix=settings.api_prefix)
+app.include_router(warnings_router, prefix=settings.api_prefix)

@@ -167,7 +167,7 @@ Page({
           tasks: tasks,
           allChecked: true,
           hasSubmittedToday: true,
-          todaySummaryText: "今天已记录 " + todayLog.duration_minutes + " 分钟 · " + todayLog.sets_count + " 项",
+          todaySummaryText: "今天已记录 " + todayLog.duration_minutes + " 分钟 · " + todayLog.sets_count + " 组",
         })
       },
       fail: function () {
@@ -439,7 +439,35 @@ Page({
       return
     }
 
-    var completedCount = tasks.filter(function (t) { return t.checked }).length
+    // 校验每个勾选任务的实际时长 >= 1
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].checked) {
+        var mins = Number(tasks[i].actualMinutes) || 0
+        if (mins < 1) {
+          wx.showToast({
+            title: tasks[i].name + " 的时长不能少于1分钟",
+            icon: "none",
+            duration: 2000,
+          })
+          return
+        }
+        if (mins > 300) {
+          wx.showToast({
+            title: tasks[i].name + " 的时长不能超过300分钟",
+            icon: "none",
+            duration: 2000,
+          })
+          return
+        }
+      }
+    }
+
+    var totalSets = 0
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].checked) {
+        totalSets += Number(tasks[i].targetSets) || 0
+      }
+    }
     var autoNote = "完成: " + noteParts.join(" / ")
 
     this.setData({ isSubmitting: true })
@@ -454,7 +482,7 @@ Page({
         patient_id: patientId,
         train_date: trainDate,
         duration_minutes: totalDuration,
-        sets_count: completedCount,
+        sets_count: totalSets,
         note: autoNote,
       },
       success: function (response) {
@@ -470,7 +498,7 @@ Page({
 
         that.setData({
           hasSubmittedToday: true,
-          todaySummaryText: "今天已记录 " + totalDuration + " 分钟 · " + completedCount + " 项",
+          todaySummaryText: "今天已记录 " + totalDuration + " 分钟 · " + totalSets + " 组",
           showSuccessFeedback: true,
         })
 

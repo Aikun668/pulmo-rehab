@@ -1,9 +1,5 @@
 var auth = require("../../utils/auth.js")
 const TARGET_DURATION_MINUTES = 20
-const RING_CANVAS_SIZE = 200
-const RING_CENTER = RING_CANVAS_SIZE / 2
-const RING_RADIUS = 64
-const RING_LINE_WIDTH = 14
 
 function truncateText(value, maxLength) {
   if (!value) {
@@ -62,11 +58,9 @@ function calculateStreakDays(days) {
     return 0
   }
 
-  // days 按日期升序，倒过来从最近一天开始数
   var sorted = days.slice().reverse()
   var today = formatToday()
 
-  // 如果今天还没打卡，从昨天开始数
   var startIndex = 0
   if (sorted[0] && sorted[0].date === today && sorted[0].duration_minutes <= 0) {
     startIndex = 1
@@ -84,10 +78,17 @@ function calculateStreakDays(days) {
   return streak
 }
 
+function getGreeting() {
+  var hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) return "早上好"
+  if (hour >= 12 && hour < 18) return "下午好"
+  return "晚上好"
+}
+
 Page({
   data: {
     patientId: 0,
-    patientName: "早上好，张先生",
+    patientName: "你好，用户",
     welcomeLabel: "肺康复助手",
     todayStatusLabel: "今日尚未打卡",
     progressPercent: 0,
@@ -103,16 +104,6 @@ Page({
     aiTip:
       "正在同步最新 AI 康复小结，请稍候。",
     aiTipUpdatedAt: "请稍候",
-    quickActions: [
-      {
-        key: "progress",
-        title: "30 天进度",
-      },
-      {
-        key: "ai-summary",
-        title: "AI 康复小结",
-      },
-    ],
   },
 
   onReady() {
@@ -120,7 +111,12 @@ Page({
   },
 
   onShow() {
-    this.setData({ patientId: auth.getPatientId() })
+    var userName = auth.getUserName() || "用户"
+    var greeting = getGreeting()
+    this.setData({
+      patientId: auth.getPatientId(),
+      patientName: greeting + "，" + userName,
+    })
     this.loadTodayProgress()
     this.loadStreakDays()
     this.loadLatestAiTip()
@@ -154,11 +150,9 @@ Page({
         this.setData(nextState, () => {
           this._updateTaskDoneState(todayLog)
           this.drawProgressRing()
-          this.drawProgressRing()
         })
       },
       fail: () => {
-        // 网络失败时保持默认空态（0%进度），不显示错误信息
         this.setData(buildTodayProgressState(0), () => {
           this.drawProgressRing()
         })
@@ -244,53 +238,60 @@ Page({
   },
 
   drawProgressRing() {
-    const progressPercent = Math.max(
+    var self = this
+    var progressPercent = Math.max(
       0,
       Math.min(100, Number(this.data.progressPercent) || 0),
     )
-    const progressSummaryText =
-      this.data.progressSummaryText || `0/${TARGET_DURATION_MINUTES}`
-    const startAngle = -Math.PI / 2
-    const endAngle = startAngle + Math.PI * 2 * (progressPercent / 100)
-    const context = wx.createCanvasContext("progressRing", this)
+    var progressSummaryText =
+      this.data.progressSummaryText || "0/" + TARGET_DURATION_MINUTES
 
-    context.clearRect(0, 0, RING_CANVAS_SIZE, RING_CANVAS_SIZE)
+    var query = wx.createSelectorQuery().in(this)
+    query.select('.progress-ring__canvas')
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return
+        var canvas = res[0].node
+        var dpr = wx.getWindowInfo().pixelRatio
+        var width = res[0].width
+        var height = res[0].height
 
-    context.setLineWidth(RING_LINE_WIDTH)
-    context.setLineCap("round")
+        canvas.width = width * dpr
+        canvas.height = height * dpr
 
-    context.beginPath()
-    context.setStrokeStyle("#D9E8FF")
-    context.arc(
-      RING_CENTER,
-      RING_CENTER,
-      RING_RADIUS,
-      0,
-      Math.PI * 2,
-      false,
-    )
-    context.stroke()
+        var ctx = canvas.getContext('2d')
+        ctx.scale(dpr, dpr)
 
-    if (progressPercent > 0) {
-      context.beginPath()
-      context.setStrokeStyle("#2A6BFF")
-      context.arc(
-        RING_CENTER,
-        RING_CENTER,
-        RING_RADIUS,
-        startAngle,
-        endAngle,
-        false,
-      )
-      context.stroke()
-    }
+        var center = width / 2
+        var radius = width * 0.34
+        var lineWidth = Math.max(4, width * 0.07)
+        var fontSize = Math.max(10, width * 0.13)
 
-    context.setFillStyle("#4A5B6C")
-    context.setFontSize(24)
-    context.setTextAlign("center")
-    context.setTextBaseline("middle")
-    context.fillText(progressSummaryText, RING_CENTER, RING_CENTER + 2)
-    context.draw()
+        var startAngle = -Math.PI / 2
+        var endAngle = startAngle + Math.PI * 2 * (progressPercent / 100)
+
+        ctx.clearRect(0, 0, width, height)
+        ctx.lineWidth = lineWidth
+        ctx.lineCap = "round"
+
+        ctx.beginPath()
+        ctx.strokeStyle = "#D9E8FF"
+        ctx.arc(center, center, radius, 0, Math.PI * 2, false)
+        ctx.stroke()
+
+        if (progressPercent > 0) {
+          ctx.beginPath()
+          ctx.strokeStyle = "#2A6BFF"
+          ctx.arc(center, center, radius, startAngle, endAngle, false)
+          ctx.stroke()
+        }
+
+        ctx.fillStyle = "#4A5B6C"
+        ctx.font = fontSize + "px sans-serif"
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.fillText(progressSummaryText, center, center + 1)
+      })
   },
 
   handleGoCheckIn() {

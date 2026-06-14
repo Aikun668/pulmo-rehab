@@ -5,7 +5,8 @@
     "pages/rehab/index",
     "pages/plan-detail/index",
     "pages/progress/index",
-    "pages/ai-summary/index"
+    "pages/ai-summary/index",
+    "pages/profile/index"
   ],
   "tabBar": {
     "color": "#7A8A9A",
@@ -30,6 +31,12 @@
         "text": "康复",
         "iconPath": "images/tabbar/rehab.png",
         "selectedIconPath": "images/tabbar/rehab-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "images/tabbar/profile.png",
+        "selectedIconPath": "images/tabbar/profile-active.png"
       }
     ]
   },

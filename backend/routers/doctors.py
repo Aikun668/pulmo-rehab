@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from core.responses import success_response
 from database import get_db
-from models import TrainingLog, User, UserRole
+from models import TrainingLog, User, UserRole, Warning
 from schemas import ApiResponse, DoctorPatientItemResponse, DoctorPatientStatsResponse
 
 
@@ -72,16 +72,33 @@ def list_doctor_patients(
         for row in stats_rows
     }
 
+    # 查询有未处理预警的患者
+    warning_patient_ids = set(
+        db.scalars(
+            select(Warning.patient_id)
+            .where(Warning.patient_id.in_(patient_ids), Warning.is_resolved == False)  # noqa: E712
+            .distinct()
+        ).all()
+    )
+
     items = [
         DoctorPatientItemResponse(
             id=patient.id,
             name=patient.name,
+            is_post_pneumonia=patient.is_post_pneumonia,
+            discharge_date=patient.discharge_date,
+            recovery_stage=patient.recovery_stage,
+            is_long_term_smoker=patient.is_long_term_smoker,
+            has_chronic_respiratory_disease=patient.has_chronic_respiratory_disease,
+            has_cardiovascular_disease=patient.has_cardiovascular_disease,
+            rehab_level=patient.rehab_level,
             stats=stats_by_patient_id.get(
                 patient.id,
                 DoctorPatientStatsResponse(
                     check_in_count_7d=0,
                     total_duration_minutes=0,
                     last_check_in_at=None,
+                    has_unresolved_warnings=patient.id in warning_patient_ids,
                 ),
             ),
         )

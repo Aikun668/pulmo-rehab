@@ -7,17 +7,20 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertCircle,
+  AlertTriangle,
   ArrowLeft,
   Brain,
   Calendar,
+  ClipboardCheck,
   Clock,
+  Edit3,
   FileText,
   Heart,
   Plus,
   User,
   X,
 } from "lucide-react";
-import { AISummary, ApiResponse, Patient, RehabPlan, TrainingLog } from "../types";
+import { AISummary, ApiResponse, Assessment, DYSPNEA_LABELS, ExerciseItem, Patient, PrescriptionGenerateResponse, RECOVERY_STAGE_LABELS, RecoveryStage, REHAB_LEVEL_INFO, RehabLevelResponse, RehabPlan, TrainingLog, WarningRecord, WARNING_TYPE_LABELS, WarningType } from "../types";
 
 interface PatientDetailViewProps {
   patient: Patient;
@@ -153,6 +156,55 @@ export default function PatientDetailView({
   const [planSuccessMessage, setPlanSuccessMessage] = useState("");
   const [isSubmittingPlan, setIsSubmittingPlan] = useState(false);
 
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState<{
+    is_post_pneumonia: boolean | null;
+    discharge_date: string;
+    recovery_stage: RecoveryStage | "";
+    is_long_term_smoker: boolean | null;
+    has_chronic_respiratory_disease: boolean | null;
+    has_cardiovascular_disease: boolean | null;
+  }>({
+    is_post_pneumonia: null,
+    discharge_date: "",
+    recovery_stage: "",
+    is_long_term_smoker: null,
+    has_chronic_respiratory_disease: null,
+    has_cardiovascular_disease: null,
+  });
+  const [profileFormError, setProfileFormError] = useState("");
+  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
+
+  const [latestAssessment, setLatestAssessment] = useState<Assessment | null>(null);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [assessmentLoading, setAssessmentLoading] = useState(true);
+  const [assessmentError, setAssessmentError] = useState("");
+  const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
+  const [assessmentForm, setAssessmentForm] = useState({
+    heart_rate: "",
+    spo2: "",
+    dyspnea_score: "",
+    fatigue_score: "",
+    notes: "",
+  });
+  const [assessmentFormError, setAssessmentFormError] = useState("");
+  const [isSubmittingAssessment, setIsSubmittingAssessment] = useState(false);
+
+  const [rehabLevelDetail, setRehabLevelDetail] = useState<RehabLevelResponse | null>(null);
+  const [rehabLevelLoading, setRehabLevelLoading] = useState(true);
+
+  // AI 处方生成工作流
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiPrescription, setAiPrescription] = useState<PrescriptionGenerateResponse | null>(null);
+  const [aiGenerateError, setAiGenerateError] = useState("");
+  const [editableTitle, setEditableTitle] = useState("");
+  const [editableExercises, setEditableExercises] = useState<ExerciseItem[]>([]);
+
+  // 预警
+  const [warnings, setWarnings] = useState<WarningRecord[]>([]);
+  const [warningsLoading, setWarningsLoading] = useState(true);
+  const [resolvingWarningId, setResolvingWarningId] = useState<number | null>(null);
+
   const isLatestRequest = (requestVersion: number) => requestVersionRef.current === requestVersion;
 
   useEffect(() => {
@@ -168,11 +220,18 @@ export default function PatientDetailView({
     setFormError("");
     setPlanSuccessMessage("");
     setIsPlanModalOpen(false);
+    setAiPrescription(null);
+    setAiGenerateError("");
+    setEditableTitle("");
+    setEditableExercises([]);
 
     void fetchLogs(currentRequestVersion);
     void fetchPlans(currentRequestVersion);
     void fetchProgress(currentRequestVersion);
     void fetchAiSummary(currentRequestVersion);
+    void fetchAssessments(currentRequestVersion);
+    void fetchRehabLevel(currentRequestVersion);
+    void fetchWarnings(currentRequestVersion);
   }, [patient.id]);
 
   const fetchLogs = async (requestVersion: number) => {
@@ -355,6 +414,239 @@ export default function PatientDetailView({
       setFormError("无法连接后端服务，训练方案下发失败。");
     } finally {
       setIsSubmittingPlan(false);
+    }
+  };
+
+  const fetchAssessments = async (requestVersion: number) => {
+    try {
+      setAssessmentLoading(true);
+      setAssessmentError("");
+
+      const response = await fetch(`/api/assessments?patient_id=${patient.id}`);
+      const json: ApiResponse<Assessment[]> = await response.json();
+
+      if (!isLatestRequest(requestVersion)) return;
+
+      if (!response.ok || json.code !== 200) {
+        setAssessments([]);
+        setLatestAssessment(null);
+        setAssessmentError(json.message || "评估记录加载失败");
+        return;
+      }
+
+      const data = json.data ?? [];
+      setAssessments(data);
+      setLatestAssessment(data[0] ?? null);
+    } catch (error) {
+      if (!isLatestRequest(requestVersion)) return;
+      console.error("Failed to load assessments:", error);
+      setAssessments([]);
+      setLatestAssessment(null);
+      setAssessmentError("无法连接后端服务，评估记录暂时不可用。");
+    } finally {
+      if (isLatestRequest(requestVersion)) setAssessmentLoading(false);
+    }
+  };
+
+  const fetchRehabLevel = async (requestVersion: number) => {
+    try {
+      setRehabLevelLoading(true);
+      const response = await fetch(`/api/patients/${patient.id}/rehab-level`);
+      const json: ApiResponse<RehabLevelResponse> = await response.json();
+
+      if (!isLatestRequest(requestVersion)) return;
+
+      if (!response.ok || json.code !== 200) {
+        setRehabLevelDetail(null);
+        return;
+      }
+
+      setRehabLevelDetail(json.data);
+    } catch (error) {
+      if (!isLatestRequest(requestVersion)) return;
+      console.error("Failed to load rehab level:", error);
+      setRehabLevelDetail(null);
+    } finally {
+      if (isLatestRequest(requestVersion)) setRehabLevelLoading(false);
+    }
+  };
+
+  const fetchWarnings = async (requestVersion: number) => {
+    try {
+      setWarningsLoading(true);
+      const response = await fetch(`/api/warnings?patient_id=${patient.id}`);
+      const json: ApiResponse<WarningRecord[]> = await response.json();
+
+      if (!isLatestRequest(requestVersion)) return;
+
+      if (!response.ok || json.code !== 200) {
+        setWarnings([]);
+        return;
+      }
+
+      setWarnings(json.data ?? []);
+    } catch (error) {
+      if (!isLatestRequest(requestVersion)) return;
+      console.error("Failed to load warnings:", error);
+      setWarnings([]);
+    } finally {
+      if (isLatestRequest(requestVersion)) setWarningsLoading(false);
+    }
+  };
+
+  const handleResolveWarning = async (warningId: number) => {
+    setResolvingWarningId(warningId);
+    try {
+      const response = await fetch(`/api/warnings/${warningId}/resolve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_resolved: true }),
+      });
+      if (response.ok) {
+        await fetchWarnings(requestVersionRef.current);
+      }
+    } catch (error) {
+      console.error("Failed to resolve warning:", error);
+    } finally {
+      setResolvingWarningId(null);
+    }
+  };
+
+  const handleOpenAssessmentModal = () => {
+    setAssessmentForm({ heart_rate: "", spo2: "", dyspnea_score: "", fatigue_score: "", notes: "" });
+    setAssessmentFormError("");
+    setIsAssessmentModalOpen(true);
+  };
+
+  const handleAssessmentSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAssessmentFormError("");
+
+    const payload: Record<string, unknown> = { patient_id: patient.id };
+    if (assessmentForm.heart_rate) payload.heart_rate = Number(assessmentForm.heart_rate);
+    if (assessmentForm.spo2) payload.spo2 = Number(assessmentForm.spo2);
+    if (assessmentForm.dyspnea_score) payload.dyspnea_score = Number(assessmentForm.dyspnea_score);
+    if (assessmentForm.fatigue_score) payload.fatigue_score = Number(assessmentForm.fatigue_score);
+    if (assessmentForm.notes.trim()) payload.notes = assessmentForm.notes.trim();
+
+    if (Object.keys(payload).length <= 1) {
+      setAssessmentFormError("请至少填写一项评估指标。");
+      return;
+    }
+
+    try {
+      setIsSubmittingAssessment(true);
+      const response = await fetch("/api/assessments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await response.json();
+
+      if (!response.ok || json.code !== 200) {
+        setAssessmentFormError(json.message || "评估提交失败，请稍后重试。");
+        return;
+      }
+
+      setIsAssessmentModalOpen(false);
+      await fetchAssessments(requestVersionRef.current);
+      await fetchRehabLevel(requestVersionRef.current);
+      await fetchWarnings(requestVersionRef.current);
+    } catch (error) {
+      console.error("Failed to submit assessment:", error);
+      setAssessmentFormError("无法连接后端服务，评估提交失败。");
+    } finally {
+      setIsSubmittingAssessment(false);
+    }
+  };
+
+  const handleOpenProfileModal = () => {
+    setProfileForm({
+      is_post_pneumonia: patient.is_post_pneumonia,
+      discharge_date: patient.discharge_date ?? "",
+      recovery_stage: patient.recovery_stage ?? "",
+      is_long_term_smoker: patient.is_long_term_smoker,
+      has_chronic_respiratory_disease: patient.has_chronic_respiratory_disease,
+      has_cardiovascular_disease: patient.has_cardiovascular_disease,
+    });
+    setProfileFormError("");
+    setIsProfileModalOpen(true);
+  };
+
+  const handleProfileSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProfileFormError("");
+
+    const payload: Record<string, unknown> = {};
+    if (profileForm.is_post_pneumonia !== null) payload.is_post_pneumonia = profileForm.is_post_pneumonia;
+    if (profileForm.discharge_date) payload.discharge_date = profileForm.discharge_date;
+    if (profileForm.recovery_stage) payload.recovery_stage = profileForm.recovery_stage;
+    if (profileForm.is_long_term_smoker !== null) payload.is_long_term_smoker = profileForm.is_long_term_smoker;
+    if (profileForm.has_chronic_respiratory_disease !== null) payload.has_chronic_respiratory_disease = profileForm.has_chronic_respiratory_disease;
+    if (profileForm.has_cardiovascular_disease !== null) payload.has_cardiovascular_disease = profileForm.has_cardiovascular_disease;
+
+    try {
+      setIsSubmittingProfile(true);
+      const response = await fetch(`/api/patients/${patient.id}/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await response.json();
+
+      if (!response.ok || json.code !== 200) {
+        setProfileFormError(json.message || "档案更新失败，请稍后重试。");
+        return;
+      }
+
+      setIsProfileModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to update patient profile:", error);
+      setProfileFormError("无法连接后端服务，档案更新失败。");
+    } finally {
+      setIsSubmittingProfile(false);
+    }
+  };
+
+  const handleAiGeneratePrescription = async () => {
+    setIsAiGenerating(true);
+    setAiGenerateError("");
+    setAiPrescription(null);
+
+    try {
+      const response = await fetch("/api/prescriptions/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: patient.id }),
+      });
+      const json: ApiResponse<PrescriptionGenerateResponse> = await response.json();
+
+      if (!response.ok || json.code !== 200) {
+        setAiGenerateError(json.message || "AI 处方生成失败，请稍后重试。");
+        return;
+      }
+
+      const data = json.data;
+      setAiPrescription(data);
+      setEditableTitle(data.title);
+      setEditableExercises([...data.exercises]);
+      // 同步填充传统表单字段（用于最终提交）
+      const contentLines = data.exercises.map((ex: ExerciseItem) => {
+        let line = `【${ex.name}】`;
+        if (ex.purpose) line += `\n目的：${ex.purpose}`;
+        if (ex.duration) line += `\n时长：${ex.duration}`;
+        if (ex.steps.length > 0) line += `\n步骤：${ex.steps.join(" → ")}`;
+        if (ex.precautions.length > 0) line += `\n⚠ 注意：${ex.precautions.join("；")}`;
+        return line;
+      });
+      setNewPlanTitle(data.title);
+      setNewPlanContent(contentLines.join("\n\n"));
+    } catch (error) {
+      console.error("Failed to generate AI prescription:", error);
+      setAiGenerateError("无法连接后端服务，AI 处方生成失败。");
+    } finally {
+      setIsAiGenerating(false);
     }
   };
 
@@ -838,6 +1130,151 @@ export default function PatientDetailView({
             </div>
 
             <div className="grid grid-cols-1 gap-3">
+              {/* 健康档案卡片 */}
+              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-[#8A97A6]">健康档案</p>
+                  <button
+                    onClick={handleOpenProfileModal}
+                    className="inline-flex items-center gap-1 text-[11px] text-[#2F5D7C] hover:text-[#4F7A94]"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    编辑
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1.5 text-sm text-[#243447]">
+                  <div className="flex justify-between">
+                    <span className="text-[#5B6B7A]">重症肺炎恢复期</span>
+                    <span className="font-medium">
+                      {patient.is_post_pneumonia === true ? "是" : patient.is_post_pneumonia === false ? "否" : "未填写"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#5B6B7A]">出院时间</span>
+                    <span className="font-medium">{patient.discharge_date ? formatDate(patient.discharge_date) : "未填写"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#5B6B7A]">恢复阶段</span>
+                    <span className="font-medium">
+                      {patient.recovery_stage ? RECOVERY_STAGE_LABELS[patient.recovery_stage] : "未填写"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#5B6B7A]">长期吸烟</span>
+                    <span className="font-medium">
+                      {patient.is_long_term_smoker === true ? "是" : patient.is_long_term_smoker === false ? "否" : "未填写"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#5B6B7A]">慢性呼吸疾病</span>
+                    <span className="font-medium">
+                      {patient.has_chronic_respiratory_disease === true ? "是" : patient.has_chronic_respiratory_disease === false ? "否" : "未填写"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#5B6B7A]">心血管疾病</span>
+                    <span className="font-medium">
+                      {patient.has_cardiovascular_disease === true ? "是" : patient.has_cardiovascular_disease === false ? "否" : "未填写"}
+                    </span>
+                  </div>
+                </div>
+                {patient.recovery_stage && (
+                  <div className="mt-3">
+                    <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                      patient.recovery_stage === "early"
+                        ? "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]"
+                        : patient.recovery_stage === "mid"
+                          ? "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]"
+                          : "bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3]"
+                    }`}>
+                      {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* 康复等级卡片 */}
+              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
+                <p className="text-[11px] text-[#8A97A6]">康复能力等级</p>
+                {rehabLevelLoading ? (
+                  <div className="mt-2 h-10 rounded bg-[#F4F7FA] animate-pulse" />
+                ) : rehabLevelDetail ? (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="rounded-md border px-2 py-0.5 text-xs font-semibold"
+                        style={{
+                          color: REHAB_LEVEL_INFO[rehabLevelDetail.rehab_level]?.color,
+                          backgroundColor: REHAB_LEVEL_INFO[rehabLevelDetail.rehab_level]?.bgColor,
+                          borderColor: REHAB_LEVEL_INFO[rehabLevelDetail.rehab_level]?.borderColor,
+                        }}
+                      >
+                        {rehabLevelDetail.level_label}
+                      </span>
+                      <span className="text-sm font-semibold text-[#243447]">{rehabLevelDetail.level_name}</span>
+                    </div>
+                    <p className="text-xs text-[#5B6B7A]">
+                      推荐训练：<span className="font-medium text-[#243447]">{rehabLevelDetail.recommended_training}</span>
+                    </p>
+                    <p className="text-[10px] text-[#8A97A6]">基于最新评估数据自动计算</p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-[#8A97A6]">需完成评估后自动生成</p>
+                )}
+              </div>
+
+              {/* 最新评估卡片 */}
+              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-[#8A97A6]">最新康复评估</p>
+                  <button
+                    onClick={handleOpenAssessmentModal}
+                    className="inline-flex items-center gap-1 text-[11px] text-[#2F5D7C] hover:text-[#4F7A94]"
+                  >
+                    <Plus className="h-3 w-3" />
+                    新增评估
+                  </button>
+                </div>
+                {assessmentLoading ? (
+                  <div className="mt-2 h-8 rounded bg-[#F4F7FA] animate-pulse" />
+                ) : latestAssessment ? (
+                  <div className="mt-2 space-y-1.5 text-sm text-[#243447]">
+                    <div className="grid grid-cols-2 gap-2">
+                      {latestAssessment.heart_rate !== null && (
+                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
+                          <p className="text-[10px] text-[#8A97A6]">心率</p>
+                          <p className="text-sm font-semibold">{latestAssessment.heart_rate} <span className="text-[10px] font-normal text-[#8A97A6]">bpm</span></p>
+                        </div>
+                      )}
+                      {latestAssessment.spo2 !== null && (
+                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
+                          <p className="text-[10px] text-[#8A97A6]">血氧</p>
+                          <p className="text-sm font-semibold">{latestAssessment.spo2}<span className="text-[10px] font-normal text-[#8A97A6]">%</span></p>
+                        </div>
+                      )}
+                      {latestAssessment.dyspnea_score !== null && (
+                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
+                          <p className="text-[10px] text-[#8A97A6]">呼吸困难</p>
+                          <p className="text-sm font-semibold">{latestAssessment.dyspnea_score}/5</p>
+                        </div>
+                      )}
+                      {latestAssessment.fatigue_score !== null && (
+                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
+                          <p className="text-[10px] text-[#8A97A6]">疲劳</p>
+                          <p className="text-sm font-semibold">{latestAssessment.fatigue_score}/10</p>
+                        </div>
+                      )}
+                    </div>
+                    {latestAssessment.dyspnea_score !== null && (
+                      <p className="text-xs text-[#5B6B7A]">呼吸困难：{DYSPNEA_LABELS[latestAssessment.dyspnea_score]}</p>
+                    )}
+                    <p className="text-[10px] text-[#8A97A6]">评估时间：{formatDateTime(latestAssessment.created_at)}</p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-[#8A97A6]">暂无评估记录，点击上方按钮新增</p>
+                )}
+              </div>
+
               <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -925,6 +1362,67 @@ export default function PatientDetailView({
             )}
           </section>
 
+          {/* 预警中心 */}
+          <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">
+                <AlertTriangle className="h-4 w-4 text-[#D9A441]" />
+                安全预警
+              </h3>
+              <p className="text-sm text-[#5B6B7A]">评估提交时自动检测，心率&gt;120 / 血氧&lt;92% / 疲劳&gt;8 / 呼吸困难≥4 触发预警。</p>
+            </div>
+
+            {warningsLoading ? (
+              <div className="h-12 rounded-xl bg-[#F4F7FA] animate-pulse" />
+            ) : warnings.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#D9E2EC] p-4 text-center text-sm text-[#5B6B7A]">
+                暂无预警记录
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {warnings.map((w) => {
+                  const typeInfo = WARNING_TYPE_LABELS[w.warning_type as WarningType];
+                  return (
+                    <div key={w.id} className={`rounded-xl border p-4 ${w.is_resolved ? "border-[#D9E2EC] bg-[#F8FAFC] opacity-60" : "border-[#F8D2D2] bg-[#FDF2F2]"}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="rounded-md border px-2 py-0.5 text-[11px] font-medium"
+                              style={{
+                                color: typeInfo?.color || "#D95C5C",
+                                backgroundColor: typeInfo?.bgColor || "#FDF2F2",
+                                borderColor: typeInfo?.borderColor || "#F8D2D2",
+                              }}
+                            >
+                              {typeInfo?.label || w.warning_type}
+                            </span>
+                            {w.is_resolved && (
+                              <span className="rounded-md border border-[#D5F5E3] bg-[#EEFDF5] px-2 py-0.5 text-[11px] font-medium text-[#5B9B7A]">
+                                已处理
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-[#243447]">{w.message}</p>
+                          <p className="text-xs text-[#8A97A6]">{formatDateTime(w.created_at)}</p>
+                        </div>
+                        {!w.is_resolved && (
+                          <button
+                            onClick={() => handleResolveWarning(w.id)}
+                            disabled={resolvingWarningId === w.id}
+                            className="shrink-0 rounded-lg border border-[#D9E2EC] px-3 py-1.5 text-xs font-medium text-[#5B6B7A] hover:bg-[#F4F7FA] disabled:opacity-60"
+                          >
+                            {resolvingWarningId === w.id ? "处理中..." : "标记已处理"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
           <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -997,12 +1495,17 @@ export default function PatientDetailView({
 
       {isPlanModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4">
+          <div className="w-full max-w-2xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4 sticky top-0 bg-white z-10">
               <div>
                 <h4 className="text-base font-semibold text-[#243447]">下发训练方案</h4>
                 <p className="text-sm text-[#5B6B7A]">
                   当前患者：{patient.name}（ID {patient.id}）
+                  {patient.rehab_level && (
+                    <span className="ml-2 font-medium" style={{ color: REHAB_LEVEL_INFO[patient.rehab_level]?.color }}>
+                      L{patient.rehab_level} {REHAB_LEVEL_INFO[patient.rehab_level]?.name}
+                    </span>
+                  )}
                 </p>
               </div>
               <button
@@ -1022,27 +1525,144 @@ export default function PatientDetailView({
                 </div>
               )}
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#243447]">方案标题</label>
-                <input
-                  type="text"
-                  value={newPlanTitle}
-                  onChange={(event) => setNewPlanTitle(event.target.value)}
-                  placeholder="例如：居家呼吸训练第1周方案"
-                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
-                />
-              </div>
+              {/* AI 生成按钮 */}
+              {!aiPrescription && (
+                <div className="space-y-3">
+                  <div className="rounded-xl border-2 border-dashed border-[#2F5D7C] bg-[#F4F7FA] p-6 text-center space-y-3">
+                    <Brain className="mx-auto h-8 w-8 text-[#2F5D7C]" />
+                    <p className="text-sm font-medium text-[#243447]">AI 智能生成训练处方</p>
+                    <p className="text-xs text-[#5B6B7A]">
+                      根据患者康复等级、健康档案和最新评估数据，自动生成个性化训练方案
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleAiGeneratePrescription}
+                      disabled={isAiGenerating}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#2F5D7C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
+                    >
+                      {isAiGenerating ? (
+                        <>
+                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          AI 生成中...
+                        </>
+                      ) : (
+                        <>
+                          <Brain className="h-4 w-4" />
+                          AI 生成处方
+                        </>
+                      )}
+                    </button>
+                    {aiGenerateError && (
+                      <p className="text-sm text-[#D95C5C]">{aiGenerateError}</p>
+                    )}
+                  </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#243447]">方案内容</label>
-                <textarea
-                  rows={8}
-                  value={newPlanContent}
-                  onChange={(event) => setNewPlanContent(event.target.value)}
-                  placeholder={"例如：\n1. 每日缩唇呼吸 2 次，每次 15 分钟。\n2. 每次训练完成后记录组数和体感。"}
-                  className="w-full resize-none rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
-                />
-              </div>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#D9E2EC]" /></div>
+                    <div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-[#8A97A6]">或手动填写方案</span></div>
+                  </div>
+                </div>
+              )}
+
+              {/* AI 生成的处方预览 + 可编辑 */}
+              {aiPrescription && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-[#2F5D7C]" />
+                    <span className="text-sm font-medium text-[#2F5D7C]">AI 已生成处方</span>
+                    <span className="text-xs text-[#8A97A6]">— 医生可审核修改后下发</span>
+                  </div>
+
+                  {/* 方案标题 */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#243447]">方案标题</label>
+                    <input
+                      type="text"
+                      value={newPlanTitle}
+                      onChange={(e) => setNewPlanTitle(e.target.value)}
+                      className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                    />
+                  </div>
+
+                  {/* 训练动作列表 */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-[#243447]">训练动作</p>
+                    {editableExercises.map((ex, idx) => (
+                      <div key={idx} className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-md bg-[#2F5D7C] px-2 py-0.5 text-xs font-medium text-white">
+                            动作 {idx + 1}
+                          </span>
+                          <span className="text-sm font-semibold text-[#243447]">{ex.name}</span>
+                        </div>
+                        {ex.purpose && <p className="text-xs text-[#5B6B7A]">目的：{ex.purpose}</p>}
+                        {ex.duration && <p className="text-xs text-[#5B6B7A]">时长：{ex.duration}</p>}
+                        {ex.steps.length > 0 && (
+                          <div className="text-xs text-[#5B6B7A]">
+                            <span>步骤：</span>
+                            <ol className="ml-4 list-decimal">
+                              {ex.steps.map((step, si) => <li key={si}>{step}</li>)}
+                            </ol>
+                          </div>
+                        )}
+                        {ex.precautions.length > 0 && (
+                          <div className="rounded-lg border border-[#F8E1C2] bg-[#FDF8EE] px-3 py-2 text-xs text-[#D9A441]">
+                            ⚠ {ex.precautions.join("；")}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 完整内容编辑 */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#243447]">方案内容（可直接编辑）</label>
+                    <textarea
+                      rows={6}
+                      value={newPlanContent}
+                      onChange={(e) => setNewPlanContent(e.target.value)}
+                      className="w-full resize-none rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                    />
+                  </div>
+
+                  {/* 重新生成 */}
+                  <button
+                    type="button"
+                    onClick={handleAiGeneratePrescription}
+                    disabled={isAiGenerating}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9E2EC] px-3 py-1.5 text-xs font-medium text-[#2F5D7C] hover:bg-[#F4F7FA] disabled:opacity-60"
+                  >
+                    {isAiGenerating ? "重新生成中..." : "重新生成"}
+                  </button>
+                </div>
+              )}
+
+              {/* 手动填写模式（无 AI 生成时显示） */}
+              {!aiPrescription && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#243447]">方案标题</label>
+                    <input
+                      type="text"
+                      value={newPlanTitle}
+                      onChange={(event) => setNewPlanTitle(event.target.value)}
+                      placeholder="例如：居家呼吸训练第1周方案"
+                      className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#243447]">方案内容</label>
+                    <textarea
+                      rows={6}
+                      value={newPlanContent}
+                      onChange={(event) => setNewPlanContent(event.target.value)}
+                      placeholder={"例如：\n1. 每日缩唇呼吸 2 次，每次 15 分钟。\n2. 每次训练完成后记录组数和体感。"}
+                      className="w-full resize-none rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-3 text-sm text-[#5B6B7A]">
                 提交后将写入 `patient_id={patient.id}`、`doctor_id={doctorId}`，并保留历史方案。
@@ -1060,9 +1680,304 @@ export default function PatientDetailView({
                 <button
                   type="submit"
                   className="rounded-lg bg-[#2F5D7C] px-4 py-2 text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
-                  disabled={isSubmittingPlan}
+                  disabled={isSubmittingPlan || (!newPlanTitle.trim() || !newPlanContent.trim())}
                 >
-                  {isSubmittingPlan ? "提交中..." : "确认下发"}
+                  {isSubmittingPlan ? "提交中..." : "审核通过并下发"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 档案编辑弹窗 */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">编辑健康档案</h4>
+                <p className="text-sm text-[#5B6B7A]">
+                  当前患者：{patient.name}（ID {patient.id}）
+                </p>
+              </div>
+              <button
+                onClick={() => setIsProfileModalOpen(false)}
+                className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                aria-label="关闭弹窗"
+              >
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleProfileSubmit} className="space-y-4 p-5">
+              {profileFormError && (
+                <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{profileFormError}</span>
+                </div>
+              )}
+
+              {/* 是否重症肺炎恢复期 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">是否重症肺炎恢复期患者</label>
+                <select
+                  value={profileForm.is_post_pneumonia === null ? "" : profileForm.is_post_pneumonia ? "true" : "false"}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      is_post_pneumonia: val === "" ? null : val === "true",
+                    }));
+                  }}
+                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                >
+                  <option value="">未填写</option>
+                  <option value="true">是</option>
+                  <option value="false">否</option>
+                </select>
+              </div>
+
+              {/* 出院时间 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">出院时间</label>
+                <input
+                  type="date"
+                  value={profileForm.discharge_date}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, discharge_date: e.target.value }))}
+                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                />
+              </div>
+
+              {/* 恢复阶段 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">当前恢复阶段</label>
+                <select
+                  value={profileForm.recovery_stage}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, recovery_stage: e.target.value as RecoveryStage | "" }))}
+                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                >
+                  <option value="">未填写</option>
+                  <option value="early">恢复早期（1-2周）</option>
+                  <option value="mid">恢复中期（2-6周）</option>
+                  <option value="stable">稳定恢复期</option>
+                </select>
+              </div>
+
+              {/* 是否长期吸烟 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">是否长期吸烟</label>
+                <select
+                  value={profileForm.is_long_term_smoker === null ? "" : profileForm.is_long_term_smoker ? "true" : "false"}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      is_long_term_smoker: val === "" ? null : val === "true",
+                    }));
+                  }}
+                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                >
+                  <option value="">未填写</option>
+                  <option value="true">是</option>
+                  <option value="false">否</option>
+                </select>
+              </div>
+
+              {/* 慢性呼吸疾病 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">是否存在慢性呼吸疾病</label>
+                <select
+                  value={profileForm.has_chronic_respiratory_disease === null ? "" : profileForm.has_chronic_respiratory_disease ? "true" : "false"}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      has_chronic_respiratory_disease: val === "" ? null : val === "true",
+                    }));
+                  }}
+                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                >
+                  <option value="">未填写</option>
+                  <option value="true">是</option>
+                  <option value="false">否</option>
+                </select>
+              </div>
+
+              {/* 心血管疾病 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">是否存在心血管疾病</label>
+                <select
+                  value={profileForm.has_cardiovascular_disease === null ? "" : profileForm.has_cardiovascular_disease ? "true" : "false"}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setProfileForm((prev) => ({
+                      ...prev,
+                      has_cardiovascular_disease: val === "" ? null : val === "true",
+                    }));
+                  }}
+                  className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                >
+                  <option value="">未填写</option>
+                  <option value="true">是</option>
+                  <option value="false">否</option>
+                </select>
+              </div>
+
+              <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-3 text-sm text-[#5B6B7A]">
+                档案信息将用于 AI 处方生成和五级康复分级判定，请尽量填写完整。
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="rounded-lg border border-[#D9E2EC] px-4 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                  disabled={isSubmittingProfile}
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-[#2F5D7C] px-4 py-2 text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
+                  disabled={isSubmittingProfile}
+                >
+                  {isSubmittingProfile ? "保存中..." : "保存档案"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 评估录入弹窗 */}
+      {isAssessmentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">新增康复评估</h4>
+                <p className="text-sm text-[#5B6B7A]">
+                  当前患者：{patient.name}（ID {patient.id}）
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAssessmentModalOpen(false)}
+                className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                aria-label="关闭弹窗"
+              >
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAssessmentSubmit} className="space-y-4 p-5">
+              {assessmentFormError && (
+                <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{assessmentFormError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* 心率 */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#243447]">心率（bpm）</label>
+                  <input
+                    type="number"
+                    min="40"
+                    max="200"
+                    value={assessmentForm.heart_rate}
+                    onChange={(e) => setAssessmentForm((prev) => ({ ...prev, heart_rate: e.target.value }))}
+                    placeholder="如：78"
+                    className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                  />
+                </div>
+                {/* 血氧 */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#243447]">血氧（%）</label>
+                  <input
+                    type="number"
+                    min="70"
+                    max="100"
+                    value={assessmentForm.spo2}
+                    onChange={(e) => setAssessmentForm((prev) => ({ ...prev, spo2: e.target.value }))}
+                    placeholder="如：96"
+                    className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* 呼吸困难评分 */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#243447]">呼吸困难评分（1-5）</label>
+                  <select
+                    value={assessmentForm.dyspnea_score}
+                    onChange={(e) => setAssessmentForm((prev) => ({ ...prev, dyspnea_score: e.target.value }))}
+                    className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                  >
+                    <option value="">请选择</option>
+                    <option value="1">1 - 呼吸完全正常</option>
+                    <option value="2">2 - 轻微气短</option>
+                    <option value="3">3 - 活动后明显气短</option>
+                    <option value="4">4 - 日常活动困难</option>
+                    <option value="5">5 - 静息状态呼吸困难</option>
+                  </select>
+                </div>
+                {/* 疲劳评分 */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#243447]">疲劳评分（1-10）</label>
+                  <select
+                    value={assessmentForm.fatigue_score}
+                    onChange={(e) => setAssessmentForm((prev) => ({ ...prev, fatigue_score: e.target.value }))}
+                    className="w-full rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                  >
+                    <option value="">请选择</option>
+                    <option value="1">1 - 完全不疲劳</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4 - 轻度疲劳</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7 - 明显疲劳</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10 - 极度疲劳</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 备注 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#243447]">评估备注（可选）</label>
+                <textarea
+                  rows={3}
+                  value={assessmentForm.notes}
+                  onChange={(e) => setAssessmentForm((prev) => ({ ...prev, notes: e.target.value }))}
+                  placeholder="如：活动后轻微气短，整体状态尚可"
+                  className="w-full resize-none rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm outline-none focus:border-[#2F5D7C]"
+                />
+              </div>
+
+              <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-3 text-sm text-[#5B6B7A]">
+                评估数据将用于五级康复分级判定和 AI 处方生成，请如实填写。
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAssessmentModalOpen(false)}
+                  className="rounded-lg border border-[#D9E2EC] px-4 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                  disabled={isSubmittingAssessment}
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-[#2F5D7C] px-4 py-2 text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
+                  disabled={isSubmittingAssessment}
+                >
+                  {isSubmittingAssessment ? "提交中..." : "提交评估"}
                 </button>
               </div>
             </form>

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.responses import success_response
+from core.security import get_current_user
 from database import get_db
 from models import RehabPlan, User, UserRole
 from schemas import ApiResponse, RehabPlanCreateRequest, RehabPlanResponse
@@ -36,11 +37,12 @@ def _ensure_patient_belongs_to_doctor(patient: User, doctor_id: int) -> None:
     response_model=ApiResponse[RehabPlanResponse],
     status_code=status.HTTP_200_OK,
     summary="新增训练方案",
-    description="医生为指定患者新增一条训练方案记录。MVP 阶段保留全部历史，不覆盖旧方案。",
+    description="医生为指定患者新增一条训练方案记录。MVP 阶段保留全部历史，不覆盖旧方案。需要登录。",
 )
 def create_rehab_plan(
     payload: RehabPlanCreateRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[RehabPlanResponse]:
     patient = _get_user_or_raise(db, payload.patient_id, UserRole.PATIENT, "Patient not found.")
     _get_user_or_raise(db, payload.doctor_id, UserRole.DOCTOR, "Doctor not found.")
@@ -62,12 +64,13 @@ def create_rehab_plan(
     "",
     response_model=ApiResponse[list[RehabPlanResponse]],
     summary="查询历史训练方案",
-    description="按患者 ID 查询全部历史训练方案，按创建时间倒序返回，最新方案排在最前。",
+    description="按患者 ID 查询全部历史训练方案，按创建时间倒序返回，最新方案排在最前。需要登录。",
 )
 def list_rehab_plans(
     patient_id: int = Query(gt=0, description="患者 ID"),
     doctor_id: int = Query(gt=0, description="医生 ID"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[list[RehabPlanResponse]]:
     patient = _get_user_or_raise(db, patient_id, UserRole.PATIENT, "Patient not found.")
     _get_user_or_raise(db, doctor_id, UserRole.DOCTOR, "Doctor not found.")

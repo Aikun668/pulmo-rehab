@@ -77,6 +77,16 @@ function getDoctorId() {
   return app.globalData.doctorId || wx.getStorageSync("doctorId") || null
 }
 
+function getUserName() {
+  var app = getApp()
+  return app.globalData.userName || wx.getStorageSync("userName") || ""
+}
+
+function getRole() {
+  var app = getApp()
+  return app.globalData.role || wx.getStorageSync("role") || ""
+}
+
 function logout() {
   var app = getApp()
   app.globalData.token = ""
@@ -98,6 +108,8 @@ module.exports = {
   getToken: getToken,
   getPatientId: getPatientId,
   getDoctorId: getDoctorId,
+  getUserName: getUserName,
+  getRole: getRole,
   logout: logout,
   request: request,
 }

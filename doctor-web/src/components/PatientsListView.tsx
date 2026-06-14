@@ -5,6 +5,8 @@
 
 import { useMemo, useState } from "react";
 import { Patient } from "../types";
+import { RECOVERY_STAGE_LABELS, REHAB_LEVEL_INFO } from "../types";
+import { AlertTriangle } from "lucide-react";
 import {
   AlertCircle,
   ArrowRight,
@@ -406,7 +408,38 @@ export default function PatientsListView({
                       <div className="space-y-4 p-5">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-base font-semibold text-[#243447]">{patient.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-base font-semibold text-[#243447]">{patient.name}</p>
+                              {patient.rehab_level && REHAB_LEVEL_INFO[patient.rehab_level] && (
+                                <span
+                                  className="rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
+                                  style={{
+                                    color: REHAB_LEVEL_INFO[patient.rehab_level].color,
+                                    backgroundColor: REHAB_LEVEL_INFO[patient.rehab_level].bgColor,
+                                    borderColor: REHAB_LEVEL_INFO[patient.rehab_level].borderColor,
+                                  }}
+                                >
+                                  L{patient.rehab_level}
+                                </span>
+                              )}
+                              {patient.recovery_stage && (
+                                <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${
+                                  patient.recovery_stage === "early"
+                                    ? "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]"
+                                    : patient.recovery_stage === "mid"
+                                      ? "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]"
+                                      : "bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3]"
+                                }`}>
+                                  {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
+                                </span>
+                              )}
+                              {patient.stats.has_unresolved_warnings && (
+                                <span className="inline-flex items-center gap-0.5 rounded-md border border-[#F8D2D2] bg-[#FDF2F2] px-1.5 py-0.5 text-[10px] font-medium text-[#D95C5C]">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  预警
+                                </span>
+                              )}
+                            </div>
                             <p className="mt-1 text-xs text-[#8A97A6]">患者 ID：{patient.id}</p>
                           </div>
                           <span className={`rounded-md border px-2 py-1 text-[11px] font-medium ${meta.badgeClassName}`}>
@@ -482,6 +515,8 @@ export default function PatientsListView({
               <thead>
                 <tr className="border-b border-[#D9E2EC] bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A]">
                   <th className="px-4 py-3 font-semibold">患者</th>
+                  <th className="px-4 py-3 text-center font-semibold">恢复阶段</th>
+                  <th className="px-4 py-3 text-center font-semibold">康复等级</th>
                   <th className="px-4 py-3 text-center font-semibold">近7天打卡</th>
                   <th className="px-4 py-3 text-center font-semibold">累计时长</th>
                   <th className="px-4 py-3 text-center font-semibold">最近训练</th>
@@ -496,6 +531,37 @@ export default function PatientsListView({
                       <td className="px-4 py-4">
                         <p className="font-semibold text-[#243447]">{patient.name}</p>
                         <p className="mt-1 text-xs text-[#8A97A6]">患者 ID：{patient.id}</p>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {patient.recovery_stage ? (
+                          <span className={`inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                            patient.recovery_stage === "early"
+                              ? "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]"
+                              : patient.recovery_stage === "mid"
+                                ? "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]"
+                                : "bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3]"
+                          }`}>
+                            {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[#8A97A6]">未填写</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {patient.rehab_level && REHAB_LEVEL_INFO[patient.rehab_level] ? (
+                          <span
+                            className="inline-flex rounded-md border px-2 py-0.5 text-[11px] font-semibold"
+                            style={{
+                              color: REHAB_LEVEL_INFO[patient.rehab_level].color,
+                              backgroundColor: REHAB_LEVEL_INFO[patient.rehab_level].bgColor,
+                              borderColor: REHAB_LEVEL_INFO[patient.rehab_level].borderColor,
+                            }}
+                          >
+                            L{patient.rehab_level} {REHAB_LEVEL_INFO[patient.rehab_level].name}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[#8A97A6]">未评估</span>
+                        )}
                       </td>
                       <td className="px-4 py-4 text-center font-semibold text-[#243447]">
                         {patient.stats.check_in_count_7d} 次

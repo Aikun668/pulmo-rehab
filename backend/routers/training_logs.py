@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.responses import success_response
+from core.security import get_current_user
 from database import get_db
 from models import TrainingLog, User, UserRole
 from schemas import (
@@ -37,11 +38,12 @@ def _get_patient_or_raise(db: Session, patient_id: int) -> User:
     response_model=ApiResponse[TrainingLogUpsertResponse],
     status_code=status.HTTP_200_OK,
     summary="新增或覆盖当日打卡",
-    description="按 patient_id + train_date 查找打卡记录；若当天已有记录则覆盖更新，否则新增一条记录。",
+    description="按 patient_id + train_date 查找打卡记录；若当天已有记录则覆盖更新，否则新增一条记录。需要登录。",
 )
 def upsert_training_log(
     payload: TrainingLogUpsertRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[TrainingLogUpsertResponse]:
     _get_patient_or_raise(db, payload.patient_id)
 
@@ -84,13 +86,14 @@ def upsert_training_log(
     "",
     response_model=ApiResponse[list[TrainingLogResponse]],
     summary="查询训练打卡列表",
-    description="按患者和可选日期范围查询训练打卡记录，结果按 train_date 倒序返回。",
+    description="按患者和可选日期范围查询训练打卡记录，结果按 train_date 倒序返回。需要登录。",
 )
 def list_training_logs(
     patient_id: int = Query(gt=0, description="患者 ID"),
     start_date: date | None = Query(default=None, description="开始日期，格式 YYYY-MM-DD"),
     end_date: date | None = Query(default=None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[list[TrainingLogResponse]]:
     _get_patient_or_raise(db, patient_id)
 
@@ -114,11 +117,12 @@ def list_training_logs(
     "/progress-30d",
     response_model=ApiResponse[TrainingProgress30dResponse],
     summary="查询近30天训练进度",
-    description="返回包含今天在内的近 30 天训练进度数据，无打卡日期会自动补 0，前端可直接用于折线图展示。",
+    description="返回包含今天在内的近 30 天训练进度数据，无打卡日期会自动补 0，前端可直接用于折线图展示。需要登录。",
 )
 def get_training_progress_30d(
     patient_id: int = Query(gt=0, description="患者 ID"),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[TrainingProgress30dResponse]:
     _get_patient_or_raise(db, patient_id)
 
