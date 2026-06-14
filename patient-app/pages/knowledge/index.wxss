@@ -1,0 +1,147 @@
+.page {
+  padding: 24rpx;
+  padding-bottom: 120rpx;
+}
+
+/* ===== 等级标签区 ===== */
+.level-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+  padding: 0 4rpx;
+}
+
+.level-header__tag {
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.level-header__hint {
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+/* ===== 文章列表 ===== */
+.article-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.article-item {
+  background: #ffffff;
+  border-radius: 20rpx;
+  border: 1rpx solid #e3ebf5;
+  box-shadow: 0 8rpx 24rpx rgba(31, 41, 55, 0.04);
+  padding: 24rpx;
+  transition: border-color 0.2s;
+}
+
+.article-item--expanded {
+  border-color: #bfdbfe;
+}
+
+.article-item__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.article-item__left {
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.article-item__category {
+  display: inline-block;
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+
+.article-item__title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.article-item__summary {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #6b7a8a;
+  line-height: 1.5;
+}
+
+.article-item__arrow {
+  font-size: 22rpx;
+  color: #8a9aad;
+  flex-shrink: 0;
+  padding-top: 8rpx;
+}
+
+/* ===== 展开内容 ===== */
+.article-item__content {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f4f8;
+}
+
+.article-item__paragraph {
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.content-subtitle {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #243447;
+  margin-top: 12rpx;
+  margin-bottom: 6rpx;
+}
+
+.content-list-item {
+  display: block;
+  font-size: 22rpx;
+  color: #4a5b6c;
+  line-height: 1.7;
+  padding-left: 8rpx;
+}
+
+.content-paragraph {
+  display: block;
+  font-size: 22rpx;
+  color: #5b6b7a;
+  line-height: 1.7;
+}
+
+/* ===== 底部免责 ===== */
+.disclaimer {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 32rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 16rpx;
+  background: #fffbeb;
+  border: 1rpx solid #fde68a;
+  gap: 8rpx;
+}
+
+.disclaimer__icon {
+  font-size: 22rpx;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.disclaimer__text {
+  font-size: 20rpx;
+  color: #92400e;
+  line-height: 1.6;
+}

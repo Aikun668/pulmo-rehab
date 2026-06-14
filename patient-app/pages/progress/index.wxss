@@ -12,7 +12,7 @@
 }
 
 .chart-card {
-  margin-top: 24rpx;
+  margin-top: 20rpx;
 }
 
 .summary-card__title,
@@ -63,6 +63,34 @@
   color: #5b6b7a;
 }
 
+/* ===== Tab 切换 ===== */
+.tab-bar {
+  display: flex;
+  margin-top: 24rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  border: 1rpx solid #e3ebf5;
+  overflow: hidden;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #5b6b7a;
+  transition: all 0.2s;
+}
+
+.tab-item--active {
+  color: #2563eb;
+  font-weight: 700;
+  background: #eff6ff;
+  border-bottom: 4rpx solid #2563eb;
+}
+
+/* ===== 训练柱状图 ===== */
 .chart-scroll {
   width: 100%;
   margin-top: 28rpx;
@@ -109,4 +137,141 @@
   margin-top: 10rpx;
   font-size: 20rpx;
   color: #5b6b7a;
+}
+
+/* ===== 趋势图 ===== */
+.trend-section {
+  margin-top: 24rpx;
+  padding-bottom: 16rpx;
+}
+
+.trend-section + .trend-section {
+  border-top: 1rpx solid #f0f4f8;
+  padding-top: 24rpx;
+}
+
+.trend-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.trend-section__title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #243447;
+}
+
+.trend-section__unit {
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.trend-chart {
+  display: flex;
+  height: 240rpx;
+  position: relative;
+}
+
+.trend-chart--short {
+  height: 180rpx;
+}
+
+.trend-y-axis {
+  width: 60rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8rpx 0;
+  flex-shrink: 0;
+}
+
+.trend-y-axis--short {
+  width: 48rpx;
+}
+
+.trend-y-label {
+  font-size: 18rpx;
+  color: #8a9aad;
+  text-align: right;
+}
+
+.trend-points {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8rpx;
+  padding: 8rpx 0;
+  overflow-x: auto;
+}
+
+.trend-points--short {
+  padding: 8rpx 0;
+}
+
+.trend-point-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 56rpx;
+}
+
+.trend-point {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  position: relative;
+}
+
+.trend-point--hr {
+  background: #3b82f6;
+  box-shadow: 0 0 8rpx rgba(59, 130, 246, 0.4);
+}
+
+.trend-point--spo2 {
+  background: #22c55e;
+  box-shadow: 0 0 8rpx rgba(34, 197, 94, 0.4);
+}
+
+.trend-point--dyspnea {
+  background: #f59e0b;
+  box-shadow: 0 0 8rpx rgba(245, 158, 11, 0.4);
+}
+
+.trend-point--fatigue {
+  background: #8b5cf6;
+  box-shadow: 0 0 8rpx rgba(139, 92, 246, 0.4);
+}
+
+.trend-point--warning {
+  background: #ef4444;
+  box-shadow: 0 0 12rpx rgba(239, 68, 68, 0.6);
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.trend-point__label {
+  margin-top: 6rpx;
+  font-size: 18rpx;
+  color: #4a5b6c;
+  font-weight: 600;
+}
+
+.trend-point__date {
+  margin-top: 4rpx;
+  font-size: 16rpx;
+  color: #8a9aad;
+}
+
+.trend-threshold {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  color: #dc2626;
+  font-weight: 500;
 }

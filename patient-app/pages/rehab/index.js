@@ -220,4 +220,10 @@ Page({
       url: "/pages/ai-summary/index",
     })
   },
+
+  handleOpenKnowledge() {
+    wx.navigateTo({
+      url: "/pages/knowledge/index",
+    })
+  },
 })

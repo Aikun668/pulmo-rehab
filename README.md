@@ -33,15 +33,15 @@
 | 模块 | 核心能力 | 状态 |
 |------|----------|------|
 | 1. 患者健康档案 | 6 个扩展字段已加入后端+前端，支持展示/编辑 | ⚠️ 部分完成（缺年龄/性别/身高/体重） |
-| 2. 智能康复评估 | 后端评估记录+前端录入弹窗已实现，缺小程序自评入口 | ⚠️ 部分完成 |
+| 2. 智能康复评估 | 后端评估记录+前端录入弹窗+小程序训练前自评已实现 | ✅ 已完成 |
 | 3. 五级康复分级 | 后端判定逻辑+前端等级展示已实现 | ✅ 已完成 |
-| 4. AI 训练处方生成 | DeepSeek 驱动处方生成+医生审核工作流已实现 | ✅ 已完成 |
-| **5. 患者训练执行** | 当前为任务清单+呼吸计时器，需升级为真正陪练页 | **P0 重构** |
-| 6. AI 动态处方调整 | 缺体征数据源，分析维度不足 | ❌ 待开发 |
+| 4. AI 训练处方生成 | DeepSeek 驱动处方生成+医生审核工作流+趋势感知动态调整已实现 | ✅ 已完成 |
+| **5. 患者训练执行** | 处方驱动训练+呼吸陪练+训练前自评+安全预警弹窗已实现 | ✅ 已完成 |
+| 6. AI 动态处方调整 | 趋势分析+上版处方参考+调整说明已实现 | ✅ 已完成 |
 | 7. AI 康复小结 | 已实现，定位降为辅助报告 | ✅ 已完成 |
-| 8. 安全预警 | 心率/血氧/疲劳阈值自动检测+医生端预警中心已实现 | ✅ 已完成 |
+| 8. 安全预警 | 心率/血氧/疲劳阈值自动检测+医患双端预警已实现 | ✅ 已完成 |
 | 9. 智能设备接入 | V2 前瞻，当前预留接口 | 📋 V2 |
-| 10. 康复知识推荐 | 按等级推荐文章 | ❌ 待开发 |
+| 10. 康复知识推荐 | 按等级推荐17篇知识文章（5级×3+通用2篇）已实现 | ✅ 已完成 |
 
 ---
 
@@ -73,11 +73,11 @@
 - **预警中心（新增）**：详情页预警记录列表 + 标记已处理 + 列表页预警图标提示
 
 ### 患者端小程序
-- 首页：动态进度环 + 连续打卡天数 + AI 预览
-- 训练页：呼吸陪练计时器 + 3 项任务勾选提交
-- 康复页：统计横栏 + 方案/进度/AI 入口
-- 方案详情：方案历史 + 训练动作分步骤指导
-- 30 天进度：柱状趋势图 + 摘要统计
+- 首页：动态进度环 + 连续打卡天数 + 等级徽章 + 处方任务速览 + 今日训练建议
+- 训练页：4 级处方加载优先级（医生审核→缓存→AI→等级默认）+ 等级呼吸陪练 + 训练前自评弹窗 + 安全预警弹窗
+- 康复页：统计横栏 + 方案/进度/AI/知识入口
+- 康复知识：按等级推荐17篇文章（5级×3+通用2篇），手风琴展开
+- 30 天进度：3-Tab 设计（训练时长/生命体征/自评评分）+ 散点趋势图
 - AI 小结：最新 + 历史列表
 - 登录鉴权：dev-login 自动获取 token
 
@@ -122,8 +122,10 @@ backend/
 - `GET /api/training-logs/progress-30d` — 近 30 天趋势
 
 ### Rehab Plans
-- `POST /api/rehab-plans` — 医生下发方案
+- `POST /api/rehab-plans` — 医生下发方案（支持结构化 exercises）
 - `GET /api/rehab-plans` — 查询方案历史
+- `PUT /api/rehab-plans/{id}` — 审核/编辑方案（修改标题/内容/动作/状态）
+- `GET /api/rehab-plans/active` — 查询患者当前生效方案
 
 ### Doctors
 - `GET /api/doctors/{doctor_id}/patients` — 患者列表
@@ -148,7 +150,7 @@ backend/
 - `GET /api/assessments/latest?patient_id=X` — 查询最新评估
 
 ### Prescriptions（新增）
-- `POST /api/prescriptions/generate` — AI 生成训练处方
+- `POST /api/prescriptions/generate` — AI 生成训练处方（趋势感知版，支持 save_as_draft）
 
 ### Warnings（新增）
 - `GET /api/warnings?patient_id=X` — 查询预警记录
@@ -182,3 +184,22 @@ npm install && npm run dev
 - 方案：每次下发新增，保留历史
 - AI 小结：取最新一条，无数据返回 null
 - 鉴权：所有核心接口需 Bearer token
+
+---
+
+## 代码审查修复记录（2026-06-14）
+
+本轮对第二阶段所有变更进行了全面代码审查，修复 10 项问题：
+
+| # | 严重度 | 文件 | 问题 | 修复方式 |
+|---|--------|------|------|----------|
+| 1 | 🔴 严重 | `prescription_service.py` | 趋势判断 `and/or` 运算符优先级错误，心率下降/血氧上升误判 | 改为按 key 的 `if/elif` 链 |
+| 2 | 🔴 严重 | `rehab_plans.py` | `update_rehab_plan` 无权限校验，任意登录用户可改方案 | 添加 `current_user.id == plan.doctor_id` 校验 |
+| 3 | 🔴 严重 | `progress/index.js+wxml` | 散点图 `bottom` 可能为负值，数据点溢出不可见 | JS 层预计算 `bottomRpx` 并 `Math.max(0, ...)` |
+| 4 | 🟡 中等 | `prescriptions.py` | `patient.rehab_level or 3` 在 level=0 时错误默认 | 改为 `is not None` 判断 |
+| 5 | 🟡 中等 | `prescriptions.py` | `save_as_draft=true` 但患者无 `doctor_id` 时静默失败 | 添加 `logger.warning` 记录 |
+| 6 | 🟡 低 | `PatientDetailView.tsx` | `window.location.reload()` 硬刷新 | 保留但添加注释说明原因 |
+| 7 | 🟡 中等 | `progress/index.js` | 评估数据全量加载 | 添加 `limit: 15` 参数 |
+| 8 | 🟡 中等 | `knowledge/index.js+wxml` | 内容行检测过宽（"2型糖尿病"误判列表） | JS 层预解析 `_parseContentLines`，正则匹配 `^\d+[\.．、\s]` |
+| 10 | 🟢 低 | `models.py` | `RehabPlan.status` 无数据库级约束 | 添加 `CheckConstraint` |
+| 11 | 🟢 低 | `prescription_service.py` | `_get_last_prescription_context` 方法内 `import` | 移至文件顶部 |

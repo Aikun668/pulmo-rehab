@@ -45,6 +45,9 @@ export interface RehabPlan {
   doctor_id: number;
   title: string;
   content: string;
+  status: "draft" | "approved" | "active";
+  exercises: ExerciseItem[];
+  adjustment_note: string | null;
   created_at: string;
 }
 
@@ -95,6 +98,8 @@ export interface PrescriptionGenerateResponse {
   rehab_level: number;
   title: string;
   exercises: ExerciseItem[];
+  adjustment_note: string | null;
+  saved_plan_id: number | null;
 }
 
 export type WarningType = "heart_rate_high" | "spo2_low" | "fatigue_high" | "dyspnea_severe";

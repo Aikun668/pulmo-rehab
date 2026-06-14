@@ -6,7 +6,8 @@
     "pages/plan-detail/index",
     "pages/progress/index",
     "pages/ai-summary/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/knowledge/index"
   ],
   "tabBar": {
     "color": "#7A8A9A",

@@ -140,6 +140,16 @@ class RehabPlanCreateRequest(BaseModel):
                 "doctor_id": 2,
                 "title": "第一周训练方案",
                 "content": "每天进行呼吸训练 20 分钟，分 3 组完成。",
+                "exercises": [
+                    {
+                        "name": "缩唇呼吸训练",
+                        "purpose": "改善呼吸效率",
+                        "duration": "每次10分钟",
+                        "steps": ["鼻吸气4秒", "缩唇呼气6秒"],
+                        "precautions": ["不要用力呼气"],
+                    }
+                ],
+                "adjustment_note": "根据趋势分析，维持当前训练强度",
             }
         }
     )
@@ -148,6 +158,27 @@ class RehabPlanCreateRequest(BaseModel):
     doctor_id: int = Field(gt=0)
     title: str = Field(min_length=1, max_length=100)
     content: str = Field(min_length=1, max_length=2000)
+    exercises: list[ExerciseItem] | None = Field(default=None, description="结构化训练动作")
+    adjustment_note: str | None = Field(default=None, max_length=500, description="AI 调整说明")
+
+
+class RehabPlanUpdateRequest(BaseModel):
+    """医生审核/编辑处方"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "title": "修改后的训练方案",
+                "content": "每天进行呼吸训练 25 分钟",
+                "status": "approved",
+            }
+        }
+    )
+
+    title: str | None = Field(default=None, min_length=1, max_length=100)
+    content: str | None = Field(default=None, min_length=1, max_length=2000)
+    exercises: list[ExerciseItem] | None = Field(default=None, description="结构化训练动作")
+    status: str | None = Field(default=None, pattern="^(draft|approved|active)$")
 
 
 class RehabPlanResponse(BaseModel):
@@ -160,6 +191,9 @@ class RehabPlanResponse(BaseModel):
                 "doctor_id": 2,
                 "title": "第一周训练方案",
                 "content": "每天进行呼吸训练 20 分钟，分 3 组完成。",
+                "status": "draft",
+                "exercises": [],
+                "adjustment_note": None,
                 "created_at": "2026-05-23T04:30:00Z",
             }
         },
@@ -170,6 +204,9 @@ class RehabPlanResponse(BaseModel):
     doctor_id: int
     title: str
     content: str
+    status: str = "draft"
+    exercises: list[ExerciseItem] = []
+    adjustment_note: str | None = None
     created_at: datetime
 
 
@@ -370,11 +407,16 @@ class PrescriptionGenerateRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "patient_id": 1,
+                "save_as_draft": True,
             }
         }
     )
 
     patient_id: int = Field(gt=0)
+    save_as_draft: bool = Field(
+        default=False,
+        description="是否自动保存为 draft RehabPlan，医生可在 rehab-plans 接口审核下发",
+    )
 
 
 class PrescriptionGenerateResponse(BaseModel):
@@ -393,6 +435,8 @@ class PrescriptionGenerateResponse(BaseModel):
                         "precautions": ["不要用力呼气", "如感头晕请停止"],
                     }
                 ],
+                "adjustment_note": "趋势稳定，维持当前训练方案",
+                "saved_plan_id": 5,
             }
         }
     )
@@ -401,6 +445,8 @@ class PrescriptionGenerateResponse(BaseModel):
     rehab_level: int
     title: str
     exercises: list[ExerciseItem]
+    adjustment_note: str | None = None
+    saved_plan_id: int | None = None
 
 
 class AssessmentCreateRequest(BaseModel):

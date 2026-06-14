@@ -3,8 +3,16 @@
 <view class="page">
   <!-- 问候区 -->
   <view class="header-section">
-    <view class="header-section__eyebrow">{{welcomeLabel}}</view>
-    <view class="header-section__title">{{patientName}}</view>
+    <view class="header-section__top">
+      <view class="header-section__text">
+        <view class="header-section__eyebrow">{{welcomeLabel}}</view>
+        <view class="header-section__title">{{patientName}}</view>
+      </view>
+      <view class="level-badge-home" wx:if="{{rehabLevel > 0}}" style="background: {{rehabLevelColor}}15; border-color: {{rehabLevelColor}};">
+        <text class="level-badge-home__label" style="color: {{rehabLevelColor}};">Level {{rehabLevel}}</text>
+        <text class="level-badge-home__name" style="color: {{rehabLevelColor}};">{{rehabLevelName}}</text>
+      </view>
+    </view>
     <view class="header-section__streak" wx:if="{{streakDays > 0}}">已连续打卡 {{streakDays}} 天</view>
   </view>
 
@@ -55,7 +63,19 @@
     </view>
   </view>
 
-  <!-- 卡片2：AI 康复小结 -->
+  <!-- 卡片2：今日训练建议 -->
+  <view class="advice-card" wx:if="{{todayAdvice}}">
+    <view class="advice-card__top">
+      <view class="advice-card__title-group">
+        <view class="advice-card__icon">💡</view>
+        <view class="advice-card__tag">今日训练建议</view>
+      </view>
+      <view class="advice-card__level" wx:if="{{rehabLevel > 0}}" style="color: {{rehabLevelColor}};">Level {{rehabLevel}}</view>
+    </view>
+    <view class="advice-card__content">{{todayAdvice}}</view>
+  </view>
+
+  <!-- 卡片3：AI 康复小结 -->
   <view class="tips-card">
     <view class="tips-card__top">
       <view class="tips-card__title-group">

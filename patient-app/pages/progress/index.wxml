@@ -4,7 +4,7 @@
   <view class="summary-card">
     <view class="summary-card__title">训练趋势摘要</view>
     <view class="summary-card__desc">{{progressSummary}}</view>
-    <view class="summary-metrics" wx:if="{{!isLoading && !errorMessage}}">
+    <view class="summary-metrics" wx:if="{{!isLoading}}">
       <view class="summary-metric">
         <view class="summary-metric__value">{{trainedDays}}</view>
         <view class="summary-metric__label">训练天数</view>
@@ -20,20 +20,24 @@
     </view>
   </view>
 
-  <view class="chart-card">
-    <view class="chart-card__title">近30天训练趋势</view>
+  <!-- Tab 切换 -->
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 'training' ? 'tab-item--active' : ''}}" data-tab="training" bindtap="handleTabChange">训练时长</view>
+    <view class="tab-item {{activeTab === 'vitals' ? 'tab-item--active' : ''}}" data-tab="vitals" bindtap="handleTabChange">生命体征</view>
+    <view class="tab-item {{activeTab === 'scores' ? 'tab-item--active' : ''}}" data-tab="scores" bindtap="handleTabChange">自评评分</view>
+  </view>
 
+  <!-- 训练时长柱状图 -->
+  <view class="chart-card" wx:if="{{activeTab === 'training'}}">
+    <view class="chart-card__title">近30天训练趋势</view>
     <view class="chart-card__state" wx:if="{{isLoading}}">正在同步近30天训练数据...</view>
-    <view class="chart-card__state" wx:elif="{{days.length === 0}}">暂无训练记录，开始训练后将在这里展示趋势</view>
+    <view class="chart-card__state" wx:elif="{{days.length === 0}}">暂无训练记录</view>
     <scroll-view scroll-x class="chart-scroll" wx:else>
       <view class="bar-list">
         <block wx:for="{{days}}" wx:key="fullDate">
           <view class="bar-item">
             <view class="bar-item__column">
-              <view
-                class="bar-item__bar {{item.durationMinutes > 0 ? 'bar-item__bar--active' : 'bar-item__bar--idle'}}"
-                style="height: {{item.barHeight}}rpx;"
-              ></view>
+              <view class="bar-item__bar {{item.durationMinutes > 0 ? 'bar-item__bar--active' : 'bar-item__bar--idle'}}" style="height: {{item.barHeight}}rpx;"></view>
             </view>
             <view class="bar-item__value">{{item.durationMinutes}}</view>
             <view class="bar-item__label">{{item.label}}</view>
@@ -41,5 +45,111 @@
         </block>
       </view>
     </scroll-view>
+  </view>
+
+  <!-- 生命体征趋势 -->
+  <view class="chart-card" wx:if="{{activeTab === 'vitals'}}">
+    <view class="chart-card__state" wx:if="{{isLoadingAssessments}}">正在加载评估数据...</view>
+    <view class="chart-card__state" wx:elif="{{assessments.heartRate.length === 0 && assessments.spo2.length === 0}}">暂无生命体征记录，完成训练前自评后将在这里展示趋势</view>
+    <block wx:else>
+      <!-- 心率 -->
+      <view class="trend-section" wx:if="{{assessments.heartRate.length > 0}}">
+        <view class="trend-section__header">
+          <view class="trend-section__title">心率趋势</view>
+          <view class="trend-section__unit">bpm</view>
+        </view>
+        <view class="trend-chart">
+          <view class="trend-y-axis">
+            <text class="trend-y-label">120</text>
+            <text class="trend-y-label">80</text>
+            <text class="trend-y-label">40</text>
+          </view>
+          <view class="trend-points">
+            <view class="trend-point-wrap" wx:for="{{assessments.heartRate}}" wx:key="index">
+              <view class="trend-point {{item.isWarning ? 'trend-point--warning' : 'trend-point--hr'}}" style="bottom: {{item.bottomRpx}}rpx;"></view>
+              <view class="trend-point__label">{{item.value}}</view>
+              <view class="trend-point__date">{{item.date}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="trend-threshold" wx:if="{{assessments.heartRate.length > 0}}">预警线：120 bpm</view>
+      </view>
+
+      <!-- 血氧 -->
+      <view class="trend-section" wx:if="{{assessments.spo2.length > 0}}">
+        <view class="trend-section__header">
+          <view class="trend-section__title">血氧趋势</view>
+          <view class="trend-section__unit">%</view>
+        </view>
+        <view class="trend-chart">
+          <view class="trend-y-axis">
+            <text class="trend-y-label">100</text>
+            <text class="trend-y-label">96</text>
+            <text class="trend-y-label">92</text>
+          </view>
+          <view class="trend-points">
+            <view class="trend-point-wrap" wx:for="{{assessments.spo2}}" wx:key="index">
+              <view class="trend-point {{item.isWarning ? 'trend-point--warning' : 'trend-point--spo2'}}" style="bottom: {{item.bottomRpx}}rpx;"></view>
+              <view class="trend-point__label">{{item.value}}</view>
+              <view class="trend-point__date">{{item.date}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="trend-threshold" wx:if="{{assessments.spo2.length > 0}}">预警线：92%</view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 自评评分趋势 -->
+  <view class="chart-card" wx:if="{{activeTab === 'scores'}}">
+    <view class="chart-card__state" wx:if="{{isLoadingAssessments}}">正在加载评估数据...</view>
+    <view class="chart-card__state" wx:elif="{{assessments.dyspnea.length === 0 && assessments.fatigue.length === 0}}">暂无自评记录，完成训练前自评后将在这里展示趋势</view>
+    <block wx:else>
+      <!-- 呼吸困难 -->
+      <view class="trend-section" wx:if="{{assessments.dyspnea.length > 0}}">
+        <view class="trend-section__header">
+          <view class="trend-section__title">呼吸困难评分</view>
+          <view class="trend-section__unit">1-5 级</view>
+        </view>
+        <view class="trend-chart trend-chart--short">
+          <view class="trend-y-axis trend-y-axis--short">
+            <text class="trend-y-label">5</text>
+            <text class="trend-y-label">3</text>
+            <text class="trend-y-label">1</text>
+          </view>
+          <view class="trend-points trend-points--short">
+            <view class="trend-point-wrap" wx:for="{{assessments.dyspnea}}" wx:key="index">
+              <view class="trend-point {{item.isWarning ? 'trend-point--warning' : 'trend-point--dyspnea'}}" style="bottom: {{item.bottomRpx}}rpx;"></view>
+              <view class="trend-point__label">{{item.value}}</view>
+              <view class="trend-point__date">{{item.date}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="trend-threshold">预警线：4 级</view>
+      </view>
+
+      <!-- 疲劳 -->
+      <view class="trend-section" wx:if="{{assessments.fatigue.length > 0}}">
+        <view class="trend-section__header">
+          <view class="trend-section__title">疲劳评分</view>
+          <view class="trend-section__unit">1-10 级</view>
+        </view>
+        <view class="trend-chart trend-chart--short">
+          <view class="trend-y-axis trend-y-axis--short">
+            <text class="trend-y-label">10</text>
+            <text class="trend-y-label">5</text>
+            <text class="trend-y-label">1</text>
+          </view>
+          <view class="trend-points trend-points--short">
+            <view class="trend-point-wrap" wx:for="{{assessments.fatigue}}" wx:key="index">
+              <view class="trend-point {{item.isWarning ? 'trend-point--warning' : 'trend-point--fatigue'}}" style="bottom: {{item.bottomRpx}}rpx;"></view>
+              <view class="trend-point__label">{{item.value}}</view>
+              <view class="trend-point__date">{{item.date}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="trend-threshold">预警线：8 级</view>
+      </view>
+    </block>
   </view>
 </view>

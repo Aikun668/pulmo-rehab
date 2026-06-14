@@ -12,6 +12,16 @@
   padding: 12rpx 4rpx 0;
 }
 
+.header-section__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-section__text {
+  flex: 1;
+}
+
 .header-section__eyebrow {
   font-size: 24rpx;
   font-weight: 600;
@@ -32,6 +42,28 @@
   font-weight: 600;
   color: #16a34a;
   line-height: 1.4;
+}
+
+/* ===== 首页等级徽章 ===== */
+.level-badge-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid;
+  flex-shrink: 0;
+}
+
+.level-badge-home__label {
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.level-badge-home__name {
+  font-size: 18rpx;
+  font-weight: 500;
 }
 
 /* ===== 通用卡片 ===== */
@@ -202,6 +234,50 @@
   font-weight: 600;
   color: #ffffff;
   line-height: 1;
+}
+
+/* ===== 今日训练建议卡片 ===== */
+.advice-card {
+  margin-top: 32rpx;
+  padding: 24rpx 28rpx 26rpx;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border-radius: 24rpx;
+  border: 1rpx solid #bfdbfe;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.advice-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.advice-card__title-group {
+  display: flex;
+  align-items: center;
+}
+
+.advice-card__icon {
+  font-size: 32rpx;
+  margin-right: 10rpx;
+}
+
+.advice-card__tag {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.advice-card__level {
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.advice-card__content {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.82;
+  color: #1e40af;
 }
 
 /* ===== AI 小结卡片 ===== */

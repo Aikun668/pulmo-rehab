@@ -3,6 +3,7 @@ from enum import Enum
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Enum as SqlEnum,
@@ -159,6 +160,9 @@ class TrainingLog(Base):
 
 class RehabPlan(Base):
     __tablename__ = "rehab_plans"
+    __table_args__ = (
+        CheckConstraint("status IN ('draft', 'approved', 'active')", name="ck_rehab_plan_status"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     patient_id: Mapped[int] = mapped_column(
@@ -173,6 +177,16 @@ class RehabPlan(Base):
     )
     title: Mapped[str] = mapped_column(String(100), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    # 第二阶段新增：处方状态 + 结构化动作
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="draft"
+    )  # draft / approved / active
+    exercises_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # JSON: [{"name","purpose","duration","steps","precautions"}]
+    adjustment_note: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # AI 动态调整说明
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,

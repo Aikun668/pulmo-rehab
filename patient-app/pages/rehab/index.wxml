@@ -39,4 +39,10 @@
     <view class="card__desc">{{aiSummaryPreview}}</view>
     <view class="card__link">查看最新小结</view>
   </view>
+
+  <view class="card card--knowledge" bindtap="handleOpenKnowledge">
+    <view class="card__title">康复知识</view>
+    <view class="card__desc">按您的康复等级推荐，涵盖呼吸训练、运动康复、饮食调理</view>
+    <view class="card__link">查看知识库</view>
+  </view>
 </view>

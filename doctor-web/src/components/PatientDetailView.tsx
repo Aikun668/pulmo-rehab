@@ -395,6 +395,8 @@ export default function PatientDetailView({
           doctor_id: doctorId,
           title: newPlanTitle.trim(),
           content: newPlanContent.trim(),
+          exercises: aiPrescription ? editableExercises : undefined,
+          adjustment_note: aiPrescription?.adjustment_note || undefined,
         }),
       });
 
@@ -406,9 +408,22 @@ export default function PatientDetailView({
 
       setNewPlanTitle("");
       setNewPlanContent("");
+      setAiPrescription(null);
       setIsPlanModalOpen(false);
+
+      // 自动将新建方案设为 active（医生下发即生效）
+      if (json.data?.id) {
+        try {
+          await fetch(`/api/rehab-plans/${json.data.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "active" }),
+          });
+        } catch { /* ignore */ }
+      }
+
       await fetchPlans(requestVersionRef.current);
-      setPlanSuccessMessage("已完成最新方案下发，可继续查看训练记录与30天进度。");
+      setPlanSuccessMessage("已完成最新方案下发，患者端将自动更新训练内容。");
     } catch (error) {
       console.error("Failed to create rehab plan:", error);
       setFormError("无法连接后端服务，训练方案下发失败。");
@@ -600,6 +615,7 @@ export default function PatientDetailView({
       }
 
       setIsProfileModalOpen(false);
+      // patient prop 由父组件管理，档案更新后需整页刷新以反映变更
       window.location.reload();
     } catch (error) {
       console.error("Failed to update patient profile:", error);
@@ -1570,8 +1586,16 @@ export default function PatientDetailView({
                   <div className="flex items-center gap-2">
                     <Brain className="h-4 w-4 text-[#2F5D7C]" />
                     <span className="text-sm font-medium text-[#2F5D7C]">AI 已生成处方</span>
+                    <span className="rounded-md bg-[#EDE9FE] px-2 py-0.5 text-xs font-medium text-[#7C3AED]">趋势感知</span>
                     <span className="text-xs text-[#8A97A6]">— 医生可审核修改后下发</span>
                   </div>
+
+                  {/* 动态调整说明 */}
+                  {aiPrescription.adjustment_note && (
+                    <div className="rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] px-3 py-2 text-xs text-[#15803D]">
+                      💡 {aiPrescription.adjustment_note}
+                    </div>
+                  )}
 
                   {/* 方案标题 */}
                   <div className="space-y-2">
