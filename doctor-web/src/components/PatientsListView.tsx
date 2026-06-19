@@ -6,11 +6,10 @@
 import { useMemo, useState } from "react";
 import { Patient } from "../types";
 import { RECOVERY_STAGE_LABELS, REHAB_LEVEL_INFO } from "../types";
-import { AlertTriangle } from "lucide-react";
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
-  Calendar,
   ChevronRight,
   Clock,
   LayoutGrid,
@@ -215,7 +214,8 @@ export default function PatientsListView({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-[#D9E2EC] bg-white p-5">
+      <div className="sticky top-[-24px] z-20 -mx-6 -mt-6 -mb-5 px-6 pt-6 pb-5 bg-med-bg">
+        <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-3">
             <div className="space-y-1">
@@ -328,6 +328,7 @@ export default function PatientsListView({
           </div>
         </div>
       </section>
+      </div>
 
       {errorMessage && (
         <section className="rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4">

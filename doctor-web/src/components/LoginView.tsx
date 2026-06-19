@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Activity, Lock, UserCheck } from "lucide-react";
 
 interface LoginViewProps {
@@ -16,13 +16,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   const [password, setPassword] = useState<string>("••••••••");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +39,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
     // Simulate minor network delay for loading effect
     setTimeout(() => {
-      if (!mountedRef.current) return;
       setIsSubmitting(false);
       onLoginSuccess(numericDocId, doctorName);
     }, 450);

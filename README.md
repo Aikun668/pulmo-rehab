@@ -203,3 +203,88 @@ npm install && npm run dev
 | 8 | 🟡 中等 | `knowledge/index.js+wxml` | 内容行检测过宽（"2型糖尿病"误判列表） | JS 层预解析 `_parseContentLines`，正则匹配 `^\d+[\.．、\s]` |
 | 10 | 🟢 低 | `models.py` | `RehabPlan.status` 无数据库级约束 | 添加 `CheckConstraint` |
 | 11 | 🟢 低 | `prescription_service.py` | `_get_last_prescription_context` 方法内 `import` | 移至文件顶部 |
+
+---
+
+## 登录卡死 Bug 修复（2026-06-14）
+
+**现象**：医生端登录按钮点击后一直转圈，无法进入系统。
+
+**根因**：`LoginView.tsx` 使用了 `mountedRef` 模式防止 setState on unmounted component，但该模式在 React 18 StrictMode 下被破坏：
+
+1. `main.tsx` 使用了 `<StrictMode>`
+2. StrictMode 会双重调用 effects：运行 → 清理 → 再运行
+3. `mountedRef` 的 cleanup 函数设置 `mountedRef.current = false`
+4. 第二次 effect 运行时，`mountedRef.current` 仍为 `false`，不会被 `useRef(true)` 重置
+5. `setTimeout` 回调检查 `if (!mountedRef.current) return` → **直接返回**
+6. `setIsSubmitting(false)` 和 `onLoginSuccess()` 永远不会执行 → 按钮永远转圈
+
+**修复**：移除 `mountedRef` 及其 `useEffect`。React 18+ 已移除 "setState on unmounted component" 警告，该模式不再必要。
+
+---
+
+## 数据展示修复 + 模拟数据生成（2026-06-19）
+
+### 问题
+1. 患者详情页训练记录/30天进度/AI小结/方案历史全部加载失败
+2. 两个患者（ID 14、15）没有任何训练数据
+
+### 修复内容
+
+**1. 移除开发期 JWT 鉴权**
+- `training_logs.py`、`rehab_plans.py`、`ai_summaries.py` 三个路由文件移除了 `get_current_user` 依赖
+- 原因：医生端为纯前端模拟登录，无 JWT token，导致所有需鉴权的接口返回 401
+- 与 `doctors.py`、`assessments.py`、`warnings.py` 保持一致（这些接口本就无鉴权）
+
+**2. 修复 RecoveryStage 枚举大小写不匹配**
+- 数据库 enum 定义为小写 `enum('early','mid','stable')`
+- 模型 `RecoveryStage` 枚举 name 为大写 `EARLY/MID/STABLE`，导致 SQLAlchemy 读取时报 `KeyError: 'mid'`
+- 修复：将枚举改为 `early = "early"` 让 name 和 value 一致
+- 同步修改 `grading_service.py`、`prescription_service.py` 中的引用
+
+**3. 修复 ai_summaries.content 列类型**
+- 数据库为 `varchar(255)`，模型定义为 `Text`
+- 修复：`ALTER TABLE ai_summaries MODIFY COLUMN content TEXT NOT NULL`
+
+**4. 模拟数据脚本 `seed_mock_data.py`**
+为患者 14（测试患者）和 15（测试患者2号）生成完整数据：
+
+| 数据类型 | 患者14 | 患者15 |
+|----------|--------|--------|
+| 健康档案 | 恢复中期/L3/慢性呼吸疾病 | 恢复早期/L2/吸烟+慢性呼吸+心血管 |
+| 训练记录 | 22条（周一到周五，趋势改善） | 17条（周一到周四，波动较大） |
+| 评估记录 | 4次（心率88→82，血氧95→97） | 4次（心率95，血氧93，呼吸困难4） |
+| 训练方案 | 2条（基础方案→进阶方案，含结构化动作） | 2条（初始方案→调整方案） |
+| AI小结 | 1条（依从性良好，指标改善） | 1条（恢复较慢，波动大，需关注） |
+| 预警记录 | 1条（血氧低，已处理） | 2条（心率高已处理+呼吸困难未处理） |
+
+---
+
+## 患者详情页 UI 重构（2026-06-19）
+
+### 问题
+1. 标题排版层次不清，患者姓名/ID/状态标签挤在一起
+2. 核心患者信息随页面滚动消失，操作按钮不可见
+3. 右侧边栏 8+ 张卡片纵向堆叠，需大量滚动浏览
+
+### 重构方案（参考 Linear/Jira 范式）
+
+**1. 吸顶患者信息栏**
+- 患者姓名 + ID + 状态标签 + 康复等级 固定在页面顶部
+- 关键指标（近7天打卡/累计时长/记录数）内联展示
+- 下发方案按钮始终可见
+- 背景色与页面一致，消除"透出"效果
+
+**2. 右侧边栏 Tab 化**
+- 将 8 张卡片分为 3 个 Tab：
+  - **档案评估**：健康档案、康复等级、最新评估、当前状态、跟进建议
+  - **AI 分析**：AI 康复小结、安全预警
+  - **方案历史**：训练方案历史
+- Tab 导航栏 sticky 定位在右侧边栏顶部
+- 默认展示"档案评估"Tab
+
+**3. 排版优化**
+- 患者姓名字号加大、字重加粗（`text-lg font-bold`）
+- ID/状态/等级标签缩小至 `text-[10px]`，降低视觉权重
+- 跟进提示独立成横条，不再占用 Header 空间
+- Section 间距从 `space-y-5` 调整为 `space-y-4`，减少垂直留白

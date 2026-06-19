@@ -1,7 +1,18 @@
 var API_BASE = "http://127.0.0.1:8000/api"
 
+// 生产环境部署时，取消下面一行注释并填入真实 API 地址：
+// var API_BASE = "https://your-api-domain.com/api"
+
+function getApiBase() {
+  var app = getApp()
+  if (app && app.globalData && app.globalData.apiBase) {
+    return app.globalData.apiBase
+  }
+  return API_BASE
+}
+
 /**
- * 封装 wx.request，自动带 Authorization header
+ * 封装 wx.request，自动带 Authorization header 和动态 API_BASE
  * 用法和 wx.request 一样，额外自动注入 token
  */
 function request(opts) {
@@ -11,6 +22,9 @@ function request(opts) {
     header["Authorization"] = "Bearer " + token
   }
   opts.header = header
+  if (!opts.url.startsWith("http")) {
+    opts.url = getApiBase() + opts.url
+  }
   wx.request(opts)
 }
 
@@ -18,7 +32,7 @@ function login(patientId) {
   var app = getApp()
   return new Promise(function (resolve, reject) {
     wx.request({
-      url: API_BASE + "/auth/dev-login",
+      url: getApiBase() + "/auth/dev-login",
       method: "POST",
       data: { patient_id: patientId },
       success: function (res) {
@@ -112,4 +126,5 @@ module.exports = {
   getRole: getRole,
   logout: logout,
   request: request,
+  getApiBase: getApiBase,
 }

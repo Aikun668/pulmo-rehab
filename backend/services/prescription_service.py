@@ -83,9 +83,9 @@ class PrescriptionService:
 
         # 恢复阶段中文映射
         stage_map = {
-            RecoveryStage.EARLY: "恢复早期（1-2周）",
-            RecoveryStage.MID: "恢复中期（2-6周）",
-            RecoveryStage.STABLE: "稳定恢复期",
+            RecoveryStage.early: "恢复早期（1-2周）",
+            RecoveryStage.mid: "恢复中期（2-6周）",
+            RecoveryStage.stable: "稳定恢复期",
         }
 
         # ===== 趋势分析 =====

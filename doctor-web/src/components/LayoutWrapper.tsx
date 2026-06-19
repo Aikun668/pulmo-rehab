@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   Users, 
   Activity, 
@@ -34,6 +34,40 @@ export default function LayoutWrapper({
   onNavigateToList
 }: LayoutWrapperProps) {
   const [timeStr, setTimeStr] = useState<string>("");
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem("sidebar-width");
+    return saved ? parseInt(saved, 10) : 256;
+  });
+  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  const startDrag = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startWidth: sidebarWidth };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      if (!dragRef.current) return;
+      const newWidth = Math.max(180, dragRef.current.startWidth + (e.clientX - dragRef.current.startX));
+      setSidebarWidth(newWidth);
+      localStorage.setItem("sidebar-width", String(newWidth));
+    };
+    const handleUp = () => {
+      if (dragRef.current) {
+        dragRef.current = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -48,7 +82,10 @@ export default function LayoutWrapper({
   return (
     <div className="h-screen overflow-hidden bg-med-bg flex font-sans text-med-text-primary">
       {/* Clinically Clean Modern Side Navigation Bar */}
-      <aside className="w-64 bg-white border-r border-med-border flex flex-col justify-between shrink-0 z-20">
+      <aside 
+        className="bg-white border-r border-med-border flex flex-col justify-between shrink-0 z-20"
+        style={{ width: sidebarWidth }}
+      >
         <div>
           {/* Institution Header Design */}
           <div className="p-5 border-b border-med-divider flex items-center gap-3">
@@ -120,6 +157,12 @@ export default function LayoutWrapper({
           </button>
         </div>
       </aside>
+
+      {/* 拖拽分隔线 */}
+      <div
+        onMouseDown={startDrag}
+        className="w-1 shrink-0 bg-transparent hover:bg-[#2F5D7C]/30 active:bg-[#2F5D7C]/50 cursor-col-resize transition-colors z-30"
+      />
 
       {/* Main Content Workspace Layout */}
       <section className="flex-1 flex flex-col min-w-0 bg-med-bg">

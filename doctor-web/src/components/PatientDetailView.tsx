@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Brain,
   Calendar,
-  ClipboardCheck,
   Clock,
   Edit3,
   FileText,
@@ -19,6 +18,8 @@ import {
   Plus,
   User,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { AISummary, ApiResponse, Assessment, DYSPNEA_LABELS, ExerciseItem, Patient, PrescriptionGenerateResponse, RECOVERY_STAGE_LABELS, RecoveryStage, REHAB_LEVEL_INFO, RehabLevelResponse, RehabPlan, TrainingLog, WarningRecord, WARNING_TYPE_LABELS, WarningType } from "../types";
 
@@ -133,6 +134,41 @@ export default function PatientDetailView({
   onBackToList,
 }: PatientDetailViewProps) {
   const requestVersionRef = useRef(0);
+  const [rightPanelWidth, setRightPanelWidth] = useState(() => {
+    const saved = localStorage.getItem("right-panel-width");
+    return saved ? parseInt(saved, 10) : 380;
+  });
+  const rightDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  const startRightDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    rightDragRef.current = { startX: e.clientX, startWidth: rightPanelWidth };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      if (!rightDragRef.current) return;
+      const newWidth = Math.max(280, rightDragRef.current.startWidth - (e.clientX - rightDragRef.current.startX));
+      setRightPanelWidth(newWidth);
+      localStorage.setItem("right-panel-width", String(newWidth));
+    };
+    const handleUp = () => {
+      if (rightDragRef.current) {
+        rightDragRef.current = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, []);
+
   const [logs, setLogs] = useState<TrainingLog[]>([]);
   const [plans, setPlans] = useState<RehabPlan[]>([]);
   const [progress30d, setProgress30d] = useState<ProgressDay[]>([]);
@@ -204,6 +240,10 @@ export default function PatientDetailView({
   const [warnings, setWarnings] = useState<WarningRecord[]>([]);
   const [warningsLoading, setWarningsLoading] = useState(true);
   const [resolvingWarningId, setResolvingWarningId] = useState<number | null>(null);
+
+  // 训练记录折叠
+  const [logsExpanded, setLogsExpanded] = useState(false);
+  const LOGS_PREVIEW_COUNT = 3;
 
   const isLatestRequest = (requestVersion: number) => requestVersionRef.current === requestVersion;
 
@@ -893,8 +933,8 @@ export default function PatientDetailView({
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-        <div className="space-y-5 xl:col-span-2">
+      <div className="flex gap-5">
+        <div className="flex-1 min-w-0 space-y-5">
           <section
             id="patient-progress-section"
             className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4"
@@ -1092,6 +1132,15 @@ export default function PatientDetailView({
                 训练记录列表
               </h3>
               <span className="text-xs text-[#8A97A6]">共 {logs.length} 条</span>
+              {logsExpanded && logs.length > LOGS_PREVIEW_COUNT && (
+                <button
+                  onClick={() => setLogsExpanded(false)}
+                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-[#5B6B7A] hover:text-[#243447]"
+                >
+                  <ChevronUp className="h-3 w-3" />
+                  收起
+                </button>
+              )}
             </div>
 
             {logsLoading ? (
@@ -1111,7 +1160,7 @@ export default function PatientDetailView({
               </div>
             ) : (
               <div className="space-y-3">
-                {logs.map((log) => (
+                {(logsExpanded ? logs : logs.slice(0, LOGS_PREVIEW_COUNT)).map((log) => (
                   <div key={log.id} className="rounded-xl border border-[#D9E2EC] bg-[#FBFCFD] p-4">
                     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                       <div className="space-y-1">
@@ -1130,12 +1179,36 @@ export default function PatientDetailView({
                     </div>
                   </div>
                 ))}
+                {logs.length > LOGS_PREVIEW_COUNT && (
+                  <button
+                    onClick={() => setLogsExpanded(!logsExpanded)}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-[#5B6B7A] hover:text-[#243447] hover:bg-[#F4F7FA] rounded-lg transition-colors"
+                  >
+                    {logsExpanded ? (
+                      <>
+                        <ChevronUp className="h-3.5 w-3.5" />
+                        <span>收起</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3.5 w-3.5" />
+                        <span>展开全部（共 {logs.length} 条，还有 {logs.length - LOGS_PREVIEW_COUNT} 条）</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </section>
         </div>
 
-        <div className="space-y-5">
+        {/* 拖拽分隔线 */}
+        <div
+          onMouseDown={startRightDrag}
+          className="w-1 shrink-0 bg-transparent hover:bg-[#2F5D7C]/30 active:bg-[#2F5D7C]/50 cursor-col-resize transition-colors z-30"
+        />
+
+        <div className="space-y-5 shrink-0 overflow-y-auto" style={{ width: rightPanelWidth, maxHeight: "calc(100vh - 200px)" }}>
           <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
             <div>
               <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">

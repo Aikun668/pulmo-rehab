@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from core.config import settings
-from database import SessionLocal, get_db
+from database import get_db
 from models import User
 
 bearer_scheme = HTTPBearer()

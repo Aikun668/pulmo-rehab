@@ -55,11 +55,11 @@ def compute_rehab_level(patient: User, latest_assessment: Assessment | None) -> 
     """
     # 无评估数据时，根据恢复阶段给初始等级
     if latest_assessment is None:
-        if patient.recovery_stage == RecoveryStage.EARLY:
+        if patient.recovery_stage == RecoveryStage.early:
             return 1
-        elif patient.recovery_stage == RecoveryStage.MID:
+        elif patient.recovery_stage == RecoveryStage.mid:
             return 3
-        elif patient.recovery_stage == RecoveryStage.STABLE:
+        elif patient.recovery_stage == RecoveryStage.stable:
             return 4
         else:
             return 3  # 默认中度
@@ -98,13 +98,13 @@ def compute_rehab_level(patient: User, latest_assessment: Assessment | None) -> 
     # 综合评分：呼吸困难权重0.6 + 疲劳权重0.4（归一化到0-1）
     composite = (dyspnea_score / 5) * 0.6 + (fatigue_score / 10) * 0.4
 
-    if patient.recovery_stage == RecoveryStage.EARLY:
+    if patient.recovery_stage == RecoveryStage.early:
         # 恢复早期：综合评分高→Level 2，低→Level 3
         if composite > 0.5 or has_risk_factors:
             return 2
         return 3
 
-    if patient.recovery_stage == RecoveryStage.MID:
+    if patient.recovery_stage == RecoveryStage.mid:
         # 恢复中期：综合评分高→Level 2，中→Level 3，低→Level 4
         if composite > 0.6 or has_risk_factors:
             return 2
@@ -112,7 +112,7 @@ def compute_rehab_level(patient: User, latest_assessment: Assessment | None) -> 
             return 3
         return 4
 
-    if patient.recovery_stage == RecoveryStage.STABLE:
+    if patient.recovery_stage == RecoveryStage.stable:
         # 稳定期：综合评分高→Level 3，中→Level 4，低→Level 5
         if composite > 0.5 or has_risk_factors:
             return 3

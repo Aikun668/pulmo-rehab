@@ -125,6 +125,25 @@ Page({
       patientId: auth.getPatientId(),
       patientName: greeting + "，" + userName,
     })
+
+    // 首次启动免责声明
+    var app = getApp()
+    if (app.globalData.showDisclaimer) {
+      app.globalData.showDisclaimer = false
+      wx.showModal({
+        title: "免责声明",
+        content:
+          "本应用为肺康复辅助训练工具，提供的训练方案、健康建议及 AI 分析仅供参考，不构成医疗诊断或治疗建议。请在专业医生指导下使用。如训练中出现胸闷、头晕、气促等不适，请立即停止并就医。",
+        confirmText: "我已知晓",
+        showCancel: false,
+        success: function () {
+          try {
+            wx.setStorageSync("disclaimer_accepted", true)
+          } catch (e) {}
+        },
+      })
+    }
+
     this.loadRehabLevel()
     this.loadStreakDays()
     this.loadLatestAiTip()
@@ -150,12 +169,10 @@ Page({
             todayAdvice: LEVEL_ADVICE[d.rehab_level] || LEVEL_ADVICE[3],
           })
         }
-        // 无论等级获取成功与否，都加载今日进度和处方
-        that.loadTodayProgress()
+        // loadPrescriptionTasks 内部会调用 loadTodayProgress，此处不重复调用
         that.loadPrescriptionTasks()
       },
       fail: function () {
-        that.loadTodayProgress()
         that.loadPrescriptionTasks()
       },
     })
@@ -190,6 +207,18 @@ Page({
           todayLog ? todayLog.duration_minutes : 0,
           targetDuration,
         )
+
+        // 今日已有训练记录 → 标记所有任务完成
+        if (todayLog && that.data.todayTasks.length > 0) {
+          nextState.todayTasks = that.data.todayTasks.map(function (task) {
+            return {
+              id: task.id,
+              name: task.name,
+              target: task.target,
+              done: true,
+            }
+          })
+        }
 
         that.setData(nextState, function () {
           that.drawProgressRing()

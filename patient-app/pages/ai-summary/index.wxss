@@ -101,3 +101,70 @@
   line-height: 1.8;
   color: #5b6b7a;
 }
+
+/* ===== 数据趋势 ===== */
+.trend-section {
+  margin-top: 28rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #d4eadc;
+}
+
+.trend-section__title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #3a4a5c;
+  margin-bottom: 20rpx;
+}
+
+.trend-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.trend-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.trend-cell__value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.trend-cell__label {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.trend-cell__change {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.trend-cell__change--up {
+  color: #16a34a;
+}
+
+.trend-cell__change--down {
+  color: #ef4444;
+}
+
+.trend-cell__change--equal {
+  color: #8a9aad;
+}
+
+.trend-cell__change--none {
+  color: #b0b8c4;
+}
+
+.trend-cell__prev {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #b0b8c4;
+}

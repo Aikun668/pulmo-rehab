@@ -3,7 +3,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.responses import success_response
-from core.security import get_current_user
 from database import get_db
 from models import AiSummary, User, UserRole
 from schemas import AiSummaryResponse, ApiResponse
@@ -33,7 +32,6 @@ def _get_patient_or_raise(db: Session, patient_id: int) -> User:
 def list_ai_summaries(
     patient_id: int = Query(gt=0, description="患者 ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[list[AiSummaryResponse]]:
     _get_patient_or_raise(db, patient_id)
 
@@ -54,7 +52,6 @@ def list_ai_summaries(
 def get_latest_ai_summary(
     patient_id: int = Query(gt=0, description="患者 ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[AiSummaryResponse | None]:
     _get_patient_or_raise(db, patient_id)
 

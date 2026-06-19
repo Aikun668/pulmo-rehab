@@ -225,6 +225,7 @@ Page({
     // 安全预警
     showWarningAlert: false,
     warningMessage: "",
+    hasActiveWarning: false,
   },
 
   _breathTimer: null,
@@ -244,6 +245,60 @@ Page({
     var patientId = auth.getPatientId()
     this.setData({ patientId: patientId })
     this.loadRehabLevel(patientId)
+    this._checkActiveWarning()
+  },
+
+  // ===== 训练前安全拦截：检查未解决预警 =====
+
+  _checkActiveWarning: function () {
+    var that = this
+    var patientId = this.data.patientId
+    if (!patientId) return
+
+    auth.request({
+      url: auth.API_BASE + "/warnings/latest-unresolved",
+      method: "GET",
+      data: { patient_id: patientId },
+      success: function (response) {
+        var respData = response.data
+        if (
+          response.statusCode === 200 &&
+          respData &&
+          respData.code === 200 &&
+          Array.isArray(respData.data) &&
+          respData.data.length > 0
+        ) {
+          var warning = respData.data[0]
+          var warningMsg = that._buildWarningMessage(warning)
+          if (warningMsg) {
+            that.setData({
+              hasActiveWarning: true,
+              warningMessage: warningMsg,
+              showWarningAlert: true,
+            })
+          }
+        } else {
+          that.setData({ hasActiveWarning: false, warningMessage: "" })
+        }
+      },
+      fail: function () {},
+    })
+  },
+
+  _buildWarningMessage: function (warning) {
+    if (warning.warning_type === "heart_rate_high") {
+      return "心率异常偏高（" + warning.metric_value + " bpm），建议暂停训练并休息"
+    }
+    if (warning.warning_type === "spo2_low") {
+      return "血氧饱和度偏低（" + warning.metric_value + "%），建议立即休息并吸氧"
+    }
+    if (warning.warning_type === "fatigue_high") {
+      return "疲劳评分过高（" + warning.metric_value + "/10），建议减少训练强度"
+    }
+    if (warning.warning_type === "dyspnea_severe") {
+      return "呼吸困难评分过高（" + warning.metric_value + "/5），建议暂停训练"
+    }
+    return ""
   },
 
   onUnload: function () {
@@ -555,6 +610,16 @@ Page({
   // ===== 呼吸计时器 =====
 
   handleOpenBreathTimer: function () {
+    if (this.data.hasActiveWarning) {
+      wx.showModal({
+        title: "安全提醒",
+        content: this.data.warningMessage + "\n\n建议暂停今日训练，待指标恢复后再继续。",
+        confirmText: "知道了",
+        showCancel: false,
+      })
+      return
+    }
+
     var config = this._breathConfig || DEFAULT_BREATH_CONFIG
     this.setData({
       showBreathTimer: true,
@@ -802,6 +867,17 @@ Page({
 
     if (isSubmitting) return
 
+    // 安全拦截：有未解决预警时不允许提交
+    if (this.data.hasActiveWarning) {
+      wx.showModal({
+        title: "安全提醒",
+        content: this.data.warningMessage + "\n\n建议暂停今日训练，待指标恢复后再继续。",
+        confirmText: "知道了",
+        showCancel: false,
+      })
+      return
+    }
+
     var allChecked = true
     for (var i = 0; i < tasks.length; i++) {
       if (!tasks[i].checked) {
@@ -863,7 +939,9 @@ Page({
     var totalSets = 0
     for (var i = 0; i < tasks.length; i++) {
       if (tasks[i].checked) {
-        totalSets += 1
+        var mins = Number(tasks[i].actualMinutes) || 0
+        // 每10分钟为1组，至少1组
+        totalSets += mins > 0 ? Math.max(1, Math.round(mins / 10)) : 1
       }
     }
     var autoNote = "完成: " + noteParts.join(" / ")
@@ -1068,23 +1146,17 @@ Page({
           respData.data.length > 0
         ) {
           var warning = respData.data[0]
-          var warningMsg = ""
-          if (warning.warning_type === "heart_rate_high") {
-            warningMsg = "心率异常偏高（" + warning.metric_value + " bpm），建议暂停训练并休息"
-          } else if (warning.warning_type === "spo2_low") {
-            warningMsg = "血氧饱和度偏低（" + warning.metric_value + "%），建议立即休息并吸氧"
-          } else if (warning.warning_type === "fatigue_high") {
-            warningMsg = "疲劳评分过高（" + warning.metric_value + "/10），建议减少训练强度"
-          } else if (warning.warning_type === "dyspnea_severe") {
-            warningMsg = "呼吸困难评分过高（" + warning.metric_value + "/5），建议暂停训练"
-          }
+          var warningMsg = that._buildWarningMessage(warning)
 
           if (warningMsg) {
             that.setData({
+              hasActiveWarning: true,
               showWarningAlert: true,
               warningMessage: warningMsg,
             })
           }
+        } else {
+          that.setData({ hasActiveWarning: false })
         }
       },
       fail: function () {

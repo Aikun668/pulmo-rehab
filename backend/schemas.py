@@ -132,6 +132,14 @@ class TrainingProgress30dResponse(BaseModel):
     days: list[TrainingProgressDay]
 
 
+class ExerciseItem(BaseModel):
+    name: str = Field(description="训练动作名称")
+    purpose: str = Field(default="", description="训练目的")
+    duration: str = Field(default="", description="时长/次数描述")
+    steps: list[str] = Field(default_factory=list, description="具体步骤")
+    precautions: list[str] = Field(default_factory=list, description="注意事项")
+
+
 class RehabPlanCreateRequest(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
@@ -392,14 +400,6 @@ class RehabLevelResponse(BaseModel):
     level_label: str
     level_name: str
     recommended_training: str
-
-
-class ExerciseItem(BaseModel):
-    name: str = Field(description="训练动作名称")
-    purpose: str = Field(default="", description="训练目的")
-    duration: str = Field(default="", description="时长/次数描述")
-    steps: list[str] = Field(default_factory=list, description="具体步骤")
-    precautions: list[str] = Field(default_factory=list, description="注意事项")
 
 
 class PrescriptionGenerateRequest(BaseModel):

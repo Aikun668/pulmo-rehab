@@ -1,99 +1,129 @@
-.page {
-  padding: 24rpx;
-  background: #F4F7FB;
-  min-height: 100vh;
-}
-
-/* ===== 用户信息卡片 ===== */
-.user-card {
+/* ===== 右上角图标 ===== */
+.nav-right {
   display: flex;
   align-items: center;
-  padding: 32rpx 28rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  justify-content: center;
+  padding: 0 8rpx;
 }
 
-.user-card__avatar {
-  width: 96rpx;
-  height: 96rpx;
+.nav-right__icon {
+  font-size: 36rpx;
+  color: #8a9aad;
+}
+
+/* ===== 页面基础 ===== */
+.page {
+  background: #ffffff;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ===== 上半区：用户信息 ===== */
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 0 72rpx;
+  background: #F5F6F8;
+}
+
+.profile-hero__avatar {
+  width: 120rpx;
+  height: 120rpx;
   border-radius: 50%;
   background: linear-gradient(135deg, #2a6bff, #5b9bff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-hero__avatar-text {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.profile-hero__name {
+  margin-top: 24rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.profile-hero__role {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #9aa5b1;
+}
+
+/* ===== 下半区：功能列表 ===== */
+.menu-list {
+  padding: 0 48rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f0f2f5;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item__icon-wrap {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.user-card__avatar-text {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #ffffff;
+.menu-item__icon-wrap--blue {
+  background: #e8f0ff;
 }
 
-.user-card__info {
-  margin-left: 24rpx;
+.menu-item__icon-wrap--green {
+  background: #e8f8ee;
 }
 
-.user-card__name {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #1f2937;
+.menu-item__icon-wrap--orange {
+  background: #fff3e0;
 }
 
-.user-card__id {
-  margin-top: 6rpx;
-  font-size: 24rpx;
-  color: #6b7a8a;
+.menu-item__icon-wrap--red {
+  background: #fdeaea;
 }
 
-.user-card__doctor {
-  margin-top: 4rpx;
-  font-size: 24rpx;
-  color: #6b7a8a;
-}
-
-/* ===== 功能菜单 ===== */
-.menu-card {
-  margin-top: 24rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 28rpx 28rpx;
-}
-
-.menu-item__left {
-  display: flex;
-  align-items: center;
+.menu-item__icon-wrap--gray {
+  background: #f0f2f5;
 }
 
 .menu-item__icon {
-  font-size: 32rpx;
-  margin-right: 16rpx;
+  font-size: 30rpx;
 }
 
 .menu-item__label {
-  font-size: 28rpx;
-  color: #1f2937;
+  margin-left: 24rpx;
+  font-size: 30rpx;
   font-weight: 500;
+  color: #1f2937;
+  flex: 1;
 }
 
 .menu-item__arrow {
-  font-size: 32rpx;
+  font-size: 36rpx;
   color: #c0c8d4;
   font-weight: 300;
 }
 
 /* ===== 版本 ===== */
 .version-info {
-  margin-top: 48rpx;
+  margin-top: 64rpx;
   text-align: center;
   font-size: 22rpx;
   color: #b0b8c4;

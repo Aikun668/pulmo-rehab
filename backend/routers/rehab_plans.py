@@ -6,7 +6,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.responses import success_response
-from core.security import get_current_user
 from database import get_db
 from models import RehabPlan, User, UserRole
 from schemas import (
@@ -44,12 +43,12 @@ def _ensure_patient_belongs_to_doctor(patient: User, doctor_id: int) -> None:
 
 def _exercises_to_json(exercises: list[ExerciseItem] | None) -> str | None:
     """将 exercises 列表序列化为 JSON 字符串存入数据库。"""
-    if not exercises:
+    if exercises is None:
         return None
     return json.dumps(
         [ex.model_dump() for ex in exercises],
         ensure_ascii=False,
-    )
+    ) if exercises else "[]"
 
 
 def _json_to_exercises(exercises_json: str | None) -> list[dict]:
@@ -81,7 +80,6 @@ def _enrich_response(plan: RehabPlan) -> dict:
 def create_rehab_plan(
     payload: RehabPlanCreateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[RehabPlanResponse]:
     patient = _get_user_or_raise(db, payload.patient_id, UserRole.PATIENT, "Patient not found.")
     _get_user_or_raise(db, payload.doctor_id, UserRole.DOCTOR, "Doctor not found.")
@@ -112,7 +110,6 @@ def list_rehab_plans(
     patient_id: int = Query(gt=0, description="患者 ID"),
     doctor_id: int = Query(gt=0, description="医生 ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[list[RehabPlanResponse]]:
     patient = _get_user_or_raise(db, patient_id, UserRole.PATIENT, "Patient not found.")
     _get_user_or_raise(db, doctor_id, UserRole.DOCTOR, "Doctor not found.")
@@ -135,19 +132,19 @@ def list_rehab_plans(
 )
 def update_rehab_plan(
     plan_id: int = Path(gt=0, description="方案 ID"),
+    doctor_id: int = Query(gt=0, description="医生 ID"),
     payload: RehabPlanUpdateRequest = ...,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[RehabPlanResponse]:
+    _get_user_or_raise(db, doctor_id, UserRole.DOCTOR, "Doctor not found.")
+
     plan = db.get(RehabPlan, plan_id)
     if plan is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="方案不存在。")
-
-    # 验证权限：只有该方案的医生才能修改
-    if plan.doctor_id != current_user.id:
+    if plan.doctor_id != doctor_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="您无权修改此训练方案。",
+            detail="当前医生无权修改该训练方案。",
         )
 
     # 部分更新

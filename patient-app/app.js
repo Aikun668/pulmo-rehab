@@ -8,9 +8,20 @@ App({
     role: "",
     userName: "",
     doctorId: null,
+    showDisclaimer: false,
   },
 
   onLaunch: function () {
+    // 检查免责声明是否已接受
+    try {
+      var accepted = wx.getStorageSync("disclaimer_accepted")
+      if (!accepted) {
+        this.globalData.showDisclaimer = true
+      }
+    } catch (e) {
+      this.globalData.showDisclaimer = true
+    }
+
     // 先尝试从本地缓存恢复登录态
     if (auth.checkLogin()) {
       return

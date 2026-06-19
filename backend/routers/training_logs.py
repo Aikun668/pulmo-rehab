@@ -5,7 +5,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.responses import success_response
-from core.security import get_current_user
 from database import get_db
 from models import TrainingLog, User, UserRole
 from schemas import (
@@ -43,7 +42,6 @@ def _get_patient_or_raise(db: Session, patient_id: int) -> User:
 def upsert_training_log(
     payload: TrainingLogUpsertRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[TrainingLogUpsertResponse]:
     _get_patient_or_raise(db, payload.patient_id)
 
@@ -93,7 +91,6 @@ def list_training_logs(
     start_date: date | None = Query(default=None, description="开始日期，格式 YYYY-MM-DD"),
     end_date: date | None = Query(default=None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[list[TrainingLogResponse]]:
     _get_patient_or_raise(db, patient_id)
 
@@ -122,7 +119,6 @@ def list_training_logs(
 def get_training_progress_30d(
     patient_id: int = Query(gt=0, description="患者 ID"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ) -> ApiResponse[TrainingProgress30dResponse]:
     _get_patient_or_raise(db, patient_id)
 

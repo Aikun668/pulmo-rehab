@@ -11,6 +11,31 @@
     <view class="card__meta">{{latestPeriod}}</view>
     <view class="card__created-at">{{latestCreatedAt}}</view>
     <view class="card__desc">{{latestContent}}</view>
+
+    <!-- 数据趋势 -->
+    <view class="trend-section">
+      <view class="trend-section__title">数据趋势（本周 vs 上周）</view>
+      <view class="trend-grid">
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.days.current}}</view>
+          <view class="trend-cell__label">训练天数</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.days.trend}}">{{trend.days.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.days.previous}}</view>
+        </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.minutes.current}}</view>
+          <view class="trend-cell__label">累计时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.minutes.trend}}">{{trend.minutes.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.minutes.previous}}</view>
+        </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.avg.current}}</view>
+          <view class="trend-cell__label">日均时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.avg.trend}}">{{trend.avg.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.avg.previous}}</view>
+        </view>
+      </view>
+    </view>
   </view>
 
   <!-- 空态 -->
@@ -19,6 +44,31 @@
     <view class="card__meta">{{latestPeriod}}</view>
     <view class="card__created-at">{{latestCreatedAt}}</view>
     <view class="card__desc">{{latestContent}}</view>
+
+    <!-- 数据趋势 -->
+    <view class="trend-section">
+      <view class="trend-section__title">数据趋势（本周 vs 上周）</view>
+      <view class="trend-grid">
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.days.current}}</view>
+          <view class="trend-cell__label">训练天数</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.days.trend}}">{{trend.days.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.days.previous}}</view>
+        </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.minutes.current}}</view>
+          <view class="trend-cell__label">累计时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.minutes.trend}}">{{trend.minutes.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.minutes.previous}}</view>
+        </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.avg.current}}</view>
+          <view class="trend-cell__label">日均时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.avg.trend}}">{{trend.avg.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.avg.previous}}</view>
+        </view>
+      </view>
+    </view>
   </view>
 
   <!-- 历史列表 -->

@@ -28,9 +28,9 @@ class UserRole(str, Enum):
 
 
 class RecoveryStage(str, Enum):
-    EARLY = "early"       # 恢复早期（1-2周）
-    MID = "mid"           # 恢复中期（2-6周）
-    STABLE = "stable"     # 稳定恢复期
+    early = "early"       # 恢复早期（1-2周）
+    mid = "mid"           # 恢复中期（2-6周）
+    stable = "stable"     # 稳定恢复期
 
 
 class User(Base):
