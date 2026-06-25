@@ -138,9 +138,9 @@ export const DYSPNEA_LABELS: Record<number, string> = {
 };
 
 export const REHAB_LEVEL_INFO: Record<number, { label: string; name: string; training: string; color: string; bgColor: string; borderColor: string }> = {
-  1: { label: "Level 1", name: "重度恢复", training: "腹式呼吸训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
-  2: { label: "Level 2", name: "轻度活动受限", training: "缩唇呼吸训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
-  3: { label: "Level 3", name: "中度恢复", training: "深吸气 + 呼吸节奏控制", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
-  4: { label: "Level 4", name: "恢复良好", training: "呼吸耐力训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
-  5: { label: "Level 5", name: "接近完全恢复", training: "综合肺功能训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
+  1: { label: "Level 1", name: "重度恢复", training: "腹式呼吸训练", color: "#5B7F8C", bgColor: "#F2F5F6", borderColor: "#CDD7DB" },
+  2: { label: "Level 2", name: "轻度活动受限", training: "缩唇呼吸训练", color: "#5B7F8C", bgColor: "#F2F5F6", borderColor: "#CDD7DB" },
+  3: { label: "Level 3", name: "中度恢复", training: "深吸气 + 呼吸节奏控制", color: "#5B7F8C", bgColor: "#F2F5F6", borderColor: "#CDD7DB" },
+  4: { label: "Level 4", name: "恢复良好", training: "呼吸耐力训练", color: "#5B7F8C", bgColor: "#F2F5F6", borderColor: "#CDD7DB" },
+  5: { label: "Level 5", name: "接近完全恢复", training: "综合肺功能训练", color: "#5B7F8C", bgColor: "#F2F5F6", borderColor: "#CDD7DB" },
 };

@@ -6,7 +6,10 @@
       "Bash(git filter-branch *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(wc -l backend/seed_mock_data.py patient-app/PLAN.md start_backend2.bat start_servers.bat)",
+      "Bash(ls -la backend/seed_mock_data.py patient-app/PLAN.md start_backend2.bat start_servers.bat)",
+      "Bash(npx tsc *)"
     ]
   }
 }

@@ -64,7 +64,7 @@ const resolveMedicalMetadata = (count7d: number, lastCheckInAt: string | null): 
     return {
       riskLevel: "medium",
       riskLabel: "需要关注",
-      badgeClassName: "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]",
+      badgeClassName: "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]",
       followUpNote: "近7天训练频率有波动，建议结合详情页进一步查看。",
       actionHint: "建议先看30天进度，再判断是否需要补充或调整训练方案。",
     };
@@ -261,7 +261,7 @@ export default function PatientsListView({
             <div className="flex items-center rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-1">
               <button
                 onClick={() => setFollowUpFilter("all")}
-                className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                className={`flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                   followUpFilter === "all"
                     ? "bg-white text-[#243447]"
                     : "text-[#5B6B7A] hover:text-[#243447]"
@@ -379,7 +379,7 @@ export default function PatientsListView({
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-[#243447]">{group.title}</h3>
                     <span
-                      className={`rounded-md border px-2 py-0.5 text-xs font-bold ${group.badgeClassName}`}
+                      className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${group.badgeClassName}`}
                     >
                       {group.items.length} 人
                     </span>
@@ -392,9 +392,11 @@ export default function PatientsListView({
                 {group.items.map(({ patient, meta }) => {
                   const engagementRate = calculateEngagementRate(patient.stats.check_in_count_7d);
                   const leftBorderClassName =
-                    meta.riskLevel === "high" || meta.riskLevel === "medium"
+                    meta.riskLevel === "high"
                       ? "border-l-[#D95C5C]"
-                      : "border-l-[#10B981]";
+                      : meta.riskLevel === "medium"
+                        ? "border-l-[#D9A441]"
+                        : "border-l-[#5B9B7A]";
 
                   return (
                     <div
