@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { Activity, Lock, UserCheck } from "lucide-react";
+import { Activity, Lock, UserCheck, Heart, Stethoscope, Wind, Shield, Brain, Calendar, TrendingUp, Users } from "lucide-react";
 
 interface LoginViewProps {
   onLoginSuccess: (doctorId: number, doctorName: string) => void;
@@ -45,29 +45,65 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center md:justify-end p-6 bg-[#F4F7FA] md:pr-16 lg:pr-32 overflow-hidden">
+    <div className="relative min-h-screen w-full flex items-center justify-center pl-44 pr-6 bg-[#F4F7FA] overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img
           src="/src/assets/images/asian_respiratory_rehab_login_bg_1779609633415.png"
           alt="肺部疾病科研与综合肺康复临床协作图景"
-          className="w-full h-full object-cover filter brightness-[0.96]"
+          className="w-full h-full object-cover filter brightness-[1.05] saturate-[1.15]"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F4F7FA]/10 via-[#F4F7FA]/40 to-[#F4F7FA]/80 md:to-[#F4F7FA]/95" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F4F7FA]/5 via-[#F4F7FA]/30 to-[#F4F7FA]/70 md:to-[#F4F7FA]/90" />
+      </div>
+
+      {/* 右侧装饰性元素 - 肺康复主题图标散落分布 */}
+      <div className="absolute inset-0 z-0 hidden lg:block pointer-events-none">
+        {/* 右上 - 心肺监测 */}
+        {/* 右上偏中 - 呼吸康复 */}
+        <div className="absolute right-[18%] top-[14%] opacity-30">
+          <Heart className="w-12 h-12 text-[#2F5D7C]" />
+        </div>
+        {/* 右上偏中 - 呼吸康复 */}
+        <div className="absolute right-[38%] top-[22%] opacity-25">
+          <Wind className="w-16 h-16 text-[#2F5D7C]" />
+        </div>
+        {/* 右侧中上 - 智能诊疗/AI */}
+        <div className="absolute right-[22%] top-[32%] opacity-28">
+          <Brain className="w-11 h-11 text-[#2F5D7C]" />
+        </div>
+        {/* 右侧中部 - 肺部活动 */}
+        <div className="absolute right-[42%] top-[40%] opacity-22">
+          <Activity className="w-14 h-14 text-[#2F5D7C]" />
+        </div>
+        {/* 右侧中偏下 - 康复计划 */}
+        <div className="absolute right-[16%] top-[48%] opacity-30">
+          <Calendar className="w-10 h-10 text-[#2F5D7C]" />
+        </div>
+        {/* 右侧中下部 - 听诊器 */}
+        <div className="absolute right-[35%] top-[56%] opacity-25">
+          <Stethoscope className="w-12 h-12 text-[#2F5D7C]" />
+        </div>
+        {/* 右侧偏下 - 数据趋势 */}
+        <div className="absolute right-[20%] top-[66%] opacity-28">
+          <TrendingUp className="w-12 h-12 text-[#2F5D7C]" />
+        </div>
+        {/* 右下 - 患者管理 */}
+        <div className="absolute right-[40%] top-[74%] opacity-22">
+          <Users className="w-14 h-14 text-[#2F5D7C]" />
+        </div>
+        {/* 右下偏下 - 安全守护 */}
+        <div className="absolute right-[24%] top-[84%] opacity-25">
+          <Shield className="w-10 h-10 text-[#2F5D7C]" />
+        </div>
       </div>
 
       <div className="relative z-10 w-full max-w-[460px] bg-white border border-[#D9E2EC] rounded-xl p-8 shadow-[0_12px_40px_-8px_rgba(36,52,71,0.12)] flex flex-col gap-6">
         <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 bg-[#F4F7FA] border border-[#D9E2EC] rounded-xl flex items-center justify-center text-[#2F5D7C] shrink-0">
-              <Activity className="h-5.5 w-5.5" />
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-lg font-semibold text-[#243447] tracking-tight">医生端登录</h1>
-              <p className="text-sm text-[#5B6B7A]">
-                输入医生信息后进入患者管理工作台。
-              </p>
-            </div>
+          <div className="text-left">
+            <h1 className="text-lg font-semibold text-[#243447] tracking-tight">医生端登录</h1>
+            <p className="text-sm text-[#5B6B7A]">
+              输入医生信息后进入患者管理工作台。
+            </p>
           </div>
         </div>
 

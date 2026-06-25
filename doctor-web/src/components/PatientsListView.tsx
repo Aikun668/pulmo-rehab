@@ -64,7 +64,7 @@ const resolveMedicalMetadata = (count7d: number, lastCheckInAt: string | null): 
     return {
       riskLevel: "medium",
       riskLabel: "需要关注",
-      badgeClassName: "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]",
+      badgeClassName: "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]",
       followUpNote: "近7天训练频率有波动，建议结合详情页进一步查看。",
       actionHint: "建议先看30天进度，再判断是否需要补充或调整训练方案。",
     };
@@ -98,7 +98,7 @@ export default function PatientsListView({
   doctorName
 }: PatientsListViewProps) {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [viewType, setViewType] = useState<"card" | "table">("card");
+  const [viewType, setViewType] = useState<"card" | "table">("table");
   const [followUpFilter, setFollowUpFilter] = useState<FollowUpFilter>("all");
 
   const patientsWithMeta: PatientWithMeta[] = useMemo(
@@ -214,7 +214,7 @@ export default function PatientsListView({
 
   return (
     <div className="space-y-5">
-      <div className="sticky top-[-24px] z-20 -mx-6 -mt-6 -mb-5 px-6 pt-6 pb-5 bg-med-bg">
+      <div className="sticky top-[-24px] z-20 -mx-6 -mt-6 mb-2 px-6 pt-6 pb-5 bg-med-bg">
         <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-3">
@@ -224,27 +224,24 @@ export default function PatientsListView({
                 <span>患者管理工作台</span>
               </div>
               <h2 className="text-lg font-semibold text-[#243447]">患者列表</h2>
-              <p className="text-sm text-[#5B6B7A]">
-                当前医生：<span className="font-medium text-[#2F5D7C]">{doctorName}</span>
-              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mt-5">
               <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] px-4 py-3">
                 <p className="text-[11px] text-[#8A97A6]">患者总数</p>
-                <p className="mt-1 text-xl font-semibold text-[#243447]">{summary.totalPatients}</p>
+                <p className="mt-1 text-xl font-bold text-[#243447]">{summary.totalPatients}</p>
               </div>
               <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] px-4 py-3">
                 <p className="text-[11px] text-[#8A97A6]">有训练记录</p>
-                <p className="mt-1 text-xl font-semibold text-[#243447]">{summary.activePatients}</p>
+                <p className="mt-1 text-xl font-bold text-[#243447]">{summary.activePatients}</p>
               </div>
               <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] px-4 py-3">
                 <p className="text-[11px] text-[#8A97A6]">待优先跟进</p>
-                <p className="mt-1 text-xl font-semibold text-[#243447]">{summary.followUpPatients}</p>
+                <p className="mt-1 text-xl font-bold text-[#243447]">{summary.followUpPatients}</p>
               </div>
               <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] px-4 py-3">
                 <p className="text-[11px] text-[#8A97A6]">训练稳定</p>
-                <p className="mt-1 text-xl font-semibold text-[#243447]">{summary.stablePatients}</p>
+                <p className="mt-1 text-xl font-bold text-[#243447]">{summary.stablePatients}</p>
               </div>
             </div>
           </div>
@@ -264,7 +261,7 @@ export default function PatientsListView({
             <div className="flex items-center rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-1">
               <button
                 onClick={() => setFollowUpFilter("all")}
-                className={`flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
                   followUpFilter === "all"
                     ? "bg-white text-[#243447]"
                     : "text-[#5B6B7A] hover:text-[#243447]"
@@ -382,7 +379,7 @@ export default function PatientsListView({
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-[#243447]">{group.title}</h3>
                     <span
-                      className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${group.badgeClassName}`}
+                      className={`rounded-md border px-2 py-0.5 text-xs font-bold ${group.badgeClassName}`}
                     >
                       {group.items.length} 人
                     </span>
@@ -395,11 +392,9 @@ export default function PatientsListView({
                 {group.items.map(({ patient, meta }) => {
                   const engagementRate = calculateEngagementRate(patient.stats.check_in_count_7d);
                   const leftBorderClassName =
-                    meta.riskLevel === "high"
+                    meta.riskLevel === "high" || meta.riskLevel === "medium"
                       ? "border-l-[#D95C5C]"
-                      : meta.riskLevel === "medium"
-                        ? "border-l-[#D9A441]"
-                        : "border-l-[#5B9B7A]";
+                      : "border-l-[#10B981]";
 
                   return (
                     <div
@@ -424,13 +419,7 @@ export default function PatientsListView({
                                 </span>
                               )}
                               {patient.recovery_stage && (
-                                <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${
-                                  patient.recovery_stage === "early"
-                                    ? "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]"
-                                    : patient.recovery_stage === "mid"
-                                      ? "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]"
-                                      : "bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3]"
-                                }`}>
+                                <span className="rounded-md border border-[#D1D5DB] bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-medium text-[#6B7280]">
                                   {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
                                 </span>
                               )}
@@ -535,13 +524,7 @@ export default function PatientsListView({
                       </td>
                       <td className="px-4 py-4 text-center">
                         {patient.recovery_stage ? (
-                          <span className={`inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium ${
-                            patient.recovery_stage === "early"
-                              ? "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]"
-                              : patient.recovery_stage === "mid"
-                                ? "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]"
-                                : "bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3]"
-                          }`}>
+                          <span className="inline-flex rounded-md border border-[#D1D5DB] bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#6B7280]">
                             {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
                           </span>
                         ) : (

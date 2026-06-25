@@ -8,7 +8,7 @@ import LoginView from "./components/LoginView";
 import LayoutWrapper from "./components/LayoutWrapper";
 import PatientsListView from "./components/PatientsListView";
 import PatientDetailView from "./components/PatientDetailView";
-import { ApiResponse, Patient } from "./types";
+import { ApiResponse, Patient, RecentPatient } from "./types";
 
 type AppRoute = "login" | "patients" | "patient-detail";
 
@@ -20,6 +20,14 @@ export default function App() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isPatientsLoading, setIsPatientsLoading] = useState<boolean>(false);
   const [patientsError, setPatientsError] = useState<string>("");
+  const [recentPatients, setRecentPatients] = useState<RecentPatient[]>(() => {
+    try {
+      const stored = localStorage.getItem("recent_patients");
+      return stored ? (JSON.parse(stored) as RecentPatient[]) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const handleLogout = () => {
     setDoctorId(0);
@@ -33,6 +41,7 @@ export default function App() {
     localStorage.removeItem("doc_name");
     localStorage.removeItem("current_route");
     localStorage.removeItem("active_patient_id");
+    localStorage.removeItem("recent_patients");
   };
 
   const handleNavigateToList = () => {
@@ -88,6 +97,27 @@ export default function App() {
   };
 
   const handleSelectPatient = (patientId: number) => {
+    setActivePatientId(patientId);
+    setCurrentRoute("patient-detail");
+    localStorage.setItem("current_route", "patient-detail");
+    localStorage.setItem("active_patient_id", String(patientId));
+
+    // 记录到最近访问
+    const patient = patients.find((p) => p.id === patientId);
+    if (patient) {
+      setRecentPatients((prev) => {
+        const filtered = prev.filter((p) => p.id !== patientId);
+        const updated: RecentPatient[] = [
+          { id: patientId, name: patient.name, visitedAt: new Date().toISOString() },
+          ...filtered,
+        ].slice(0, 5);
+        localStorage.setItem("recent_patients", JSON.stringify(updated));
+        return updated;
+      });
+    }
+  };
+
+  const handleSelectRecentPatient = (patientId: number) => {
     setActivePatientId(patientId);
     setCurrentRoute("patient-detail");
     localStorage.setItem("current_route", "patient-detail");
@@ -162,6 +192,8 @@ export default function App() {
       currentRoute={currentRoute}
       activePatientName={activePatient?.name}
       onNavigateToList={handleNavigateToList}
+      recentPatients={recentPatients}
+      onSelectRecentPatient={handleSelectRecentPatient}
     >
       <div className="space-y-6">
         {currentRoute === "patients" && (

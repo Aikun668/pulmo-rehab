@@ -9,12 +9,16 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowLeft,
+  BarChart3,
   Brain,
   Calendar,
   Clock,
   Edit3,
   FileText,
+  Flame,
+  Gauge,
   Heart,
+  Mail,
   Plus,
   User,
   X,
@@ -135,8 +139,8 @@ export default function PatientDetailView({
 }: PatientDetailViewProps) {
   const requestVersionRef = useRef(0);
   const [rightPanelWidth, setRightPanelWidth] = useState(() => {
-    const saved = localStorage.getItem("right-panel-width");
-    return saved ? parseInt(saved, 10) : 380;
+    const saved = localStorage.getItem("chart-sidebar-width");
+    return saved ? parseInt(saved, 10) : 220;
   });
   const rightDragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
@@ -150,9 +154,9 @@ export default function PatientDetailView({
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       if (!rightDragRef.current) return;
-      const newWidth = Math.max(280, rightDragRef.current.startWidth - (e.clientX - rightDragRef.current.startX));
+      const newWidth = Math.min(400, Math.max(160, rightDragRef.current.startWidth + (e.clientX - rightDragRef.current.startX)));
       setRightPanelWidth(newWidth);
-      localStorage.setItem("right-panel-width", String(newWidth));
+      localStorage.setItem("chart-sidebar-width", String(newWidth));
     };
     const handleUp = () => {
       if (rightDragRef.current) {
@@ -241,9 +245,30 @@ export default function PatientDetailView({
   const [warningsLoading, setWarningsLoading] = useState(true);
   const [resolvingWarningId, setResolvingWarningId] = useState<number | null>(null);
 
-  // 训练记录折叠
-  const [logsExpanded, setLogsExpanded] = useState(false);
-  const LOGS_PREVIEW_COUNT = 3;
+  // 训练记录弹窗
+  const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
+  const [logsModalExpanded, setLogsModalExpanded] = useState(false);
+  const LOGS_PREVIEW_COUNT = 5;
+
+  const [isHeatmapModalOpen, setIsHeatmapModalOpen] = useState(false);
+  const [isDurationModalOpen, setIsDurationModalOpen] = useState(false);
+  const [isThirtyDayHeatmapOpen, setIsThirtyDayHeatmapOpen] = useState(false);
+  const [isDurationBarChartOpen, setIsDurationBarChartOpen] = useState(false);
+  const [isSetsBarChartOpen, setIsSetsBarChartOpen] = useState(false);
+  const [hoveredDurationDay, setHoveredDurationDay] = useState<string | null>(null);
+  const [hoveredSetsDay, setHoveredSetsDay] = useState<string | null>(null);
+  const [showAvgLine, setShowAvgLine] = useState(false);
+  const [showStreakBand, setShowStreakBand] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    overview: true,
+    aiSummary: false,
+    warnings: false,
+    planHistory: true,
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const isLatestRequest = (requestVersion: number) => requestVersionRef.current === requestVersion;
 
@@ -712,11 +737,33 @@ export default function PatientDetailView({
     const trainedDays = progress30d.filter((item) => item.duration_minutes > 0);
     const totalDuration = progress30d.reduce((sum, item) => sum + item.duration_minutes, 0);
     const totalSets = progress30d.reduce((sum, item) => sum + item.sets_count, 0);
-
+    const dailyAvgMinutes = trainedDays.length > 0 ? Math.round(totalDuration / trainedDays.length) : 0;
+    let maxConsecutiveDays = 0;
+    let currentStreak = 0;
+    let streakStart = 0;
+    let maxStreakStart = 0;
+    let maxStreakEnd = 0;
+    for (let i = 0; i < progress30d.length; i++) {
+      if (progress30d[i].duration_minutes > 0) {
+        if (currentStreak === 0) streakStart = i;
+        currentStreak++;
+        if (currentStreak > maxConsecutiveDays) {
+          maxConsecutiveDays = currentStreak;
+          maxStreakStart = streakStart;
+          maxStreakEnd = i;
+        }
+      } else {
+        currentStreak = 0;
+      }
+    }
     return {
       trainedDays: trainedDays.length,
       totalDuration,
       totalSets,
+      dailyAvgMinutes,
+      maxConsecutiveDays,
+      maxStreakStart,
+      maxStreakEnd,
     };
   }, [progress30d]);
 
@@ -770,6 +817,98 @@ export default function PatientDetailView({
       xAxisLabelIndexes: [0, 7, 14, 21, 29].filter((index) => index < progress30d.length),
     };
   }, [progress30d, progressMax]);
+
+  const heatmap7d = useMemo(() => {
+    const today = new Date();
+    const days: { date: string; weekday: string; duration_minutes: number; sets_count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const match = progress30d.find((item) => item.date === dateStr);
+      const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+      days.push({
+        date: dateStr,
+        weekday: weekdays[d.getDay()],
+        duration_minutes: match ? match.duration_minutes : 0,
+        sets_count: match ? match.sets_count : 0,
+      });
+    }
+    return days;
+  }, [progress30d]);
+
+  const heatmapColor = (duration: number): string => {
+    if (duration === 0) return "#F1F5F9";
+    if (duration <= 10) return "#C6E4D6";
+    if (duration <= 20) return "#7BC0A4";
+    if (duration <= 40) return "#3D9A73";
+    return "#1A6B4C";
+  };
+
+  const durationMilestones = useMemo(() => {
+    const total = patient.stats.total_duration_minutes;
+    const milestones = [100, 500, 1000, 5000, 15000, 50000];
+    let currentMax = milestones[0];
+    let prevMax = 0;
+    for (const m of milestones) {
+      if (total >= m) {
+        prevMax = m;
+        continue;
+      }
+      currentMax = m;
+      break;
+    }
+    const percentage = Math.min(100, Math.round(((total - prevMax) / (currentMax - prevMax)) * 100));
+    const nextMilestone = currentMax;
+    const progressInSegment = total - prevMax;
+    const segmentSize = currentMax - prevMax;
+    return { total, prevMax, currentMax: nextMilestone, percentage, progressInSegment, segmentSize, milestones };
+  }, [patient.stats.total_duration_minutes]);
+
+  const heatmap30dGrid = useMemo(() => {
+    const today = new Date();
+    const weeks: { date: string; weekday: string; duration_minutes: number; sets_count: number }[][] = [];
+    let currentWeek: typeof weeks[0] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const match = progress30d.find((item) => item.date === dateStr);
+      const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+      currentWeek.push({
+        date: dateStr,
+        weekday: weekdays[d.getDay()],
+        duration_minutes: match ? match.duration_minutes : 0,
+        sets_count: match ? match.sets_count : 0,
+      });
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.unshift({ date: "", weekday: "", duration_minutes: -1, sets_count: -1 });
+      }
+      weeks.push(currentWeek);
+    }
+    return weeks;
+  }, [progress30d]);
+
+  const heatmap30dColor = (duration: number): string => {
+    if (duration < 0) return "transparent";
+    if (duration === 0) return "#F1F5F9";
+    if (duration <= 10) return "#C6E4D6";
+    if (duration <= 20) return "#7BC0A4";
+    if (duration <= 40) return "#3D9A73";
+    return "#1A6B4C";
+  };
+
+  const barChart30d = useMemo(() => {
+    const durationMax = Math.max(1, ...progress30d.map((d) => d.duration_minutes));
+    const setsMax = Math.max(1, ...progress30d.map((d) => d.sets_count));
+    return { durationMax, setsMax };
+  }, [progress30d]);
 
   const followUpState = useMemo(
     () => resolveFollowUpState(patient.stats.check_in_count_7d, patient.stats.last_check_in_at),
@@ -827,9 +966,15 @@ export default function PatientDetailView({
   const handleFollowUpAction = () => {
     const targetMap: Record<FollowUpState["actionTarget"], string> = {
       progress: "patient-progress-section",
-      logs: "patient-logs-section",
+      logs: "",
       plans: "patient-plans-section",
     };
+
+    if (followUpState.actionTarget === "logs") {
+      setLogsModalExpanded(false);
+      setIsLogsModalOpen(true);
+      return;
+    }
 
     if (followUpState.actionTarget === "plans" && followUpState.riskLevel === "high" && plans.length === 0) {
       setIsPlanModalOpen(true);
@@ -842,100 +987,129 @@ export default function PatientDetailView({
   };
 
   return (
-    <div className="space-y-5 text-slate-800">
-      <section className="rounded-xl border border-[#D9E2EC] bg-white p-5">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <button
-                onClick={onBackToList}
-                className="h-9 w-9 rounded-lg border border-[#D9E2EC] bg-white text-[#5B6B7A] hover:bg-[#F4F7FA]"
-                title="返回患者列表"
-              >
-                <ArrowLeft className="mx-auto h-4 w-4" />
-              </button>
+    <div className="space-y-4 text-slate-800">
+      {/* 顶部信息栏 + 提示行 */}
+      <div className="rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] p-4">
+        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBackToList}
+            className="h-9 w-9 rounded border border-[#D9E2EC] bg-white text-[#5B6B7A] hover:bg-[#F4F7FA] shrink-0"
+            title="返回患者列表"
+          >
+            <ArrowLeft className="mx-auto h-5 w-5" />
+          </button>
+          <h2 className="text-base font-bold text-[#111827]">{patient.name}</h2>
+          <span className="rounded px-2 py-0.5 text-xs text-[#6B7280] bg-[#F3F4F6]">
+            ID {patient.id}
+          </span>
+          <span className="rounded px-2 py-0.5 text-xs font-bold border-l-[4px] border-l-[#FE5F55] bg-[#FEF2F2] text-[#D95C5C]">
+            {followUpState.label}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 min-w-[176px] justify-end">
+          <button
+            onClick={onBackToList}
+            className="rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
+          >
+            返回列表
+          </button>
+          <button
+            onClick={() => setIsPlanModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-[#2B7A78] px-3 py-2 text-sm font-medium text-white hover:bg-[#236B69]"
+          >
+            <Plus className="h-4 w-4" />
+            下发方案
+          </button>
+        </div>
+      </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[11px] text-[#5B6B7A]">
-                  <User className="h-3.5 w-3.5 text-[#4F7A94]" />
-                  <span>患者详情工作台</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-semibold text-[#243447]">{patient.name}</h2>
-                  <span className="rounded-md border border-[#D9E2EC] bg-[#F4F7FA] px-2 py-0.5 text-[11px] text-[#5B6B7A]">
-                    患者 ID {patient.id}
-                  </span>
-                  <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${followUpState.badgeClassName}`}>
-                    {followUpState.label}
-                  </span>
-                </div>
-                <p className="text-sm text-[#5B6B7A]">最近训练日期：{formatDate(patient.stats.last_check_in_at)}</p>
-                <p className="text-sm leading-6 text-[#5B6B7A]">{followUpState.note}</p>
-                <p className="text-sm text-[#243447]">
-                  当前建议：<span className="font-medium">{followUpState.actionDescription}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-              <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-center gap-2 text-sm text-[#5B6B7A]">
-                  <Calendar className="h-4 w-4" />
-                  <span>近7天打卡</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-[#243447]">
-                  {patient.stats.check_in_count_7d}
-                  <span className="ml-1 text-sm font-medium text-[#5B6B7A]">次</span>
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-center gap-2 text-sm text-[#5B6B7A]">
-                  <Clock className="h-4 w-4" />
-                  <span>累计训练时长</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-[#243447]">
-                  {patient.stats.total_duration_minutes}
-                  <span className="ml-1 text-sm font-medium text-[#5B6B7A]">分钟</span>
-                </p>
-              </div>
-              <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-center gap-2 text-sm text-[#5B6B7A]">
-                  <FileText className="h-4 w-4" />
-                  <span>训练记录</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-[#243447]">{logs.length}</p>
-              </div>
-              <div className="rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-center gap-2 text-sm text-[#5B6B7A]">
-                  <Heart className="h-4 w-4" />
-                  <span>历史方案</span>
-                </div>
-                <p className="mt-2 text-2xl font-semibold text-[#243447]">{plans.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onBackToList}
-              className="rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
-            >
-              返回列表
-            </button>
-            <button
-              onClick={() => setIsPlanModalOpen(true)}
-              className="flex items-center gap-2 rounded-lg bg-[#2F5D7C] px-3 py-2 text-sm font-medium text-white hover:bg-[#4F7A94]"
-            >
-              <Plus className="h-4 w-4" />
-              下发方案
-            </button>
+        {/* 提示行 */}
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-[#6B7280] min-w-0">
+            最近训练：{formatDate(patient.stats.last_check_in_at)} · {followUpState.note}
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="invisible rounded-lg px-1 py-2 text-sm font-medium">返回列表</span>
+            <a href="#" className="flex items-center gap-1.5 text-sm text-[#2B7A78] hover:underline">
+              <Mail className="h-4 w-4" />
+              联系患者
+            </a>
           </div>
         </div>
-      </section>
+      </div>
 
-      <div className="flex gap-5">
-        <div className="flex-1 min-w-0 space-y-5">
-          <section
+      {/* 四模块指标卡 */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div
+          onClick={() => setIsHeatmapModalOpen(true)}
+          className="rounded-lg bg-white p-4 cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#F9FAFB] transition-colors h-24 flex flex-col justify-center"
+          title="点击查看详情"
+        >
+          <p className="text-xs text-[#6B7280]">近7天打卡</p>
+          <p className="mt-1 text-2xl font-bold text-[#111827] leading-none">
+            {patient.stats.check_in_count_7d}<span className="text-sm font-normal text-[#6B7280] ml-1">次</span>
+          </p>
+          <p className="mt-1.5 text-xs">
+            {patient.stats.check_in_count_7d >= 5 ? (
+              <span className="text-[#10B981]">目标：5次 ✅</span>
+            ) : patient.stats.check_in_count_7d >= 3 ? (
+              <span className="text-[#F59E0B]">目标：5次 ⚠️</span>
+            ) : (
+              <span className="text-[#FE5F55]">目标：5次 ❌</span>
+            )}
+          </p>
+        </div>
+        <div
+          onClick={() => setIsDurationModalOpen(true)}
+          className="rounded-lg bg-white p-4 cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#F9FAFB] transition-colors h-24 flex flex-col justify-center"
+          title="点击查看详情"
+        >
+          <p className="text-xs text-[#6B7280]">累计训练时长</p>
+          <p className="mt-1 text-2xl font-bold text-[#111827] leading-none">
+            {patient.stats.total_duration_minutes}<span className="text-sm font-normal text-[#6B7280] ml-1">分钟</span>
+          </p>
+          <p className="mt-1.5 text-xs">
+            {patient.stats.total_duration_minutes >= 300 ? (
+              <span className="text-[#10B981]">目标：300分钟 ✅</span>
+            ) : patient.stats.total_duration_minutes >= 150 ? (
+              <span className="text-[#F59E0B]">目标：300分钟 ⚠️</span>
+            ) : (
+              <span className="text-[#FE5F55]">目标：300分钟 ❌</span>
+            )}
+          </p>
+        </div>
+        <div
+          onClick={() => { setLogsModalExpanded(false); setIsLogsModalOpen(true); }}
+          className="rounded-lg bg-white p-4 cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#F9FAFB] transition-colors h-24 flex flex-col justify-center"
+          title="点击查看详情"
+        >
+          <p className="text-xs text-[#6B7280]">训练记录</p>
+          <p className="mt-1 text-2xl font-bold text-[#111827] leading-none">{logs.length}</p>
+          <p className="mt-1.5 text-xs text-[#6B7280]">
+            上次：{formatDate(patient.stats.last_check_in_at)}
+          </p>
+        </div>
+        <div
+          onClick={() => {
+            const el = document.getElementById("patient-plans-section");
+            el?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className="rounded-lg bg-white p-4 cursor-pointer shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:bg-[#F9FAFB] transition-colors h-24 flex flex-col justify-center"
+          title="点击查看详情"
+        >
+          <p className="text-xs text-[#6B7280]">历史方案</p>
+          <p className="mt-1 text-2xl font-bold text-[#111827] leading-none">{plans.length}</p>
+          <p className="mt-1.5 text-xs text-[#6B7280]">
+            最近：{latestPlan ? formatDate(latestPlan.created_at) : "暂无"}
+          </p>
+        </div>
+      </div>
+
+      <div className="h-px" />
+
+      {/* 近30天训练进度 */}
+      <section
             id="patient-progress-section"
             className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4"
           >
@@ -959,35 +1133,9 @@ export default function PatientDetailView({
                 暂无近30天训练数据。
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-3">
-                    <p className="text-xs text-[#8A97A6]">有训练的天数</p>
-                    <p className="mt-1 text-xl font-semibold text-[#243447]">{progressSummary.trainedDays} 天</p>
-                  </div>
-                  <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-3">
-                    <p className="text-xs text-[#8A97A6]">30天总时长</p>
-                    <p className="mt-1 text-xl font-semibold text-[#243447]">{progressSummary.totalDuration} 分钟</p>
-                  </div>
-                  <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-3">
-                    <p className="text-xs text-[#8A97A6]">30天总组数</p>
-                    <p className="mt-1 text-xl font-semibold text-[#243447]">{progressSummary.totalSets} 组</p>
-                  </div>
-                </div>
-
-                {progressChart && (
-                  <div className="rounded-xl border border-[#D9E2EC] bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium text-[#243447]">近30天训练时长趋势</p>
-                        <p className="text-xs text-[#5B6B7A]">折线展示每日训练时长，组数通过悬浮提示查看。</p>
-                      </div>
-                      <div className="text-right text-xs text-[#8A97A6]">
-                        <p>纵轴：分钟</p>
-                        <p>横轴：日期</p>
-                      </div>
-                    </div>
-
+              <div className="flex gap-0 items-stretch">
+                {progressChart ? (
+                  <div className="flex-1 min-w-0 rounded-xl border border-[#D9E2EC] bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4">
                     <div className="relative">
                       <svg
                         viewBox={`0 0 ${progressChart.chartWidth} ${progressChart.chartHeight}`}
@@ -1084,6 +1232,92 @@ export default function PatientDetailView({
                           strokeWidth="1"
                         />
 
+                        {showStreakBand && progressSummary.maxConsecutiveDays > 0 && progressChart.points[progressSummary.maxStreakStart] && progressChart.points[progressSummary.maxStreakEnd] && (() => {
+                          const innerH = progressChart.chartHeight - progressChart.padding.top - progressChart.padding.bottom;
+                          const startPt = progressChart.points[progressSummary.maxStreakStart];
+                          const endPt = progressChart.points[progressSummary.maxStreakEnd];
+                          const bandX = startPt.x - 10;
+                          const bandW = endPt.x - startPt.x + 20;
+                          return (
+                            <>
+                              <rect
+                                x={bandX}
+                                y={progressChart.padding.top}
+                                width={bandW}
+                                height={innerH}
+                                fill="#2F5D7C"
+                                fillOpacity="0.08"
+                                rx="4"
+                              />
+                              <rect
+                                x={bandX + 4}
+                                y={progressChart.padding.top + 4}
+                                width={bandW - 8}
+                                height={innerH - 8}
+                                fill="none"
+                                stroke="#2F5D7C"
+                                strokeWidth="1"
+                                strokeDasharray="4 2"
+                                rx="2"
+                              />
+                              <rect
+                                x={bandX + bandW / 2 - 52}
+                                y={progressChart.padding.top + 2}
+                                width="104"
+                                height="18"
+                                rx="4"
+                                fill="#2F5D7C"
+                              />
+                              <text
+                                x={bandX + bandW / 2}
+                                y={progressChart.padding.top + 14}
+                                textAnchor="middle"
+                                fill="#FFFFFF"
+                                fontSize="11"
+                                fontWeight="500"
+                              >
+                                最长连续 {progressSummary.maxConsecutiveDays}天
+                              </text>
+                            </>
+                          );
+                        })()}
+
+                        {showAvgLine && progressSummary.dailyAvgMinutes > 0 && (() => {
+                          const innerH = progressChart.chartHeight - progressChart.padding.top - progressChart.padding.bottom;
+                          const avgY = progressChart.padding.top + innerH - (progressSummary.dailyAvgMinutes / Math.max(1, progressMax)) * innerH;
+                          return (
+                            <>
+                              <line
+                                x1={progressChart.padding.left}
+                                y1={avgY}
+                                x2={progressChart.chartWidth - progressChart.padding.right}
+                                y2={avgY}
+                                stroke="#2F5D7C"
+                                strokeWidth="1.5"
+                                strokeDasharray="6 3"
+                              />
+                              <rect
+                                x={progressChart.chartWidth - progressChart.padding.right - 88}
+                                y={avgY - 10}
+                                width="88"
+                                height="20"
+                                rx="4"
+                                fill="#2F5D7C"
+                              />
+                              <text
+                                x={progressChart.chartWidth - progressChart.padding.right - 44}
+                                y={avgY + 4}
+                                textAnchor="middle"
+                                fill="#FFFFFF"
+                                fontSize="11"
+                                fontWeight="500"
+                              >
+                                日均 {progressSummary.dailyAvgMinutes}分钟
+                              </text>
+                            </>
+                          );
+                        })()}
+
                         {progressChart.xAxisLabelIndexes.map((index) => {
                           const point = progressChart.points[index];
                           return (
@@ -1117,108 +1351,80 @@ export default function PatientDetailView({
                       )}
                     </div>
                   </div>
+                ) : (
+                  <div className="flex-1 rounded-xl border border-dashed border-[#D9E2EC] p-8 text-center text-sm text-[#5B6B7A]">暂无图表数据</div>
                 )}
-              </>
-            )}
-          </section>
-
-          <section
-            id="patient-logs-section"
-            className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">
-                <FileText className="h-4 w-4 text-[#4F7A94]" />
-                训练记录列表
-              </h3>
-              <span className="text-xs text-[#8A97A6]">共 {logs.length} 条</span>
-              {logsExpanded && logs.length > LOGS_PREVIEW_COUNT && (
-                <button
-                  onClick={() => setLogsExpanded(false)}
-                  className="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-[#5B6B7A] hover:text-[#243447]"
-                >
-                  <ChevronUp className="h-3 w-3" />
-                  收起
-                </button>
-              )}
-            </div>
-
-            {logsLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="h-16 rounded-xl bg-[#F4F7FA] animate-pulse" />
-                ))}
-              </div>
-            ) : logsError ? (
-              <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{logsError}</span>
-              </div>
-            ) : logs.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#D9E2EC] p-8 text-center text-sm text-[#5B6B7A]">
-                当前患者暂无训练记录。
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {(logsExpanded ? logs : logs.slice(0, LOGS_PREVIEW_COUNT)).map((log) => (
-                  <div key={log.id} className="rounded-xl border border-[#D9E2EC] bg-[#FBFCFD] p-4">
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                      <div className="space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-semibold text-[#243447]">{log.train_date}</span>
-                          <span className="rounded-full border border-[#D9E2EC] bg-white px-2 py-0.5 text-xs text-[#5B6B7A]">
-                            {log.duration_minutes} 分钟
-                          </span>
-                          <span className="rounded-full border border-[#D9E2EC] bg-white px-2 py-0.5 text-xs text-[#5B6B7A]">
-                            {log.sets_count} 组
-                          </span>
-                        </div>
-                        <p className="text-sm text-[#5B6B7A]">{log.note?.trim() ? log.note : "本次训练未填写备注。"}</p>
-                      </div>
-                      <span className="text-xs text-[#8A97A6]">{formatDateTime(log.created_at)}</span>
+                <div
+                  onMouseDown={startRightDrag}
+                  className="w-1 shrink-0 bg-transparent hover:bg-[#2F5D7C]/30 active:bg-[#2F5D7C]/50 cursor-col-resize transition-colors"
+                />
+                <div className="shrink-0 flex flex-col divide-y divide-[#E7EDF3] rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] overflow-hidden" style={{ width: rightPanelWidth }}>
+                  <div onClick={() => setIsThirtyDayHeatmapOpen(true)} className="flex-1 flex items-center gap-2 px-4 cursor-pointer hover:bg-white transition-colors">
+                    <Calendar className="h-5 w-5 text-[#8A97A6] shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-[#8A97A6]">有训练的天数</p>
+                      <p className="text-base font-bold text-[#243447]">{progressSummary.trainedDays} 天</p>
                     </div>
                   </div>
-                ))}
-                {logs.length > LOGS_PREVIEW_COUNT && (
-                  <button
-                    onClick={() => setLogsExpanded(!logsExpanded)}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-[#5B6B7A] hover:text-[#243447] hover:bg-[#F4F7FA] rounded-lg transition-colors"
-                  >
-                    {logsExpanded ? (
-                      <>
-                        <ChevronUp className="h-3.5 w-3.5" />
-                        <span>收起</span>
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="h-3.5 w-3.5" />
-                        <span>展开全部（共 {logs.length} 条，还有 {logs.length - LOGS_PREVIEW_COUNT} 条）</span>
-                      </>
-                    )}
-                  </button>
-                )}
+                  <div onClick={() => setIsDurationBarChartOpen(true)} className="flex-1 flex items-center gap-2 px-4 cursor-pointer hover:bg-white transition-colors">
+                    <Clock className="h-5 w-5 text-[#8A97A6] shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-[#8A97A6]">30天总时长</p>
+                      <p className="text-base font-bold text-[#243447]">{progressSummary.totalDuration} 分钟</p>
+                    </div>
+                  </div>
+                  <div onClick={() => setIsSetsBarChartOpen(true)} className="flex-1 flex items-center gap-2 px-4 cursor-pointer hover:bg-white transition-colors">
+                    <BarChart3 className="h-5 w-5 text-[#8A97A6] shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-[#8A97A6]">30天总组数</p>
+                      <p className="text-base font-bold text-[#243447]">{progressSummary.totalSets} 组</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 px-4 cursor-pointer hover:bg-white transition-colors" onClick={() => setShowAvgLine(!showAvgLine)}>
+                    <Gauge className={`h-5 w-5 shrink-0 ${showAvgLine ? "text-[#2F5D7C]" : "text-[#8A97A6]"}`} />
+                    <div className="min-w-0">
+                      <p className="text-xs text-[#8A97A6]">日均时长</p>
+                      <p className="text-base font-bold text-[#243447]">{progressSummary.dailyAvgMinutes} 分钟</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 px-4 cursor-pointer hover:bg-white transition-colors" onClick={() => setShowStreakBand(!showStreakBand)}>
+                    <Flame className={`h-5 w-5 shrink-0 ${showStreakBand ? "text-[#E87800]" : "text-[#8A97A6]"}`} />
+                    <div className="min-w-0">
+                      <p className="text-xs text-[#8A97A6]">最长连续</p>
+                      <p className="text-base font-bold text-[#243447]">{progressSummary.maxConsecutiveDays} 天</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </section>
-        </div>
 
-        {/* 拖拽分隔线 */}
-        <div
-          onMouseDown={startRightDrag}
-          className="w-1 shrink-0 bg-transparent hover:bg-[#2F5D7C]/30 active:bg-[#2F5D7C]/50 cursor-col-resize transition-colors z-30"
-        />
+      {/* 拖拽分隔线 */}
+      <div
+        onMouseDown={startRightDrag}
+        className="w-1 shrink-0 bg-transparent hover:bg-[#2F5D7C]/30 active:bg-[#2F5D7C]/50 cursor-col-resize transition-colors z-30 hidden"
+      />
 
-        <div className="space-y-5 shrink-0 overflow-y-auto" style={{ width: rightPanelWidth, maxHeight: "calc(100vh - 200px)" }}>
-          <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
-            <div>
-              <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">
-                <User className="h-4 w-4 text-[#4F7A94]" />
-                患者概览
-              </h3>
-              <p className="mt-1 text-sm text-[#5B6B7A]">右侧优先展示患者当前状态与最近一次关键动作。</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
+      <div className="space-y-5">
+        <section className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
+        <button
+          onClick={() => toggleSection("overview")}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-[#4F7A94]" />
+            <h3 className="text-base font-semibold text-[#243447]">患者概览</h3>
+            <span className="text-xs text-[#8A97A6]">健康档案 · 康复等级 · 评估 · 状态</span>
+          </div>
+          {expandedSections.overview ? (
+            <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+          )}
+        </button>
+        {expandedSections.overview && (
+          <div className="px-5 pb-5 space-y-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {/* 健康档案卡片 */}
               <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
                 <div className="flex items-center justify-between">
@@ -1393,10 +1599,6 @@ export default function PatientDetailView({
                 </button>
               </div>
               <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <p className="text-[11px] text-[#8A97A6]">当前医生</p>
-                <p className="mt-1 text-sm font-semibold text-[#243447]">医生 ID {doctorId}</p>
-              </div>
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
                 <p className="text-[11px] text-[#8A97A6]">最近训练记录</p>
                 <p className="mt-1 text-sm font-semibold text-[#243447]">
                   {latestLog ? formatDateTime(latestLog.created_at) : "暂无记录"}
@@ -1409,20 +1611,32 @@ export default function PatientDetailView({
                 </p>
               </div>
             </div>
-          </section>
+          </div>
+        )}
+      </section>
 
-          <section
-            id="patient-plans-section"
-            className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4"
-          >
-            <div>
-              <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">
-                <Brain className="h-4 w-4 text-[#4F7A94]" />
-                最新 AI 小结
-              </h3>
-              <p className="mt-1 text-sm text-[#5B6B7A]">默认展示当前患者最新一条 AI 周报。</p>
-            </div>
-
+          <section className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
+        <button
+          onClick={() => toggleSection("aiSummary")}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Brain className="h-4 w-4 text-[#4F7A94]" />
+            <h3 className="text-base font-semibold text-[#243447]">最新 AI 小结</h3>
+            {aiSummary && (
+              <span className="rounded-md bg-[#EDE9FE] px-2 py-0.5 text-[10px] font-medium text-[#7C3AED]">
+                {aiSummary.summary_week_start} ~ {aiSummary.summary_week_end}
+              </span>
+            )}
+          </div>
+          {expandedSections.aiSummary ? (
+            <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+          )}
+        </button>
+        {expandedSections.aiSummary && (
+          <div className="px-5 pb-5">
             {aiLoading ? (
               <div className="space-y-2">
                 <div className="h-4 rounded bg-[#F4F7FA] animate-pulse" />
@@ -1440,26 +1654,40 @@ export default function PatientDetailView({
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="text-xs text-[#8A97A6]">
-                  周期：{aiSummary.summary_week_start} - {aiSummary.summary_week_end}
-                </div>
                 <div className="text-xs text-[#8A97A6]">生成时间：{formatDateTime(aiSummary.created_at)}</div>
                 <div className="whitespace-pre-line rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4 text-sm leading-6 text-[#243447]">
                   {aiSummary.content}
                 </div>
               </div>
             )}
-          </section>
+          </div>
+        )}
+      </section>
 
           {/* 预警中心 */}
-          <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
-            <div>
-              <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">
-                <AlertTriangle className="h-4 w-4 text-[#D9A441]" />
-                安全预警
-              </h3>
-              <p className="text-sm text-[#5B6B7A]">评估提交时自动检测，心率&gt;120 / 血氧&lt;92% / 疲劳&gt;8 / 呼吸困难≥4 触发预警。</p>
-            </div>
+          <section className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
+        <button
+          onClick={() => toggleSection("warnings")}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-[#D9A441]" />
+            <h3 className="text-base font-semibold text-[#243447]">安全预警</h3>
+            {warnings.length > 0 && (
+              <span className="rounded-full bg-[#FDF2F2] px-2 py-0.5 text-[10px] font-bold text-[#D95C5C]">
+                {warnings.filter((w) => !w.is_resolved).length} 未处理
+              </span>
+            )}
+          </div>
+          {expandedSections.warnings ? (
+            <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+          )}
+        </button>
+        {expandedSections.warnings && (
+          <div className="px-5 pb-5">
+            <p className="text-sm text-[#5B6B7A] mb-3">评估提交时自动检测，心率&gt;120 / 血氧&lt;92% / 疲劳&gt;8 / 呼吸困难≥4 触发预警。</p>
 
             {warningsLoading ? (
               <div className="h-12 rounded-xl bg-[#F4F7FA] animate-pulse" />
@@ -1510,25 +1738,36 @@ export default function PatientDetailView({
                 })}
               </div>
             )}
-          </section>
+          </div>
+        )}
+      </section>
 
-          <section className="rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-base font-semibold text-[#243447]">
-                  <Heart className="h-4 w-4 text-[#4F7A94]" />
-                  训练方案历史
-                </h3>
-                <p className="text-sm text-[#5B6B7A]">保留全部历史方案，最新方案排在最前。</p>
-              </div>
-              <button
-                onClick={() => setIsPlanModalOpen(true)}
-                className="rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
-              >
-                新增方案
-              </button>
-            </div>
-
+          <section id="patient-plans-section" className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
+        <button
+          onClick={() => toggleSection("planHistory")}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Heart className="h-4 w-4 text-[#4F7A94]" />
+            <h3 className="text-base font-semibold text-[#243447]">训练方案历史</h3>
+            <span className="text-xs text-[#8A97A6]">{plans.length} 个方案</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsPlanModalOpen(true); }}
+              className="rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
+            >
+              新增方案
+            </button>
+            {expandedSections.planHistory ? (
+              <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+            )}
+          </div>
+        </button>
+        {expandedSections.planHistory && (
+          <div className="px-5 pb-5 space-y-4">
             <div className={`rounded-xl border px-4 py-3 ${planStatusSummary.toneClassName}`}>
               <p className="text-[11px] opacity-80">方案状态</p>
               <p className="mt-1 text-sm font-semibold">{planStatusSummary.title}</p>
@@ -1578,9 +1817,10 @@ export default function PatientDetailView({
                 ))}
               </div>
             )}
-          </section>
+          </div>
+        )}
+      </section>
         </div>
-      </div>
 
       {isPlanModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
@@ -1943,6 +2183,512 @@ export default function PatientDetailView({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 训练记录弹窗 */}
+      {isLogsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4 shrink-0">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">训练记录</h4>
+                <p className="text-sm text-[#5B6B7A]">
+                  当前患者：{patient.name}（ID {patient.id}）· 共 {logs.length} 条
+                </p>
+              </div>
+              <button
+                onClick={() => setIsLogsModalOpen(false)}
+                className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                aria-label="关闭弹窗"
+              >
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-5 space-y-3">
+              {logsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((item) => (
+                    <div key={item} className="h-16 rounded-xl bg-[#F4F7FA] animate-pulse" />
+                  ))}
+                </div>
+              ) : logsError ? (
+                <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{logsError}</span>
+                </div>
+              ) : logs.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[#D9E2EC] p-8 text-center text-sm text-[#5B6B7A]">
+                  当前患者暂无训练记录。
+                </div>
+              ) : (
+                <>
+                  {(logsModalExpanded ? logs : logs.slice(0, LOGS_PREVIEW_COUNT)).map((log) => (
+                    <div key={log.id} className="rounded-xl border border-[#D9E2EC] bg-[#FBFCFD] p-4">
+                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-semibold text-[#243447]">{log.train_date}</span>
+                            <span className="rounded-full border border-[#D9E2EC] bg-white px-2 py-0.5 text-xs text-[#5B6B7A]">
+                              {log.duration_minutes} 分钟
+                            </span>
+                            <span className="rounded-full border border-[#D9E2EC] bg-white px-2 py-0.5 text-xs text-[#5B6B7A]">
+                              {log.sets_count} 组
+                            </span>
+                          </div>
+                          <p className="text-sm text-[#5B6B7A]">{log.note?.trim() ? log.note : "本次训练未填写备注。"}</p>
+                        </div>
+                        <span className="text-xs text-[#8A97A6]">{formatDateTime(log.created_at)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {logs.length > LOGS_PREVIEW_COUNT && (
+                    <button
+                      onClick={() => setLogsModalExpanded(!logsModalExpanded)}
+                      className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-[#5B6B7A] hover:text-[#243447] hover:bg-[#F4F7FA] rounded-lg transition-colors"
+                    >
+                      {logsModalExpanded ? (
+                        <>
+                          <ChevronUp className="h-3.5 w-3.5" />
+                          <span>收起</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3.5 w-3.5" />
+                          <span>展开全部（共 {logs.length} 条，还有 {logs.length - LOGS_PREVIEW_COUNT} 条）</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 30天训练热力图弹窗 */}
+      {isThirtyDayHeatmapOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-6 py-4">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">近30天训练热力图</h4>
+                <p className="text-sm text-[#5B6B7A]">{patient.name} · 共 {progressSummary.trainedDays} 天有训练</p>
+              </div>
+              <button onClick={() => setIsThirtyDayHeatmapOpen(false)} className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]" aria-label="关闭弹窗">
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex justify-center overflow-x-auto">
+                <svg width="420" height="260" viewBox="0 0 420 260" role="img" aria-label="近30天训练热力图">
+                  <g transform="translate(42, 16)">
+                    {["日", "一", "二", "三", "四", "五", "六"].map((wd, ri) => (
+                      <text key={wd} x={-12} y={ri * 32 + 24} textAnchor="end" fill="#8A97A6" fontSize="11">{wd}</text>
+                    ))}
+                  </g>
+                  {heatmap30dGrid.map((week, wi) => (
+                    <g key={wi} transform={`translate(${48 + wi * 38}, 16)`}>
+                      {week.map((day, di) => {
+                        const hasData = day.duration_minutes >= 0;
+                        return hasData ? (
+                          <g key={di}>
+                            <title>{day.date ? `${day.date} 周${day.weekday}: ${day.duration_minutes}分钟 · ${day.sets_count}组` : ""}</title>
+                            <rect
+                              x={0}
+                              y={di * 32}
+                              width={28}
+                              height={28}
+                              rx={5}
+                              fill={heatmap30dColor(day.duration_minutes)}
+                              stroke={day.duration_minutes > 0 ? "#A0C8B4" : "#D9E2EC"}
+                              strokeWidth="1"
+                            />
+                          </g>
+                        ) : null;
+                      })}
+                    </g>
+                  ))}
+                  <g transform="translate(48, 250)">
+                    {heatmap30dGrid.map((week, wi) => {
+                      const firstDay = week.find((d) => d.duration_minutes >= 0);
+                      if (!firstDay) return null;
+                      const label = `${parseInt(firstDay.date.slice(5, 7), 10)}/${parseInt(firstDay.date.slice(8, 10), 10)}`;
+                      return (
+                        <text key={wi} x={wi * 38 + 14} y={0} textAnchor="middle" fill="#8A97A6" fontSize="10">
+                          {label}
+                        </text>
+                      );
+                    })}
+                  </g>
+                </svg>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-[11px] text-[#8A97A6]">
+                <span>少</span>
+                {["#F1F5F9", "#C6E4D6", "#7BC0A4", "#3D9A73", "#1A6B4C"].map((c) => (
+                  <div key={c} className="h-3.5 w-3.5 rounded-sm" style={{ backgroundColor: c, border: c === "#F1F5F9" ? "1px solid #D9E2EC" : "none" }} />
+                ))}
+                <span>多（分钟）</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 30天训练时长条形统计图弹窗 */}
+      {isDurationBarChartOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-3xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4 shrink-0">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">近30天每日训练时长</h4>
+                <p className="text-sm text-[#5B6B7A]">{patient.name} · 合计 {progressSummary.totalDuration} 分钟</p>
+              </div>
+              <button onClick={() => setIsDurationBarChartOpen(false)} className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]" aria-label="关闭弹窗">
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5">
+              <div className="space-y-1">
+                {progress30d.map((day) => {
+                  const barWidth = Math.max(2, (day.duration_minutes / barChart30d.durationMax) * 100);
+                  const hasTraining = day.duration_minutes > 0;
+                  const isHovered = hoveredDurationDay === day.date;
+                  return (
+                    <div key={day.date} className="flex items-center gap-2">
+                      <span className="w-12 text-right text-[10px] text-[#8A97A6] shrink-0">
+                        {`${parseInt(day.date.slice(5, 7), 10)}/${parseInt(day.date.slice(8, 10), 10)}`}
+                      </span>
+                      <div
+                        className="flex-1 h-5 bg-[#F4F7FA] rounded relative cursor-pointer"
+                        onMouseEnter={() => setHoveredDurationDay(day.date)}
+                        onMouseLeave={() => setHoveredDurationDay(null)}
+                      >
+                        <div
+                          className={`h-full rounded transition-all duration-300 ${hasTraining ? "bg-[#2F5D7C]" : "bg-transparent"} ${isHovered ? "!bg-[#1A3F52]" : ""}`}
+                          style={{ width: `${barWidth}%` }}
+                        />
+                        {isHovered && (
+                          <div className="absolute left-1/2 -translate-x-1/2 -top-8 bg-[#243447] text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10 shadow-lg">
+                            {day.date} · {day.duration_minutes} 分钟 · {day.sets_count} 组
+                          </div>
+                        )}
+                      </div>
+                      <span className={`w-10 text-right text-[10px] shrink-0 ${hasTraining ? "text-[#243447] font-medium" : "text-[#C9D4DF]"}`}>
+                        {day.duration_minutes > 0 ? `${day.duration_minutes}分` : "0"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 30天训练组数条形统计图弹窗 */}
+      {isSetsBarChartOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-3xl rounded-2xl border border-[#D9E2EC] bg-white shadow-xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4 shrink-0">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">近30天每日训练组数</h4>
+                <p className="text-sm text-[#5B6B7A]">{patient.name} · 合计 {progressSummary.totalSets} 组</p>
+              </div>
+              <button onClick={() => setIsSetsBarChartOpen(false)} className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]" aria-label="关闭弹窗">
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5">
+              <div className="space-y-1">
+                {progress30d.map((day) => {
+                  const barWidth = Math.max(2, (day.sets_count / barChart30d.setsMax) * 100);
+                  const hasTraining = day.sets_count > 0;
+                  const isHovered = hoveredSetsDay === day.date;
+                  return (
+                    <div key={day.date} className="flex items-center gap-2">
+                      <span className="w-12 text-right text-[10px] text-[#8A97A6] shrink-0">
+                        {`${parseInt(day.date.slice(5, 7), 10)}/${parseInt(day.date.slice(8, 10), 10)}`}
+                      </span>
+                      <div
+                        className="flex-1 h-5 bg-[#F4F7FA] rounded relative cursor-pointer"
+                        onMouseEnter={() => setHoveredSetsDay(day.date)}
+                        onMouseLeave={() => setHoveredSetsDay(null)}
+                      >
+                        <div
+                          className={`h-full rounded transition-all duration-300 ${hasTraining ? "bg-[#4F7A94]" : "bg-transparent"} ${isHovered ? "!bg-[#2D4F63]" : ""}`}
+                          style={{ width: `${barWidth}%` }}
+                        />
+                        {isHovered && (
+                          <div className="absolute left-1/2 -translate-x-1/2 -top-8 bg-[#243447] text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10 shadow-lg">
+                            {day.date} · {day.sets_count} 组 · {day.duration_minutes} 分钟
+                          </div>
+                        )}
+                      </div>
+                      <span className={`w-8 text-right text-[10px] shrink-0 ${hasTraining ? "text-[#243447] font-medium" : "text-[#C9D4DF]"}`}>
+                        {day.sets_count > 0 ? `${day.sets_count}组` : "0"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 累计训练时长环形进度弹窗 */}
+      {isDurationModalOpen && (() => {
+        const { total, prevMax, currentMax, percentage, progressInSegment, segmentSize, milestones } = durationMilestones;
+        const radius = 72;
+        const strokeWidth = 10;
+        const center = 100;
+        const circumference = 2 * Math.PI * radius;
+        const filledLength = (percentage / 100) * circumference;
+        const unfilledLength = circumference - filledLength;
+        const ringColor = percentage >= 80 ? "#1A6B4C" : percentage >= 50 ? "#3D9A73" : percentage >= 25 ? "#7BC0A4" : "#2F5D7C";
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-[#D9E2EC] bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4">
+                <div>
+                  <h4 className="text-base font-semibold text-[#243447]">累计训练时长</h4>
+                  <p className="text-sm text-[#5B6B7A]">
+                    {patient.name}（ID {patient.id}）
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsDurationModalOpen(false)}
+                  className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                  aria-label="关闭弹窗"
+                >
+                  <X className="mx-auto h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-5">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <svg width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="累计训练时长环形进度">
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        fill="none"
+                        stroke="#E7EDF3"
+                        strokeWidth={strokeWidth}
+                      />
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        fill="none"
+                        stroke={ringColor}
+                        strokeWidth={strokeWidth}
+                        strokeLinecap="round"
+                        strokeDasharray={`${filledLength} ${unfilledLength}`}
+                        strokeDashoffset={circumference * 0.25}
+                        transform={`rotate(-90 ${center} ${center})`}
+                        style={{ transition: "stroke-dasharray 0.6s ease" }}
+                      />
+                      <text x={center} y={center - 8} textAnchor="middle" fill="#243447" fontSize="28" fontWeight="700">
+                        {total}
+                      </text>
+                      <text x={center} y={center + 16} textAnchor="middle" fill="#5B6B7A" fontSize="13">
+                        分钟
+                      </text>
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-[#E7EDF3] bg-[#FBFCFD] p-4 text-center">
+                  <p className="text-sm font-medium text-[#243447]">
+                    当前目标：{currentMax} 分钟
+                  </p>
+                  <p className="mt-1 text-xs text-[#5B6B7A]">
+                    已完成 {progressInSegment}/{segmentSize} 分钟（{percentage}%）
+                  </p>
+                  <div className="mt-2 h-2 w-full rounded-full bg-[#E7EDF3]">
+                    <div
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${percentage}%`, backgroundColor: ringColor }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-[#5B6B7A]">里程碑</p>
+                  <div className="space-y-1.5">
+                    {milestones.map((m) => {
+                      const achieved = total >= m;
+                      const isCurrent = m === currentMax;
+                      return (
+                        <div
+                          key={m}
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
+                            achieved
+                              ? "bg-[#EEFDF5] border border-[#D5F5E3]"
+                              : isCurrent
+                                ? "bg-[#F4F7FA] border border-[#2F5D7C]/30"
+                                : "bg-[#F8FAFC] border border-[#D9E2EC]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`h-2.5 w-2.5 rounded-full ${
+                                achieved ? "bg-[#3D9A73]" : isCurrent ? "bg-[#2F5D7C]" : "bg-[#D9E2EC]"
+                              }`}
+                            />
+                            <span className={achieved ? "text-[#3E7B61] font-medium" : isCurrent ? "text-[#243447] font-semibold" : "text-[#8A97A6]"}>
+                              {m} 分钟
+                            </span>
+                          </div>
+                          {achieved && (
+                            <span className="text-[10px] text-[#5B9B7A] font-medium">✓ 已达成</span>
+                          )}
+                          {isCurrent && !achieved && (
+                            <span className="text-[10px] text-[#2F5D7C] font-medium">进行中</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 近7天打卡热力图弹窗 */}
+      {isHeatmapModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-[#D9E2EC] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#D9E2EC] px-5 py-4">
+              <div>
+                <h4 className="text-base font-semibold text-[#243447]">近7天训练热力图</h4>
+                <p className="text-sm text-[#5B6B7A]">
+                  {patient.name}（ID {patient.id}）· 共 {patient.stats.check_in_count_7d} 天打卡
+                </p>
+              </div>
+              <button
+                onClick={() => setIsHeatmapModalOpen(false)}
+                className="h-9 w-9 rounded-lg border border-[#D9E2EC] text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                aria-label="关闭弹窗"
+              >
+                <X className="mx-auto h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5">
+              <div className="flex justify-center">
+                <svg width="364" height="120" viewBox="0 0 364 120" role="img" aria-label="近7天打卡热力图">
+                  {heatmap7d.map((day, index) => {
+                    const cellX = 24 + index * 48;
+                    const cellY = 24;
+                    const cellSize = 32;
+                    const cornerRadius = 6;
+                    const color = heatmapColor(day.duration_minutes);
+                    const hasTraining = day.duration_minutes > 0;
+
+                    return (
+                      <g key={day.date}>
+                        <rect
+                          x={cellX}
+                          y={cellY}
+                          width={cellSize}
+                          height={cellSize}
+                          rx={cornerRadius}
+                          fill={color}
+                          stroke={hasTraining ? "#A0C8B4" : "#D9E2EC"}
+                          strokeWidth="1"
+                        />
+                        <text
+                          x={cellX + cellSize / 2}
+                          y={cellY + cellSize / 2 + 1}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fill={hasTraining ? "#FFFFFF" : "#8A97A6"}
+                          fontSize="13"
+                          fontWeight="600"
+                        >
+                          {day.duration_minutes > 0 ? day.duration_minutes : "0"}
+                        </text>
+                        <text
+                          x={cellX + cellSize / 2}
+                          y={cellY + cellSize + 16}
+                          textAnchor="middle"
+                          fill="#8A97A6"
+                          fontSize="10"
+                        >
+                          {`${(parseInt(day.date.slice(5, 7), 10))}/${(parseInt(day.date.slice(8, 10), 10))}`}
+                        </text>
+                        <text
+                          x={cellX + cellSize / 2}
+                          y={cellY + cellSize + 28}
+                          textAnchor="middle"
+                          fill={hasTraining ? "#3D9A73" : "#8A97A6"}
+                          fontSize="11"
+                          fontWeight={hasTraining ? "600" : "normal"}
+                        >
+                          周{day.weekday}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+
+              <div className="rounded-xl border border-[#E7EDF3] bg-[#FBFCFD] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-[#5B6B7A]">图例：训练时长（分钟）</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-[#8A97A6]">0</span>
+                  {[
+                    { color: "#F1F5F9", label: "0", border: true },
+                    { color: "#C6E4D6", label: "1-10" },
+                    { color: "#7BC0A4", label: "11-20" },
+                    { color: "#3D9A73", label: "21-40" },
+                    { color: "#1A6B4C", label: "40+" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-1.5">
+                      <div
+                        className={`h-4 w-4 rounded ${item.border ? "border border-[#D9E2EC]" : ""}`}
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-[10px] text-[#8A97A6]">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {heatmap7d.map((day) => (
+                  <div
+                    key={day.date}
+                    className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-3 flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-xs font-medium text-[#243447]">
+                        {parseInt(day.date.slice(5, 7), 10)}/{parseInt(day.date.slice(8, 10), 10)} 周{day.weekday}
+                      </p>
+                      <p className="text-xs text-[#8A97A6]">
+                        {day.duration_minutes > 0 ? `${day.duration_minutes} 分钟 · ${day.sets_count} 组` : "未训练"}
+                      </p>
+                    </div>
+                    <div
+                      className="h-6 w-6 rounded-md"
+                      style={{ backgroundColor: heatmapColor(day.duration_minutes), border: day.duration_minutes === 0 ? "1px solid #D9E2EC" : "none" }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

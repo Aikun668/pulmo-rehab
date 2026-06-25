@@ -3,6 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export interface RecentPatient {
+  id: number;
+  name: string;
+  visitedAt: string;
+}
+
 export type RecoveryStage = "early" | "mid" | "stable";
 
 export const RECOVERY_STAGE_LABELS: Record<RecoveryStage, string> = {
@@ -132,9 +138,9 @@ export const DYSPNEA_LABELS: Record<number, string> = {
 };
 
 export const REHAB_LEVEL_INFO: Record<number, { label: string; name: string; training: string; color: string; bgColor: string; borderColor: string }> = {
-  1: { label: "Level 1", name: "重度恢复", training: "腹式呼吸训练", color: "#D95C5C", bgColor: "#FDF2F2", borderColor: "#F8D2D2" },
-  2: { label: "Level 2", name: "轻度活动受限", training: "缩唇呼吸训练", color: "#D9A441", bgColor: "#FDF8EE", borderColor: "#F8E1C2" },
-  3: { label: "Level 3", name: "中度恢复", training: "深吸气 + 呼吸节奏控制", color: "#2F5D7C", bgColor: "#EEF4FA", borderColor: "#D9E2EC" },
-  4: { label: "Level 4", name: "恢复良好", training: "呼吸耐力训练", color: "#5B9B7A", bgColor: "#EEFDF5", borderColor: "#D5F5E3" },
-  5: { label: "Level 5", name: "接近完全恢复", training: "综合肺功能训练", color: "#2E7D5B", bgColor: "#E6F9F0", borderColor: "#B8E8D0" },
+  1: { label: "Level 1", name: "重度恢复", training: "腹式呼吸训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
+  2: { label: "Level 2", name: "轻度活动受限", training: "缩唇呼吸训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
+  3: { label: "Level 3", name: "中度恢复", training: "深吸气 + 呼吸节奏控制", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
+  4: { label: "Level 4", name: "恢复良好", training: "呼吸耐力训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
+  5: { label: "Level 5", name: "接近完全恢复", training: "综合肺功能训练", color: "#4F6BED", bgColor: "#EEF2FF", borderColor: "#C7D2FE" },
 };

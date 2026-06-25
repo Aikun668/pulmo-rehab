@@ -8,11 +8,14 @@ import {
   Users, 
   Activity, 
   LogOut, 
-  ShieldCheck, 
-  Server,
   MapPin, 
-  Clock
+  Clock,
+  CalendarCheck,
+  UserPlus,
+  Bell,
+  ChevronRight
 } from "lucide-react";
+import { RecentPatient } from "../types";
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -22,6 +25,8 @@ interface LayoutWrapperProps {
   currentRoute: string;
   activePatientName?: string;
   onNavigateToList: () => void;
+  recentPatients: RecentPatient[];
+  onSelectRecentPatient: (patientId: number) => void;
 }
 
 export default function LayoutWrapper({
@@ -31,7 +36,9 @@ export default function LayoutWrapper({
   onLogout,
   currentRoute,
   activePatientName,
-  onNavigateToList
+  onNavigateToList,
+  recentPatients,
+  onSelectRecentPatient,
 }: LayoutWrapperProps) {
   const [timeStr, setTimeStr] = useState<string>("");
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -114,18 +121,70 @@ export default function LayoutWrapper({
               <span>门诊患者康复随访</span>
             </button>
 
-            <div className="px-3 pt-5 pb-2 text-[9px] font-bold text-med-text-meta uppercase tracking-wider">
-              当前工作流 (MVP)
+            {/* 快捷统计 */}
+            <div className="mt-4 px-3">
+              <div className="text-[9px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
+                今日工作概览
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-[#F4F7FA] border border-med-border rounded-lg p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <CalendarCheck className="h-3 w-3 text-med-primary" />
+                    <span className="text-[10px] text-med-text-secondary">待随访</span>
+                  </div>
+                  <span className="text-lg font-bold text-med-text-primary">12</span>
+                </div>
+                <div className="bg-[#F4F7FA] border border-med-border rounded-lg p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <UserPlus className="h-3 w-3 text-emerald-500" />
+                    <span className="text-[10px] text-med-text-secondary">本周新增</span>
+                  </div>
+                  <span className="text-lg font-bold text-med-text-primary">5</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2.5 px-3 py-2 text-xs text-med-text-secondary font-medium">
-              <Server className="h-4 w-4 text-med-text-meta shrink-0" />
-              <span>服务层: FastAPI</span>
+            {/* 系统提醒 */}
+            <div className="mt-4 px-3">
+              <div className="text-[9px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
+                系统提醒
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                <div className="flex items-start gap-1.5">
+                  <Bell className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] text-amber-700 leading-relaxed">
+                      下周有 <span className="font-bold">2</span> 例随访到期
+                    </p>
+                    <p className="text-[9px] text-amber-500 mt-0.5">建议提前联系患者</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2.5 px-3 py-2 text-xs text-med-text-secondary font-medium">
-              <ShieldCheck className="h-4 w-4 text-med-text-meta shrink-0" />
-              <span>机制: 医生端三页主流程</span>
+            {/* 最近访问 */}
+            <div className="mt-4 px-3">
+              <div className="text-[9px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
+                最近访问
+              </div>
+              {recentPatients.length > 0 ? (
+                <div className="space-y-1">
+                  {recentPatients.map((patient) => (
+                    <button
+                      key={patient.id}
+                      onClick={() => onSelectRecentPatient(patient.id)}
+                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-md bg-white border border-med-border hover:bg-[#F4F7FA] transition-all group cursor-pointer"
+                    >
+                      <span className="text-[11px] text-med-text-primary font-medium">{patient.name}</span>
+                      <ChevronRight className="h-3 w-3 text-med-text-meta group-hover:text-med-primary transition-colors" />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-2.5 py-3 rounded-md bg-[#F4F7FA] border border-med-border text-[11px] text-med-text-secondary text-center">
+                  暂无最近访问记录
+                </div>
+              )}
             </div>
           </nav>
         </div>
