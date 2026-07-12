@@ -2,34 +2,26 @@ var auth = require("../../utils/auth.js")
 
 Page({
   data: {
-    userName: "赵六",
+    userName: "",
     patientId: 0,
     doctorId: null,
     role: "",
-    avatarSurname: "赵",
-    greetingText: "赵先生",
   },
 
   onShow() {
-    // 自定义 tabBar：设置选中状态（我的tab = index 4）
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 4 })
-    }
-
-    var userName = auth.getUserName()
-    // 与首页保持一致的兜底逻辑：无真实用户名时用"赵六"
-    if (!userName || userName === "用户") {
-      userName = "赵六"
-    }
-    var surname = userName.charAt(0) || "赵"
-
     this.setData({
-      userName: userName,
+      userName: auth.getUserName() || "未设置",
       patientId: auth.getPatientId() || 0,
       doctorId: auth.getDoctorId(),
       role: auth.getRole ? auth.getRole() : "patient",
-      avatarSurname: surname,
-      greetingText: surname + "先生",
+    })
+  },
+
+  handleSettings() {
+    wx.showToast({
+      title: "设置功能暂未开放",
+      icon: "none",
+      duration: 1500,
     })
   },
 
@@ -55,15 +47,6 @@ Page({
     if (key === "progress") {
       wx.navigateTo({
         url: "/pages/progress/index",
-      })
-      return
-    }
-
-    if (key === "settings") {
-      wx.showToast({
-        title: "设置功能开发中",
-        icon: "none",
-        duration: 1500,
       })
       return
     }
@@ -95,7 +78,7 @@ Page({
         if (res.confirm) {
           auth.logout()
           // 强制重新执行 dev-login，确保首页有有效 token
-          auth.login(17).then(function () {
+          auth.login(1).then(function () {
             wx.reLaunch({ url: "/pages/home/index" })
           }).catch(function () {
             wx.reLaunch({ url: "/pages/home/index" })

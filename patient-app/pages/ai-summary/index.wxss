@@ -1,8 +1,7 @@
 .page {
   padding: 24rpx;
-  background: #F5F7FA;
+  background: #F4F7FB;
   min-height: 100vh;
-  box-sizing: border-box;
 }
 
 .loading-hint {
@@ -12,123 +11,7 @@
   color: #8a9aad;
 }
 
-/* ===== Tab 切换栏 ===== */
-.tab-bar {
-  display: flex;
-  background: #ffffff;
-  border-radius: 20rpx;
-  padding: 8rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
-}
-
-.tab-item {
-  flex: 1;
-  text-align: center;
-  padding: 16rpx 0;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #8a9aad;
-  border-radius: 16rpx;
-  transition: all 0.3s ease;
-}
-
-.tab-item--active {
-  background: #2563EB;
-  color: #ffffff;
-  font-weight: 600;
-  box-shadow: 0 4rpx 12rpx rgba(37, 99, 235, 0.2);
-}
-
-/* ===== 空态卡片 ===== */
-.empty-card {
-  padding: 48rpx 32rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
-  text-align: center;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
-}
-
-.empty-card__icon {
-  margin-bottom: 24rpx;
-}
-
-.empty-card__title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #3a4a5c;
-  margin-bottom: 12rpx;
-}
-
-.empty-card__desc {
-  font-size: 24rpx;
-  color: #8a9aad;
-  line-height: 1.8;
-}
-
-/* 空态图标 - 建议 */
-.illust-empty-advice {
-  width: 80rpx;
-  height: 100rpx;
-  position: relative;
-  margin: 0 auto;
-}
-
-.illust-empty-advice__doc {
-  width: 80rpx;
-  height: 80rpx;
-  background: #e3ebf5;
-  border-radius: 16rpx;
-  position: relative;
-}
-
-.illust-empty-advice__line {
-  width: 48rpx;
-  height: 8rpx;
-  background: #c4d4e4;
-  border-radius: 4rpx;
-  position: absolute;
-  top: 20rpx;
-  left: 16rpx;
-}
-
-.illust-empty-advice__line--short {
-  width: 32rpx;
-  top: 36rpx;
-}
-
-/* 空态图标 - 方案 */
-.illust-empty-plan {
-  width: 80rpx;
-  height: 100rpx;
-  position: relative;
-  margin: 0 auto;
-}
-
-.illust-empty-plan__clipboard {
-  width: 80rpx;
-  height: 80rpx;
-  background: #e3ebf5;
-  border-radius: 16rpx;
-  position: relative;
-}
-
-.illust-empty-plan__line {
-  width: 48rpx;
-  height: 8rpx;
-  background: #c4d4e4;
-  border-radius: 4rpx;
-  position: absolute;
-  top: 20rpx;
-  left: 16rpx;
-}
-
-.illust-empty-plan__line--short {
-  width: 32rpx;
-  top: 36rpx;
-}
-
-/* ===== 卡片通用 ===== */
+/* ===== 最新卡片 ===== */
 .card {
   padding: 28rpx 24rpx;
   background: #ffffff;
@@ -143,35 +26,16 @@
   background: #f0faf4;
 }
 
-.card--plan {
-  border-color: #c7dbf5;
-  background: #f0f5ff;
-}
-
-/* 卡片头部：badge + title + meta */
-.card__header {
-  position: relative;
-  padding-top: 4rpx;
-}
-
 .card__badge {
   position: absolute;
-  top: -4rpx;
-  right: 0;
+  top: 0;
+  right: 24rpx;
   background: #16a34a;
   color: #ffffff;
   font-size: 20rpx;
   font-weight: 600;
   padding: 4rpx 16rpx;
   border-radius: 0 0 10rpx 10rpx;
-}
-
-.card__badge--blue {
-  background: #2563EB;
-}
-
-.card__title-row {
-  padding-right: 80rpx;
 }
 
 .card__title {
@@ -181,353 +45,126 @@
 }
 
 .card__meta {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.card__created-at {
   margin-top: 8rpx;
   font-size: 22rpx;
   color: #8a9aad;
 }
 
-/* ===== 紧凑趋势指标行 ===== */
-.trend-compact {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 20rpx;
-  padding: 16rpx 20rpx;
-  background: rgba(22, 163, 74, 0.06);
-  border-radius: 16rpx;
-}
-
-.trend-compact__item {
-  display: flex;
-  align-items: baseline;
-  gap: 2rpx;
-}
-
-.trend-compact__value {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.trend-compact__unit {
-  font-size: 22rpx;
-  color: #8a9aad;
-  margin-left: 2rpx;
-}
-
-.trend-compact__change {
-  font-size: 22rpx;
-  font-weight: 600;
-  margin-left: 4rpx;
-}
-
-.trend-compact__change--up { color: #16a34a; }
-.trend-compact__change--down { color: #ef4444; }
-.trend-compact__change--equal { color: #8a9aad; }
-.trend-compact__change--none { color: #b0b8c4; }
-
-.trend-compact__divider {
-  width: 1rpx;
-  height: 28rpx;
-  background: #d4eadc;
-}
-
-/* ===== 医生建议区 ===== */
-.doctor-input-section {
-  margin-top: 20rpx;
-  padding: 20rpx 24rpx;
-  background: #ffffff;
-  border-radius: 16rpx;
-  border: 2rpx solid #d4eadc;
-}
-
-.doctor-input-section__label {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #16a34a;
-  margin-bottom: 10rpx;
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.doctor-input-section__dot {
-  width: 8rpx;
-  height: 8rpx;
-  background: #16a34a;
-  border-radius: 50%;
-}
-
-.doctor-input-section__content {
-  font-size: 26rpx;
-  line-height: 1.9;
-  color: #1f2937;
-  font-weight: 500;
-}
-
-/* ===== 展开/折叠按钮 ===== */
-.fold-toggle {
-  margin-top: 12rpx;
-  text-align: right;
-  font-size: 22rpx;
-  color: #16a34a;
-  font-weight: 600;
-}
-
-/* ===== 通用折叠卡片 ===== */
-.fold-card {
+.card__desc {
   margin-top: 16rpx;
-  background: #ffffff;
-  border-radius: 16rpx;
-  border: 1rpx solid #e3ebf5;
-  overflow: hidden;
-}
-
-.fold-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16rpx 20rpx;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.fold-card__label {
   font-size: 24rpx;
+  line-height: 1.9;
+  color: #5b6b7a;
+}
+
+/* ===== 历史列表 ===== */
+.history-section {
+  margin-top: 32rpx;
+}
+
+.history-section__title {
+  font-size: 28rpx;
   font-weight: 600;
   color: #3a4a5c;
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
+  margin-bottom: 16rpx;
 }
 
-.fold-card__dot {
-  width: 8rpx;
-  height: 8rpx;
-  border-radius: 50%;
-}
-
-.fold-card__dot--blue {
-  background: #2563EB;
-}
-
-.fold-card__dot--gray {
-  background: #8a9aad;
-}
-
-.fold-card__arrow {
-  font-size: 22rpx;
-  color: #8a9aad;
-}
-
-.fold-card__body {
-  padding: 0 20rpx 20rpx 20rpx;
-}
-
-/* ===== AI 补充分析内容 ===== */
-.ai-supplement-content {
-  font-size: 24rpx;
-  line-height: 1.8;
-  color: #5b6b7a;
-  padding: 16rpx;
-  background: rgba(37, 99, 235, 0.04);
-  border-radius: 12rpx;
-}
-
-/* ===== 历史建议 ===== */
 .history-item {
-  padding: 16rpx;
-  background: #f8fafc;
-  border-radius: 12rpx;
-  margin-bottom: 12rpx;
-}
-
-.history-item:last-child {
-  margin-bottom: 0;
+  padding: 24rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
 }
 
 .history-item__meta {
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 600;
   color: #3a4a5c;
 }
 
-.history-item__doctor {
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  line-height: 1.7;
-  color: #1f2937;
-  font-weight: 500;
-}
-
-.history-item__ai {
-  margin-top: 8rpx;
-  font-size: 22rpx;
-  line-height: 1.7;
-  color: #5b6b7a;
-}
-
-/* ===== 方案概述 ===== */
-.plan-summary {
-  margin-top: 20rpx;
-  padding: 16rpx 20rpx;
-  background: rgba(37, 99, 235, 0.06);
-  border-radius: 16rpx;
-}
-
-.plan-summary__content {
-  font-size: 24rpx;
-  line-height: 1.8;
-  color: #3a4a5c;
-}
-
-/* ===== 手风琴列表 ===== */
-.accordion-list {
-  margin-top: 20rpx;
-}
-
-.accordion-item {
-  margin-bottom: 12rpx;
-  background: #ffffff;
-  border-radius: 16rpx;
-  border: 1rpx solid #e3ebf5;
-  overflow: hidden;
-}
-
-.accordion-item:last-child {
-  margin-bottom: 0;
-}
-
-/* 手风琴 Header */
-.accordion-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx;
-}
-
-.accordion-header__info {
-  flex: 1;
-  min-width: 0;
-}
-
-.accordion-header__name {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.accordion-header__meta {
+.history-item__time {
   margin-top: 6rpx;
   font-size: 22rpx;
   color: #8a9aad;
-  line-height: 1.4;
 }
 
-.accordion-header__duration {
-  color: #2563EB;
-  font-weight: 600;
-}
-
-.accordion-header__purpose {
-  color: #8a9aad;
-}
-
-.accordion-header__arrow {
-  font-size: 22rpx;
-  color: #8a9aad;
-  padding-left: 16rpx;
-}
-
-/* 手风琴 Body */
-.accordion-body {
-  padding: 0 20rpx 20rpx 20rpx;
-  border-top: 1rpx solid #e3ebf5;
-}
-
-/* ===== 训练步骤 ===== */
-.exercise-steps {
-  padding-top: 16rpx;
-}
-
-.exercise-steps__label {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #2563EB;
-  margin-bottom: 12rpx;
-}
-
-.exercise-step {
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: 10rpx;
-}
-
-.exercise-step__num {
-  width: 28rpx;
-  height: 28rpx;
-  background: #2563EB;
-  color: #ffffff;
-  font-size: 18rpx;
-  font-weight: 700;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12rpx;
-  margin-top: 4rpx;
-  flex-shrink: 0;
-}
-
-.exercise-step__text {
-  font-size: 24rpx;
-  color: #3a4a5c;
-  line-height: 1.6;
-  flex: 1;
-}
-
-/* ===== 注意事项 ===== */
-.exercise-precautions {
-  margin-top: 16rpx;
-  padding: 16rpx;
-  background: #fef3c7;
-  border-radius: 12rpx;
-  border: 1rpx solid #fbbf24;
-}
-
-.exercise-precautions__label {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: #92400e;
-  margin-bottom: 10rpx;
-}
-
-.exercise-precautions__item {
-  font-size: 24rpx;
-  color: #78350f;
-  line-height: 1.7;
-  margin-bottom: 6rpx;
-  padding-left: 16rpx;
-  position: relative;
-}
-
-.exercise-precautions__item::before {
-  content: "!";
-  position: absolute;
-  left: 0;
-  font-weight: 700;
-  color: #92400e;
-}
-
-.exercise-precautions__item:last-child {
-  margin-bottom: 0;
-}
-
-/* ===== AI 调整说明内容 ===== */
-.adjustment-content {
+.history-item__content {
+  margin-top: 12rpx;
   font-size: 24rpx;
   line-height: 1.8;
   color: #5b6b7a;
-  padding: 16rpx;
-  background: rgba(37, 99, 235, 0.04);
-  border-radius: 12rpx;
+}
+
+/* ===== 数据趋势 ===== */
+.trend-section {
+  margin-top: 28rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #d4eadc;
+}
+
+.trend-section__title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #3a4a5c;
+  margin-bottom: 20rpx;
+}
+
+.trend-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.trend-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.trend-cell__value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.trend-cell__label {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #8a9aad;
+}
+
+.trend-cell__change {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.trend-cell__change--up {
+  color: #16a34a;
+}
+
+.trend-cell__change--down {
+  color: #ef4444;
+}
+
+.trend-cell__change--equal {
+  color: #8a9aad;
+}
+
+.trend-cell__change--none {
+  color: #b0b8c4;
+}
+
+.trend-cell__prev {
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #b0b8c4;
 }

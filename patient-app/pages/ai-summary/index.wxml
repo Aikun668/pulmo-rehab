@@ -1,198 +1,83 @@
-<navigation-bar title="康复指导" back="{{true}}" color="#1F2937" background="#F5F7FA"></navigation-bar>
+<navigation-bar title="AI 小结" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
 
 <view class="page">
-  <!-- Tab 切换栏 -->
-  <view class="tab-bar">
-    <view class="tab-item {{activeTab === 'advice' ? 'tab-item--active' : ''}}" data-tab="advice" bindtap="handleTabChange">康复建议</view>
-    <view class="tab-item {{activeTab === 'plan' ? 'tab-item--active' : ''}}" data-tab="plan" bindtap="handleTabChange">训练方案</view>
-  </view>
+  <!-- 加载态 -->
+  <view class="loading-hint" wx:if="{{isLoading}}">正在同步最新 AI 康复小结...</view>
 
-  <!-- ========== Tab 1: 康复建议 ========== -->
-  <view class="tab-content" wx:if="{{activeTab === 'advice'}}">
+  <!-- 最新一期 -->
+  <view class="card card--latest" wx:if="{{hasSummary}}">
+    <view class="card__badge">最新</view>
+    <view class="card__title">最新周期</view>
+    <view class="card__meta">{{latestPeriod}}</view>
+    <view class="card__created-at">{{latestCreatedAt}}</view>
+    <view class="card__desc">{{latestContent}}</view>
 
-    <!-- 加载态 -->
-    <view class="loading-hint" wx:if="{{isLoadingAdvice}}">正在同步医生建议…</view>
-
-    <!-- 空态 -->
-    <view class="empty-card" wx:if="{{!isLoadingAdvice && !hasAdvice}}">
-      <view class="empty-card__icon">
-        <view class="illust-empty-advice">
-          <view class="illust-empty-advice__doc"></view>
-          <view class="illust-empty-advice__line"></view>
-          <view class="illust-empty-advice__line illust-empty-advice__line--short"></view>
+    <!-- 数据趋势 -->
+    <view class="trend-section">
+      <view class="trend-section__title">数据趋势（本周 vs 上周）</view>
+      <view class="trend-grid">
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.days.current}}</view>
+          <view class="trend-cell__label">训练天数</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.days.trend}}">{{trend.days.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.days.previous}}</view>
         </view>
-      </view>
-      <view class="empty-card__title">暂无医生建议</view>
-      <view class="empty-card__desc">继续完成训练打卡，医生将根据您的表现定期下发康复建议</view>
-    </view>
-
-    <!-- 最新建议卡片 -->
-    <view class="card card--latest" wx:if="{{hasAdvice && latestAdvice}}">
-      <view class="card__header">
-        <view class="card__badge">最新</view>
-        <view class="card__title-row">
-          <view class="card__title">医生建议</view>
-          <view class="card__meta">{{latestAdvice.period}}</view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.minutes.current}}</view>
+          <view class="trend-cell__label">累计时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.minutes.trend}}">{{trend.minutes.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.minutes.previous}}</view>
         </view>
-      </view>
-
-      <!-- 紧凑趋势指标行（一眼抓住关键数据） -->
-      <view class="trend-compact">
-        <view class="trend-compact__item">
-          <text class="trend-compact__value">{{trend.days.current}}</text>
-          <text class="trend-compact__unit">天</text>
-          <text class="trend-compact__change trend-compact__change--{{trend.days.trend}}">{{trend.days.label}}</text>
-        </view>
-        <view class="trend-compact__divider"></view>
-        <view class="trend-compact__item">
-          <text class="trend-compact__value">{{trend.minutes.current}}</text>
-          <text class="trend-compact__unit">分</text>
-          <text class="trend-compact__change trend-compact__change--{{trend.minutes.trend}}">{{trend.minutes.label}}</text>
-        </view>
-        <view class="trend-compact__divider"></view>
-        <view class="trend-compact__item">
-          <text class="trend-compact__value">{{trend.avg.current}}</text>
-          <text class="trend-compact__unit">分/日</text>
-          <text class="trend-compact__change trend-compact__change--{{trend.avg.trend}}">{{trend.avg.label}}</text>
-        </view>
-      </view>
-
-      <!-- 医生原文：默认截断，可展开 -->
-      <view class="doctor-input-section">
-        <view class="doctor-input-section__label">
-          <view class="doctor-input-section__dot"></view>
-          <text>医生建议</text>
-        </view>
-        <!-- 折叠态：截断文字 -->
-        <view class="doctor-input-section__content" wx:if="{{!doctorInputExpanded}}">
-          {{latestAdvice.doctorInputShort}}
-        </view>
-        <!-- 展开态：完整文字 -->
-        <view class="doctor-input-section__content" wx:if="{{doctorInputExpanded}}">
-          {{latestAdvice.doctorInput}}
-        </view>
-        <!-- 展开/折叠按钮 -->
-        <view class="fold-toggle" wx:if="{{latestAdvice.needExpand}}" bindtap="handleExpandDoctorInput">
-          <text>{{doctorInputExpanded ? '收起 ▲' : '展开全文 ▼'}}</text>
-        </view>
-      </view>
-
-      <!-- AI 补充分析：默认折叠 -->
-      <view class="fold-card" wx:if="{{latestAdvice.aiContent}}">
-        <view class="fold-card__header" bindtap="handleExpandAiSupplement">
-          <view class="fold-card__label">
-            <view class="fold-card__dot fold-card__dot--blue"></view>
-            <text>AI 补充分析</text>
-          </view>
-          <view class="fold-card__arrow">{{aiSupplementExpanded ? '▲' : '▼'}}</view>
-        </view>
-        <view class="fold-card__body" wx:if="{{aiSupplementExpanded}}">
-          <view class="ai-supplement-content">{{latestAdvice.aiContent}}</view>
-        </view>
-      </view>
-
-      <!-- 历史建议：默认折叠 -->
-      <view class="fold-card" wx:if="{{adviceHistory.length > 0}}">
-        <view class="fold-card__header" bindtap="handleExpandHistory">
-          <view class="fold-card__label">
-            <view class="fold-card__dot fold-card__dot--gray"></view>
-            <text>历史建议（{{adviceHistory.length}}条）</text>
-          </view>
-          <view class="fold-card__arrow">{{historyExpanded ? '▲' : '▼'}}</view>
-        </view>
-        <view class="fold-card__body" wx:if="{{historyExpanded}}">
-          <view class="history-item" wx:for="{{adviceHistory}}" wx:key="id">
-            <view class="history-item__meta">{{item.period}}</view>
-            <view class="history-item__doctor">{{item.doctorInput}}</view>
-            <view class="history-item__ai" wx:if="{{item.aiContent}}">{{item.aiContent}}</view>
-          </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.avg.current}}</view>
+          <view class="trend-cell__label">日均时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.avg.trend}}">{{trend.avg.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.avg.previous}}</view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- ========== Tab 2: 训练方案 ========== -->
-  <view class="tab-content" wx:if="{{activeTab === 'plan'}}">
+  <!-- 空态 -->
+  <view class="card" wx:if="{{!isLoading && !hasSummary}}">
+    <view class="card__title">最新周期</view>
+    <view class="card__meta">{{latestPeriod}}</view>
+    <view class="card__created-at">{{latestCreatedAt}}</view>
+    <view class="card__desc">{{latestContent}}</view>
 
-    <!-- 加载态 -->
-    <view class="loading-hint" wx:if="{{isLoadingPlan}}">正在同步训练方案…</view>
-
-    <!-- 空态 -->
-    <view class="empty-card" wx:if="{{!isLoadingPlan && !hasPlan}}">
-      <view class="empty-card__icon">
-        <view class="illust-empty-plan">
-          <view class="illust-empty-plan__clipboard"></view>
-          <view class="illust-empty-plan__line"></view>
-          <view class="illust-empty-plan__line illust-empty-plan__line--short"></view>
+    <!-- 数据趋势 -->
+    <view class="trend-section">
+      <view class="trend-section__title">数据趋势（本周 vs 上周）</view>
+      <view class="trend-grid">
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.days.current}}</view>
+          <view class="trend-cell__label">训练天数</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.days.trend}}">{{trend.days.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.days.previous}}</view>
+        </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.minutes.current}}</view>
+          <view class="trend-cell__label">累计时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.minutes.trend}}">{{trend.minutes.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.minutes.previous}}</view>
+        </view>
+        <view class="trend-cell">
+          <view class="trend-cell__value">{{trend.avg.current}}</view>
+          <view class="trend-cell__label">日均时长(分)</view>
+          <view class="trend-cell__change trend-cell__change--{{trend.avg.trend}}">{{trend.avg.label}}</view>
+          <view class="trend-cell__prev">上周 {{trend.avg.previous}}</view>
         </view>
       </view>
-      <view class="empty-card__title">暂无训练方案</view>
-      <view class="empty-card__desc">医生尚未下发训练方案，继续打卡后医生将为您制定专属方案</view>
     </view>
+  </view>
 
-    <!-- 当前方案卡片 -->
-    <view class="card card--plan" wx:if="{{hasPlan && activePlan}}">
-      <view class="card__header">
-        <view class="card__badge card__badge--blue">当前方案</view>
-        <view class="card__title-row">
-          <view class="card__title">{{activePlan.title}}</view>
-          <view class="card__meta">{{activePlan.createdAt}}</view>
-        </view>
-      </view>
-
-      <!-- 方案概述（始终可见，短内容不需要折叠） -->
-      <view class="plan-summary" wx:if="{{activePlan.content}}">
-        <view class="plan-summary__content">{{activePlan.content}}</view>
-      </view>
-
-      <!-- 训练动作列表：手风琴 -->
-      <view class="accordion-list" wx:if="{{activePlan.exercises.length > 0}}">
-        <view class="accordion-item" wx:for="{{activePlan.exercises}}" wx:key="name">
-          <!-- 手风琴 Header：名称 + 时长 + 目的 -->
-          <view class="accordion-header" data-idx="{{index}}" bindtap="handleExpandExercise">
-            <view class="accordion-header__info">
-              <view class="accordion-header__name">{{item.name}}</view>
-              <view class="accordion-header__meta">
-                <text class="accordion-header__duration">{{item.duration}}</text>
-                <text class="accordion-header__purpose" wx:if="{{item.purpose}}"> · {{item.purpose}}</text>
-              </view>
-            </view>
-            <view class="accordion-header__arrow">{{expandedExercises[index] ? '▲' : '▼'}}</view>
-          </view>
-          <!-- 手风琴 Body：步骤 + 注意事项 -->
-          <view class="accordion-body" wx:if="{{expandedExercises[index]}}">
-            <!-- 步骤 -->
-            <view class="exercise-steps" wx:if="{{item.steps.length > 0}}">
-              <view class="exercise-steps__label">训练步骤</view>
-              <view class="exercise-step" wx:for="{{item.steps}}" wx:for-item="step" wx:key="index">
-                <view class="exercise-step__num">{{index + 1}}</view>
-                <view class="exercise-step__text">{{step}}</view>
-              </view>
-            </view>
-            <!-- 注意事项 -->
-            <view class="exercise-precautions" wx:if="{{item.precautions.length > 0}}">
-              <view class="exercise-precautions__label">注意事项</view>
-              <view class="exercise-precautions__item" wx:for="{{item.precautions}}" wx:for-item="p" wx:key="index">
-                {{p}}
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- AI 调整说明：默认折叠 -->
-      <view class="fold-card" wx:if="{{activePlan.adjustmentNote}}">
-        <view class="fold-card__header" bindtap="handleExpandAdjustment">
-          <view class="fold-card__label">
-            <view class="fold-card__dot fold-card__dot--blue"></view>
-            <text>AI 调整说明</text>
-          </view>
-          <view class="fold-card__arrow">{{adjustmentExpanded ? '▲' : '▼'}}</view>
-        </view>
-        <view class="fold-card__body" wx:if="{{adjustmentExpanded}}">
-          <view class="adjustment-content">{{activePlan.adjustmentNote}}</view>
-        </view>
-      </view>
+  <!-- 历史列表 -->
+  <view class="history-section" wx:if="{{summaries.length > 0}}">
+    <view class="history-section__title">历史小结</view>
+    <view class="history-item" wx:for="{{summaries}}" wx:key="id">
+      <view class="history-item__meta">{{item.period}}</view>
+      <view class="history-item__time">{{item.createdAt}}</view>
+      <view class="history-item__content">{{item.content}}</view>
     </view>
   </view>
 </view>

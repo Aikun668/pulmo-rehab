@@ -62,9 +62,7 @@ export interface AISummary {
   patient_id: number;
   summary_week_start: string;
   summary_week_end: string;
-  doctor_input: string;
   content: string;
-  dispatched_at: string | null;
   created_at: string;
 }
 

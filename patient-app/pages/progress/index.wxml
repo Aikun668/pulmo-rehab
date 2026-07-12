@@ -1,4 +1,4 @@
-<navigation-bar title="30天进度" back="{{true}}" color="#1F2937" background="#F5F7FA"></navigation-bar>
+<navigation-bar title="30天进度" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
 
 <view class="page">
   <view class="summary-card">
@@ -27,120 +27,24 @@
     <view class="tab-item {{activeTab === 'scores' ? 'tab-item--active' : ''}}" data-tab="scores" bindtap="handleTabChange">自评评分</view>
   </view>
 
-  <!-- 训练时长：折线图 + 豆腐块 -->
+  <!-- 训练时长柱状图 -->
   <view class="chart-card" wx:if="{{activeTab === 'training'}}">
     <view class="chart-card__title">近30天训练趋势</view>
     <view class="chart-card__state" wx:if="{{isLoading}}">正在同步近30天训练数据...</view>
     <view class="chart-card__state" wx:elif="{{days.length === 0}}">暂无训练记录</view>
-    <block wx:else>
-      <!-- 训练时长趋势点状图 -->
-      <view class="trend-section">
-        <view class="trend-section__header">
-          <view class="trend-section__title">训练时长趋势</view>
-          <view class="trend-section__unit">分钟</view>
-        </view>
-        <view class="trend-chart">
-          <view class="trend-y-axis">
-            <text class="trend-y-label">{{yAxisMax}}</text>
-            <text class="trend-y-label">{{yAxisMid}}</text>
-            <text class="trend-y-label">0</text>
-          </view>
-          <view class="trend-points">
-            <view class="trend-point-wrap" wx:for="{{trainingPoints}}" wx:key="index">
-              <view class="trend-point trend-point--training" style="bottom: {{item.bottomRpx}}rpx;"></view>
-              <view class="trend-point__label">{{item.value}}</view>
-              <view class="trend-point__date">{{item.date}}</view>
+    <scroll-view scroll-x class="chart-scroll" wx:else>
+      <view class="bar-list">
+        <block wx:for="{{days}}" wx:key="fullDate">
+          <view class="bar-item">
+            <view class="bar-item__column">
+              <view class="bar-item__bar {{item.durationMinutes > 0 ? 'bar-item__bar--active' : 'bar-item__bar--idle'}}" style="height: {{item.barHeight}}rpx;"></view>
             </view>
+            <view class="bar-item__value">{{item.durationMinutes}}</view>
+            <view class="bar-item__label">{{item.label}}</view>
           </view>
-        </view>
+        </block>
       </view>
-
-      <!-- 2×2 豆腐块指标卡 -->
-      <view class="metric-grid">
-        <!-- 日均时长 -->
-        <view class="metric-tile metric-tile--blue">
-          <view class="metric-tile__data">
-            <view class="metric-tile__value">{{avgDuration}}</view>
-            <view class="metric-tile__label">日均时长(分钟)</view>
-          </view>
-          <view class="metric-tile__illustration">
-            <view class="illust-clock">
-              <view class="illust-clock__shadow"></view>
-              <view class="illust-clock__face"></view>
-              <view class="illust-clock__hand-long"></view>
-              <view class="illust-clock__hand-short"></view>
-              <view class="illust-clock__dot"></view>
-              <view class="illust-clock__marks">
-                <view class="illust-clock__mark"></view>
-                <view class="illust-clock__mark"></view>
-                <view class="illust-clock__mark"></view>
-                <view class="illust-clock__mark"></view>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 单日最高 -->
-        <view class="metric-tile metric-tile--amber">
-          <view class="metric-tile__data">
-            <view class="metric-tile__value">{{maxDuration}}</view>
-            <view class="metric-tile__label">单日最高(分钟)</view>
-          </view>
-          <view class="metric-tile__illustration">
-            <view class="illust-trophy">
-              <view class="illust-trophy__shadow"></view>
-              <view class="illust-trophy__cup"></view>
-              <view class="illust-trophy__neck"></view>
-              <view class="illust-trophy__base"></view>
-              <view class="illust-trophy__star"></view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 最长连续 -->
-        <view class="metric-tile metric-tile--green">
-          <view class="metric-tile__data">
-            <view class="metric-tile__value">{{maxStreak}}</view>
-            <view class="metric-tile__label">最长连续(天)</view>
-          </view>
-          <view class="metric-tile__illustration">
-            <view class="illust-streak">
-              <view class="illust-streak__shadow"></view>
-              <view class="illust-streak__calendar"></view>
-              <view class="illust-streak__header"></view>
-              <view class="illust-streak__days">
-                <view class="illust-streak__day illust-streak__day--on"></view>
-                <view class="illust-streak__day illust-streak__day--on"></view>
-                <view class="illust-streak__day illust-streak__day--on"></view>
-                <view class="illust-streak__day illust-streak__day--on"></view>
-                <view class="illust-streak__day illust-streak__day--on"></view>
-                <view class="illust-streak__day illust-streak__day--off"></view>
-                <view class="illust-streak__day illust-streak__day--off"></view>
-              </view>
-              <view class="illust-streak__flame"></view>
-            </view>
-          </view>
-        </view>
-
-        <!-- 疲劳评分 -->
-        <view class="metric-tile metric-tile--purple">
-          <view class="metric-tile__data">
-            <view class="metric-tile__value">{{fatigueScore}}</view>
-            <view class="metric-tile__label">疲劳评分(1-10)</view>
-          </view>
-          <view class="metric-tile__illustration">
-            <view class="illust-energy">
-              <view class="illust-energy__shadow"></view>
-              <view class="illust-energy__body"></view>
-              <view class="illust-energy__fill"></view>
-              <view class="illust-energy__head"></view>
-              <view class="illust-energy__wave"></view>
-              <view class="illust-energy__wave illust-energy__wave--2"></view>
-            </view>
-          </view>
-        </view>
-      </view>
-    </block>
+    </scroll-view>
   </view>
 
   <!-- 生命体征趋势 -->

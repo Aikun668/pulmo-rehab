@@ -278,8 +278,7 @@ class AiSummaryResponse(BaseModel):
                 "patient_id": 1,
                 "summary_week_start": "2026-05-19",
                 "summary_week_end": "2026-05-25",
-                "doctor_input": "本周重点关注血氧波动情况",
-                "content": "数据补充：本周3次训练中...",
+                "content": "本周训练较稳定，请继续保持规律训练。",
                 "created_at": "2026-05-26T00:00:00Z",
             }
         },
@@ -289,24 +288,8 @@ class AiSummaryResponse(BaseModel):
     patient_id: int
     summary_week_start: date
     summary_week_end: date
-    doctor_input: str
     content: str
-    dispatched_at: datetime | None = None
     created_at: datetime
-
-
-class AiSummaryGenerateRequest(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "patient_id": 1,
-                "doctor_input": "本周重点关注血氧波动，患者反映爬楼后气促加重",
-            }
-        },
-    )
-
-    patient_id: int
-    doctor_input: str = Field(min_length=10, description="医生关键建议（必填，最少10字）")
 
 
 class DevLoginRequest(BaseModel):
@@ -430,11 +413,6 @@ class PrescriptionGenerateRequest(BaseModel):
     )
 
     patient_id: int = Field(gt=0)
-    doctor_input: str = Field(
-        default="",
-        min_length=10,
-        description="医生的关键处方判断（最少 10 字），AI 将在此基础上补充完整方案",
-    )
     save_as_draft: bool = Field(
         default=False,
         description="是否自动保存为 draft RehabPlan，医生可在 rehab-plans 接口审核下发",
@@ -551,62 +529,6 @@ class WarningResponse(BaseModel):
 
 class WarningResolveRequest(BaseModel):
     is_resolved: bool = Field(default=True, description="标记为已处理")
-
-
-class AiGuidanceResponse(BaseModel):
-    """面向患者的AI综合指导响应"""
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "intro": "基于您近7天完成5天训练（累计120分钟）的数据和医生下发的康复方案，AI为您综合分析并提出以下建议：",
-                "points": [
-                    "训练完成度良好，建议维持当前训练强度。",
-                    "血氧偏低，建议减少户外步行强度。",
-                ],
-                "summary": "综合来看，您当前康复进展良好...",
-                "updated_at": "07-10 14:30",
-                "rehab_level": "中度恢复",
-                "trained_days": 5,
-                "total_minutes": 120,
-                "completion_rate": "71%",
-            }
-        },
-    )
-
-    intro: str = Field(description="指导开头说明")
-    points: list[str] = Field(default_factory=list, description="AI建议要点列表")
-    summary: str = Field(description="AI综合总结语")
-    updated_at: str = Field(description="更新时间显示文本")
-    rehab_level: str = Field(description="康复等级名称")
-    trained_days: int = Field(description="近7天训练天数")
-    total_minutes: int = Field(description="近7天累计训练分钟")
-    completion_rate: str = Field(description="完成率百分比文本")
-
-
-class AiGuidanceChatRequest(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "patient_id": 1,
-                "question": "缩唇呼吸怎么做更有效？",
-            }
-        },
-    )
-
-    patient_id: int = Field(gt=0)
-    question: str = Field(min_length=1, max_length=500, description="患者提问内容")
-
-
-class AiGuidanceChatResponse(BaseModel):
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "reply": "缩唇呼吸的关键技巧：经鼻缓慢吸气4秒，缩唇缓慢呼气6-8秒...",
-            }
-        },
-    )
-
-    reply: str = Field(description="AI回复内容")
 
 
 # 预警阈值常量（GPT 报告模块八）

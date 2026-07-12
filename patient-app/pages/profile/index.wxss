@@ -1,3 +1,16 @@
+/* ===== 右上角图标 ===== */
+.nav-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+}
+
+.nav-right__icon {
+  font-size: 36rpx;
+  color: #8a9aad;
+}
+
 /* ===== 页面基础 ===== */
 .page {
   background: #ffffff;
@@ -88,10 +101,6 @@
 
 .menu-item__icon-wrap--gray {
   background: #f0f2f5;
-}
-
-.menu-item__icon-wrap--purple {
-  background: #ede9fe;
 }
 
 .menu-item__icon {

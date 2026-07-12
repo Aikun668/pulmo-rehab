@@ -1,142 +1,91 @@
-<view class="page" style="padding-top: {{contentTopPadding}}px;">
-  <!-- 暖橘渐变背景层：从页面最顶部延伸到第一个模块中部，自然过渡到白色 -->
-  <view class="gradient-bg"></view>
-  <!-- 内容层：所有模块浮在渐变之上 -->
-  <view class="content-layer">
-  <!-- 胶囊用户选择器 + 铃铛通知（与系统胶囊同行，右侧预留空间避免重叠） -->
+<navigation-bar title="肺康复训练" back="{{false}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+
+<view class="page">
+  <!-- 问候区 -->
   <view class="header-section">
-    <view class="header-section__top" style="padding-right: {{headerRightPad}}px;">
-      <view class="user-pill" bindtap="handleUserPillTap">
-        <view class="user-pill__avatar">{{avatarSurname}}</view>
-        <view class="user-pill__text">{{greetingText}}</view>
+    <view class="header-section__top">
+      <view class="header-section__text">
+        <view class="header-section__eyebrow">{{welcomeLabel}}</view>
+        <view class="header-section__title">{{patientName}}</view>
       </view>
-      <view class="bell-btn" bindtap="handleBellTap">
-        <view class="bell-icon"></view>
-        <view class="bell-btn__badge" wx:if="{{hasUnreadMessage}}"></view>
+      <view class="level-badge-home" wx:if="{{rehabLevel > 0}}" style="background: {{rehabLevelColor}}15; border-color: {{rehabLevelColor}};">
+        <text class="level-badge-home__label" style="color: {{rehabLevelColor}};">Level {{rehabLevel}}</text>
+        <text class="level-badge-home__name" style="color: {{rehabLevelColor}};">{{rehabLevelName}}</text>
       </view>
     </view>
     <view class="header-section__streak" wx:if="{{streakDays > 0}}">已连续打卡 {{streakDays}} 天</view>
   </view>
 
-  <!-- 日期选择条 -->
-  <view class="date-bar">
-    <view class="date-bar__row">
-      <view class="date-bar__title-wrap" bindtap="handleCalendarToggle">
-        <view class="date-bar__title-row">
-          <text class="date-bar__title">今日</text>
-          <text class="date-bar__arrow">▼</text>
-        </view>
-        <text class="date-bar__date-label">{{todayDateLabel}}</text>
-      </view>
-      <view class="date-bar__days">
-        <view class="date-bar__item {{item.isSelected ? 'date-bar__item--selected' : ''}}" wx:for="{{weekDays}}" wx:key="fullDate" data-index="{{index}}" bindtap="handleDateTap">
-          <view class="date-bar__dot" wx:if="{{item.isToday}}"></view>
-          <view class="date-bar__weekday">{{item.weekday}}</view>
-          <view class="date-bar__circle">
-            <text class="date-bar__check" wx:if="{{item.isSelected}}">✓</text>
-            <text class="date-bar__daynum" wx:if="{{!item.isSelected}}">{{item.day}}</text>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 分项进度卡：训练时长 / 训练组数 / 血氧SpO₂ -->
-  <view class="section-header">今日训练指标</view>
-
-  <view class="metrics-card">
-    <view class="metrics-card__item" wx:for="{{metricsItems}}" wx:key="label">
-      <view class="metrics-card__label">{{item.label}}</view>
-      <view class="metrics-card__values">
-        <text class="metrics-card__value">{{item.value}}</text>
-        <text class="metrics-card__unit">{{item.unit}}</text>
-        <text class="metrics-card__target">/{{item.target}}</text>
-      </view>
-      <view class="metrics-card__bar-track">
-        <view class="metrics-card__bar-fill" style="width: {{item.percent}}%; background: {{item.color}};"></view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 卡片：今日康复进度（环+文字+按钮） -->
+  <!-- 卡片1：今日进度 + 任务速览 -->
   <view class="card">
-    <view class="card__main-row">
-        <view class="progress-ring">
-          <view class="progress-ring__fill" style="background: conic-gradient(#4CAF50 {{progressPercent}}%, #F0F0F0 {{progressPercent}}%);"></view>
-          <view class="progress-ring__inner"></view>
-          <view class="progress-ring__center">
-            <text class="progress-ring__current">{{progressCurrent}}</text>
-            <text class="progress-ring__target">/{{progressTarget}}</text>
-          </view>
+    <view class="card__top">
+      <view class="card__progress-block">
+        <view class="card__eyebrow">今日康复进度</view>
+        <view class="card__progress-row">
+          <text class="card__progress-number">{{progressPercent}}</text>
+          <text class="card__progress-unit">%</text>
         </view>
-        <view class="card__right-info">
-          <text class="card__remaining">还剩 {{remainingMinutes}} 分钟达标</text>
-          <text class="card__sub-text">坚持训练，稳步恢复每一天</text>
-        </view>
-        <view class="card__btn-primary" bindtap="handleGoCheckIn">
-          <text class="card__btn-text">去打卡 ›</text>
+        <view class="card__progress-label">{{todayStatusLabel}}</view>
+      </view>
+      <view class="progress-ring">
+        <canvas class="progress-ring__canvas" type="2d" id="progressRing" style="width: 150rpx; height: 150rpx;"></canvas>
+      </view>
+    </view>
+
+    <view class="card__divider"></view>
+
+    <!-- 今日任务速览 -->
+    <view class="card__section-title">今日训练任务</view>
+    <view class="task-list">
+      <view class="task-item" wx:for="{{todayTasks}}" wx:key="id">
+        <view class="task-item__dot {{item.done ? 'task-item__dot--done' : ''}}"></view>
+        <view class="task-item__info">
+          <view class="task-item__name {{item.done ? 'task-item__name--done' : ''}}">{{item.name}}</view>
+          <view class="task-item__target">{{item.target}}</view>
         </view>
       </view>
+    </view>
+
+    <view class="card__action-row">
+      <view class="card__quick-links">
+        <view class="card__quick-link" data-key="progress" bindtap="handleQuickActionTap">
+          <image class="card__quick-link-icon" src="/images/home/trend.png" mode="aspectFit"></image>
+          <text>30天进度</text>
+        </view>
+        <view class="card__quick-link" data-key="ai-summary" bindtap="handleQuickActionTap">
+          <image class="card__quick-link-icon" src="/images/home/check.png" mode="aspectFit"></image>
+          <text>AI小结</text>
+        </view>
+      </view>
+      <view class="card__btn-primary" bindtap="handleGoCheckIn">
+        <text class="card__btn-text">去打卡</text>
+      </view>
+    </view>
   </view>
 
-  <!-- 快捷入口：3条独立悬浮条 -->
-  <view class="section-header">快捷功能</view>
-  <view class="shortcut-strip">
-    <view class="shortcut-strip__item" data-key="progress" bindtap="handleQuickActionTap">
-      <image class="shortcut-strip__icon" src="/images/home/trend.png" mode="aspectFit"></image>
-      <view class="shortcut-strip__content">
-        <view class="shortcut-strip__title">30天训练进度</view>
-        <view class="shortcut-strip__subtitle">{{progress30dSummary}}</view>
+  <!-- 卡片2：今日训练建议 -->
+  <view class="advice-card" wx:if="{{todayAdvice}}">
+    <view class="advice-card__top">
+      <view class="advice-card__title-group">
+        <view class="advice-card__icon">💡</view>
+        <view class="advice-card__tag">今日训练建议</view>
       </view>
-      <view class="shortcut-strip__actions">
-        <view class="shortcut-strip__btn">查看</view>
-      </view>
+      <view class="advice-card__level" wx:if="{{rehabLevel > 0}}" style="color: {{rehabLevelColor}};">Level {{rehabLevel}}</view>
     </view>
-    <view class="shortcut-strip__item" data-key="advice" bindtap="handleQuickActionTap">
-      <image class="shortcut-strip__icon" src="/images/home/check.png" mode="aspectFit"></image>
-      <view class="shortcut-strip__content">
-        <view class="shortcut-strip__title">今日训练建议</view>
-        <view class="shortcut-strip__subtitle">{{adviceSummary}}</view>
-      </view>
-      <view class="shortcut-strip__actions">
-        <view class="shortcut-strip__btn">查看</view>
-      </view>
-    </view>
-    <view class="shortcut-strip__item" data-key="ai-summary" bindtap="handleQuickActionTap">
-      <view class="shortcut-strip__icon shortcut-strip__icon--stethoscope"></view>
-      <view class="shortcut-strip__content">
-        <view class="shortcut-strip__title">康复指导</view>
-        <view class="shortcut-strip__subtitle">{{aiSummarySubtitle}}</view>
-      </view>
-      <view class="shortcut-strip__actions">
-        <view class="shortcut-strip__btn shortcut-strip__btn--dot">查看</view>
-      </view>
-    </view>
+    <view class="advice-card__content">{{todayAdvice}}</view>
   </view>
-  </view><!-- content-layer 结束 -->
-</view>
-<view class="calendar-overlay" wx:if="{{showCalendar}}" bindtap="handleCalendarOverlayTap">
-  <view class="calendar-popup" catchtap="">
-    <view class="calendar-popup__header">
-      <view class="calendar-popup__prev" bindtap="handleCalendarPrevMonth">‹</view>
-      <view class="calendar-popup__title">{{calendarYear}}年{{calendarMonth}}月</view>
-      <view class="calendar-popup__next" bindtap="handleCalendarNextMonth">›</view>
-    </view>
-    <!-- 星期头 -->
-    <view class="calendar-popup__weekdays">
-      <view class="calendar-popup__wd" wx:for="{{['日','一','二','三','四','五','六']}}" wx:key="*this">{{item}}</view>
-    </view>
-    <!-- 日期网格 -->
-    <view class="calendar-popup__grid">
-      <view class="calendar-popup__cell {{item.isSelected ? 'calendar-popup__cell--selected' : ''}} {{item.isToday ? 'calendar-popup__cell--today' : ''}} {{item.day === 0 ? 'calendar-popup__cell--empty' : ''}}" wx:for="{{calendarDays}}" wx:key="index" data-date="{{item.fullDate}}" bindtap="handleCalendarDayTap">
-        <view class="calendar-popup__circle" wx:if="{{item.day > 0}}">
-          <text class="calendar-popup__check" wx:if="{{item.isSelected}}">✓</text>
-          <text class="calendar-popup__daytext" wx:if="{{!item.isSelected}}">{{item.day}}</text>
+
+  <!-- 卡片3：AI 康复小结 -->
+  <view class="tips-card">
+    <view class="tips-card__top">
+      <view class="tips-card__title-group">
+        <view class="tips-card__badge">
+          <image class="tips-card__badge-image" src="/images/home/sparkle.png" mode="aspectFit"></image>
         </view>
+        <view class="tips-card__tag">AI 康复小结</view>
       </view>
+      <view class="tips-card__time">{{aiTipUpdatedAt}}</view>
     </view>
-    <view class="calendar-popup__footer">
-      <view class="calendar-popup__confirm" bindtap="handleCalendarConfirm">确定</view>
-    </view>
+    <view class="tips-card__content">{{aiTip}}</view>
   </view>
 </view>
