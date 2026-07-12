@@ -1,187 +1,13 @@
 var auth = require("../../utils/auth.js")
+var rehabConfig = require("../../utils/rehab-config.js")
 
-// ===== 按等级的默认训练方案（AI 处方不可用时的降级方案） =====
-var LEVEL_DEFAULT_EXERCISES = {
-  1: [
-    {
-      name: "腹式呼吸训练",
-      purpose: "增强膈肌力量，改善呼吸深度",
-      duration: "每次5-10分钟",
-      steps: ["仰卧或坐位，放松全身", "一手放胸前，一手放腹部", "用鼻缓慢吸气，腹部隆起", "用口缓慢呼气，腹部下陷"],
-      precautions: ["动作缓慢柔和", "如感头晕立即停止"],
-    },
-    {
-      name: "被动活动训练",
-      purpose: "维持关节活动度，预防僵硬",
-      duration: "每次5分钟",
-      steps: ["家属协助活动四肢关节", "动作轻柔，避免疼痛"],
-      precautions: ["避免剧烈活动"],
-    },
-  ],
-  2: [
-    {
-      name: "缩唇呼吸训练",
-      purpose: "改善呼吸效率，延长呼气时间",
-      duration: "每次10分钟，每日3次",
-      steps: ["鼻吸气4秒", "缩唇缓慢呼气6秒", "自然停顿2秒"],
-      precautions: ["不要用力呼气", "如感头晕请停止"],
-    },
-    {
-      name: "床边坐立训练",
-      purpose: "增强体力，提高活动耐力",
-      duration: "每次10-15分钟",
-      steps: ["床边坐起，双脚着地", "保持坐姿5分钟", "逐步延长坐立时间"],
-      precautions: ["如有头晕立即躺下"],
-    },
-  ],
-  3: [
-    {
-      name: "深吸气训练",
-      purpose: "增加肺活量，改善通气功能",
-      duration: "每次10分钟",
-      steps: ["经鼻深吸气4秒", "屏气2秒", "缩唇缓慢呼气6秒"],
-      precautions: ["呼气时间是吸气时间的2-3倍"],
-    },
-    {
-      name: "呼吸节奏控制",
-      purpose: "建立良好呼吸模式",
-      duration: "每次10分钟",
-      steps: ["正常呼吸节奏", "逐步延长呼气时间", "配合步行训练"],
-      precautions: ["保持呼吸节律稳定"],
-    },
-    {
-      name: "平地行走训练",
-      purpose: "提升运动耐力",
-      duration: "每次15-20分钟",
-      steps: ["平地慢速行走", "维持轻度气短水平", "逐渐增加距离"],
-      precautions: ["携带血氧仪监测"],
-    },
-  ],
-  4: [
-    {
-      name: "呼吸耐力训练",
-      purpose: "提升呼吸肌耐力",
-      duration: "每次15分钟",
-      steps: ["深吸气5秒", "屏气3秒", "缩唇呼气7秒", "重复10次为一组"],
-      precautions: ["训练后充分休息"],
-    },
-    {
-      name: "步行耐力训练",
-      purpose: "提高有氧运动能力",
-      duration: "每次20-30分钟",
-      steps: ["中等速度步行", "可适当增加坡度", "监测心率不超过120"],
-      precautions: ["注意运动强度"],
-    },
-    {
-      name: "上肢力量训练",
-      purpose: "增强上肢肌力，辅助呼吸",
-      duration: "每次10分钟",
-      steps: ["持轻物做肩关节活动", "配合呼吸节奏", "逐步增加重量"],
-      precautions: ["避免屏气动作"],
-    },
-  ],
-  5: [
-    {
-      name: "综合肺功能训练",
-      purpose: "全面提升呼吸功能",
-      duration: "每次20分钟",
-      steps: ["深吸气5秒", "屏气3秒", "用力快速呼气", "配合全身运动"],
-      precautions: ["如有不适当即停止"],
-    },
-    {
-      name: "有氧运动训练",
-      purpose: "提升心肺耐力",
-      duration: "每次30分钟",
-      steps: ["快步走或慢跑", "心率控制在目标范围", "循序渐进增加强度"],
-      precautions: ["注意运动后恢复"],
-    },
-    {
-      name: "呼吸肌力量训练",
-      purpose: "增强呼吸肌力量",
-      duration: "每次15分钟",
-      steps: ["深呼吸练习", "阻抗呼吸训练", "呼吸肌拉伸"],
-      precautions: ["避免过度疲劳"],
-    },
-  ],
-}
-
-// ===== 按等级的呼吸计时器节拍配置 =====
-var LEVEL_BREATH_CONFIG = {
-  1: {
-    phases: [
-      { key: "inhale", label: "吸气", duration: 3 },
-      { key: "hold", label: "屏气", duration: 1 },
-      { key: "exhale", label: "呼气", duration: 5 },
-    ],
-    rounds: 5,
-  },
-  2: {
-    phases: [
-      { key: "inhale", label: "吸气", duration: 4 },
-      { key: "hold", label: "屏气", duration: 2 },
-      { key: "exhale", label: "呼气", duration: 6 },
-    ],
-    rounds: 5,
-  },
-  3: {
-    phases: [
-      { key: "inhale", label: "吸气", duration: 4 },
-      { key: "hold", label: "屏气", duration: 2 },
-      { key: "exhale", label: "呼气", duration: 6 },
-    ],
-    rounds: 8,
-  },
-  4: {
-    phases: [
-      { key: "inhale", label: "吸气", duration: 5 },
-      { key: "hold", label: "屏气", duration: 3 },
-      { key: "exhale", label: "呼气", duration: 7 },
-    ],
-    rounds: 8,
-  },
-  5: {
-    phases: [
-      { key: "inhale", label: "吸气", duration: 5 },
-      { key: "hold", label: "屏气", duration: 3 },
-      { key: "exhale", label: "呼气", duration: 8 },
-    ],
-    rounds: 10,
-  },
-}
-
-var DEFAULT_BREATH_CONFIG = LEVEL_BREATH_CONFIG[3]
-
-var LEVEL_NAMES = {
-  1: "重度恢复",
-  2: "轻度活动受限",
-  3: "中度恢复",
-  4: "恢复良好",
-  5: "接近完全恢复",
-}
-
-var LEVEL_COLORS = {
-  1: "#ef4444",
-  2: "#f97316",
-  3: "#eab308",
-  4: "#22c55e",
-  5: "#3b82f6",
-}
-
-var formatToday = function () {
-  var date = new Date()
-  var year = date.getFullYear()
-  var month = String(date.getMonth() + 1).padStart(2, "0")
-  var day = String(date.getDate()).padStart(2, "0")
-  return year + "-" + month + "-" + day
-}
-
-// 从时长描述中解析目标分钟数
-function parseDurationMinutes(durationStr) {
-  if (!durationStr) return 10
-  var match = durationStr.match(/(\d+)/)
-  if (match) return parseInt(match[1], 10)
-  return 10
-}
+var LEVEL_NAMES = rehabConfig.LEVEL_NAMES
+var LEVEL_COLORS = rehabConfig.LEVEL_COLORS
+var LEVEL_DEFAULT_EXERCISES = rehabConfig.LEVEL_DEFAULT_EXERCISES
+var LEVEL_BREATH_CONFIG = rehabConfig.LEVEL_BREATH_CONFIG
+var DEFAULT_BREATH_CONFIG = rehabConfig.DEFAULT_BREATH_CONFIG
+var formatToday = rehabConfig.formatToday
+var parseDurationMinutes = rehabConfig.parseDurationMinutes
 
 Page({
   data: {
@@ -197,6 +23,7 @@ Page({
     isLoadingPrescription: false,
     // 任务
     tasks: [],
+    checkedCount: 0,
     allChecked: false,
     hasSubmittedToday: false,
     todaySummaryText: "正在加载...",
@@ -209,7 +36,6 @@ Page({
     breathCountdown: 4,
     breathRound: 1,
     breathTotalRounds: 8,
-    breathCircleScale: 1,
     breathCompleted: false,
     breathElapsedSeconds: 0,
     breathTotalMinutes: 1,
@@ -226,26 +52,59 @@ Page({
     showWarningAlert: false,
     warningMessage: "",
     hasActiveWarning: false,
+    // 今日训练时长（大数字展示）
+    todayTrainingMinutes: 0,
+    // 迷你4天柱状图数据
+    recent4Days: [],
+    // 最近一周弹窗
+    showWeeklyModal: false,
+    weekly7Days: [],
+    // 头像姓氏
+    avatarSurname: "赵",
   },
 
   _breathTimer: null,
   _breathConfig: null,
+  _breathCanvas: null,
+  _breathCtx: null,
+  _breathCanvasWidth: 0,
+  _breathCanvasHeight: 0,
+  _breathAnimFrameId: null,
+  _breathCurrentRadius: 0,
+  _initialLoadDone: false,
 
   onLoad: function () {
+    var patientId = auth.getPatientId()
     this.setData({
+      patientId: patientId,
       trainDate: formatToday(),
       tasks: [],
       allChecked: false,
       hasSubmittedToday: false,
       todaySummaryText: "正在加载训练方案...",
     })
+    // 首次进入：全量加载
+    this.loadRehabLevel(patientId)
+    this._checkActiveWarning()
+    this._initMockChartData()
   },
 
   onShow: function () {
-    var patientId = auth.getPatientId()
-    this.setData({ patientId: patientId })
-    this.loadRehabLevel(patientId)
-    this._checkActiveWarning()
+    // 自定义 tabBar：设置选中状态（打卡tab = index 1）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 1 })
+    }
+
+    // 非首次进入：读取训练方案页的训练进度 + 轻量刷新
+    if (this._initialLoadDone) {
+      this._syncPlanTrainingProgress()
+      this.loadTodayLog()
+      this._checkActiveWarning()
+      return
+    }
+
+    // 首次 onShow（onLoad 已发起全量加载，标记已完成）
+    this._initialLoadDone = true
   },
 
   // ===== 训练前安全拦截：检查未解决预警 =====
@@ -301,12 +160,72 @@ Page({
     return ""
   },
 
+  // ===== 模拟数据：今日时长 + 4天迷你柱 + 7天弹窗 =====
+
+  _initMockChartData: function () {
+    var now = new Date()
+    // 模拟最近7天训练分钟数（含今天）
+    var weekMinutes = [15, 0, 22, 18, 30, 12, 12]
+    var dayNames = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+
+    // 计算最近7天的日期标签
+    var weekly7Days = []
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(now.getTime() - i * 24 * 3600 * 1000)
+      var dayIndex = d.getDay()
+      // getDay: 0=周日, 1=周一...
+      var label = dayNames[dayIndex === 0 ? 6 : dayIndex - 1]
+      var isToday = (i === 0)
+      weekly7Days.push({
+        dayLabel: label,
+        minutes: weekMinutes[6 - i],
+        widthPercent: Math.max(4, (weekMinutes[6 - i] / 30) * 100),
+        isToday: isToday,
+      })
+    }
+
+    // 最近4天迷你柱（含今天，只取后4个）
+    var recent4 = weekly7Days.slice(3, 7)
+    var maxMin4 = 0
+    for (var j = 0; j < recent4.length; j++) {
+      if (recent4[j].minutes > maxMin4) maxMin4 = recent4[j].minutes
+    }
+    var recent4Days = []
+    for (var j = 0; j < recent4.length; j++) {
+      var pct = maxMin4 > 0 ? Math.max(8, (recent4[j].minutes / maxMin4) * 100) : 8
+      recent4Days.push({
+        heightPercent: pct,
+        isToday: recent4[j].isToday,
+        minutes: recent4[j].minutes,
+      })
+    }
+
+    // 今日时长 = 模拟数据中今天的值
+    var todayMinutes = weekMinutes[6] // 今天是数组最后一个
+
+    this.setData({
+      todayTrainingMinutes: todayMinutes,
+      recent4Days: recent4Days,
+      weekly7Days: weekly7Days,
+    })
+  },
+
+  handleOpenWeekly: function () {
+    this.setData({ showWeeklyModal: true })
+  },
+
+  handleCloseWeekly: function () {
+    this.setData({ showWeeklyModal: false })
+  },
+
   onUnload: function () {
     this.clearBreathTimer()
+    this._stopBreathAnim()
   },
 
   onHide: function () {
     this.clearBreathTimer()
+    this._stopBreathAnim()
   },
 
   updateCheckState: function () {
@@ -582,6 +501,7 @@ Page({
           tasks: tasks,
           allChecked: true,
           hasSubmittedToday: true,
+          todayTrainingMinutes: todayLog.duration_minutes,
           todaySummaryText:
             "今天已记录 " +
             todayLog.duration_minutes +
@@ -620,6 +540,7 @@ Page({
       return
     }
 
+    var that = this
     var config = this._breathConfig || DEFAULT_BREATH_CONFIG
     this.setData({
       showBreathTimer: true,
@@ -629,13 +550,18 @@ Page({
       breathRound: 1,
       breathTotalRounds: config.rounds,
       breathCompleted: false,
-      breathCircleScale: 1,
       breathElapsedSeconds: 0,
+    }, function () {
+      that._initBreathCanvas(function () {
+        that._breathCurrentRadius = that._breathCanvasWidth * 0.30
+        that.drawBreathCircle()
+      })
     })
   },
 
   handleCloseBreathTimer: function () {
     this.clearBreathTimer()
+    this._stopBreathAnim()
     this.setData({ showBreathTimer: false })
   },
 
@@ -643,6 +569,7 @@ Page({
     var that = this
     this.clearBreathTimer()
     this.setData({ breathRunning: true })
+    this._startBreathAnim()
 
     this._breathTimer = setInterval(function () {
       var config = that._breathConfig || DEFAULT_BREATH_CONFIG
@@ -655,21 +582,8 @@ Page({
       // 当前阶段继续倒计时
       if (countdown > 1) {
         var newCountdown = countdown - 1
-        var currentPhaseDuration = 0
-        for (var p = 0; p < phases.length; p++) {
-          if (phases[p].key === phase) {
-            currentPhaseDuration = phases[p].duration
-            break
-          }
-        }
-        var scale = that._calcCircleScale(
-          phase,
-          currentPhaseDuration,
-          newCountdown,
-        )
         that.setData({
           breathCountdown: newCountdown,
-          breathCircleScale: scale,
           breathElapsedSeconds: elapsed + 1,
         })
         return
@@ -688,15 +602,9 @@ Page({
 
       if (nextPhaseIndex < phases.length) {
         var nextPhase = phases[nextPhaseIndex]
-        var scale = that._calcCircleScale(
-          nextPhase.key,
-          nextPhase.duration,
-          nextPhase.duration,
-        )
         that.setData({
           breathPhase: nextPhase.key,
           breathCountdown: nextPhase.duration,
-          breathCircleScale: scale,
           breathElapsedSeconds: elapsed + 1,
         })
       } else {
@@ -704,26 +612,20 @@ Page({
         var totalRounds = config.rounds
         if (round < totalRounds) {
           var firstPhase = phases[0]
-          var scale = that._calcCircleScale(
-            firstPhase.key,
-            firstPhase.duration,
-            firstPhase.duration,
-          )
           that.setData({
             breathRound: round + 1,
             breathPhase: firstPhase.key,
             breathCountdown: firstPhase.duration,
-            breathCircleScale: scale,
             breathElapsedSeconds: elapsed + 1,
           })
         } else {
           // 全部完成
+          that._stopBreathAnim()
           that.clearBreathTimer()
           var totalMinutes = Math.ceil((elapsed + 1) / 60)
           that.setData({
             breathRunning: false,
             breathCompleted: true,
-            breathCircleScale: 1,
             breathElapsedSeconds: elapsed + 1,
             breathTotalMinutes: totalMinutes,
           })
@@ -735,11 +637,15 @@ Page({
 
   handlePauseBreath: function () {
     this.clearBreathTimer()
+    this._stopBreathAnim()
     this.setData({ breathRunning: false })
+    this.drawBreathCircle()
   },
 
   handleResetBreath: function () {
     this.clearBreathTimer()
+    this._stopBreathAnim()
+    var that = this
     var config = this._breathConfig || DEFAULT_BREATH_CONFIG
     this.setData({
       breathRunning: false,
@@ -747,22 +653,11 @@ Page({
       breathCountdown: config.phases[0].duration,
       breathRound: 1,
       breathCompleted: false,
-      breathCircleScale: 1,
       breathElapsedSeconds: 0,
+    }, function () {
+      that._breathCurrentRadius = that._breathCanvasWidth * 0.30
+      that.drawBreathCircle()
     })
-  },
-
-  _calcCircleScale: function (phase, totalDuration, countdown) {
-    if (phase === "inhale") {
-      var progress = (totalDuration - countdown) / totalDuration
-      return 1 + progress * 0.5
-    } else if (phase === "hold") {
-      return 1.5
-    } else if (phase === "exhale") {
-      var progress = (totalDuration - countdown) / totalDuration
-      return 1.5 - progress * 0.5
-    }
-    return 1
   },
 
   _fillBreathingTaskDuration: function (minutes) {
@@ -804,6 +699,192 @@ Page({
       clearInterval(this._breathTimer)
       this._breathTimer = null
     }
+  },
+
+  // ===== Canvas 呼吸动画 =====
+
+  _initBreathCanvas: function (onReady) {
+    var that = this
+    var query = wx.createSelectorQuery().in(this)
+    query
+      .select(".breath-canvas")
+      .fields({ node: true, size: true })
+      .exec(function (res) {
+        if (!res || !res[0] || !res[0].node) return
+        var canvas = res[0].node
+        var dpr = wx.getWindowInfo().pixelRatio
+        canvas.width = res[0].width * dpr
+        canvas.height = res[0].height * dpr
+        var ctx = canvas.getContext("2d")
+        ctx.scale(dpr, dpr)
+        that._breathCanvas = canvas
+        that._breathCtx = ctx
+        that._breathCanvasWidth = res[0].width
+        that._breathCanvasHeight = res[0].height
+        if (onReady) onReady()
+      })
+  },
+
+  drawBreathCircle: function () {
+    if (!this._breathCtx) return
+    var ctx = this._breathCtx
+    var w = this._breathCanvasWidth
+    var h = this._breathCanvasHeight
+    var phase = this.data.breathPhase
+    var countdown = this.data.breathCountdown
+
+    var config = this._breathConfig || DEFAULT_BREATH_CONFIG
+    var currentPhaseDuration = 0
+    for (var i = 0; i < config.phases.length; i++) {
+      if (config.phases[i].key === phase) {
+        currentPhaseDuration = config.phases[i].duration
+        break
+      }
+    }
+
+    var progress = currentPhaseDuration > 0
+      ? (currentPhaseDuration - countdown) / currentPhaseDuration
+      : 0
+
+    var minR = w * 0.30
+    var maxR = w * 0.45
+    var radius
+    if (phase === "inhale") {
+      radius = minR + progress * (maxR - minR)
+    } else if (phase === "hold") {
+      radius = maxR
+    } else if (phase === "exhale") {
+      radius = maxR - progress * (maxR - minR)
+    } else {
+      radius = minR
+    }
+
+    this._drawBreathCircleFrame(radius, phase)
+  },
+
+  _startBreathAnim: function () {
+    if (!this._breathCanvas) return
+    var that = this
+    var canvas = this._breathCanvas
+
+    function frame() {
+      if (!that._breathCtx) return
+
+      var phase = that.data.breathPhase
+      var countdown = that.data.breathCountdown
+      var config = that._breathConfig || DEFAULT_BREATH_CONFIG
+
+      var currentPhaseDuration = 0
+      for (var p = 0; p < config.phases.length; p++) {
+        if (config.phases[p].key === phase) {
+          currentPhaseDuration = config.phases[p].duration
+          break
+        }
+      }
+
+      var progress = currentPhaseDuration > 0
+        ? (currentPhaseDuration - countdown) / currentPhaseDuration
+        : 0
+
+      var w = that._breathCanvasWidth
+      var minR = w * 0.30
+      var maxR = w * 0.45
+      var targetR
+      if (phase === "inhale") {
+        targetR = minR + progress * (maxR - minR)
+      } else if (phase === "hold") {
+        targetR = maxR
+      } else if (phase === "exhale") {
+        targetR = maxR - progress * (maxR - minR)
+      } else {
+        targetR = minR
+      }
+
+      var current = that._breathCurrentRadius || targetR
+      current += (targetR - current) * 0.12
+      that._breathCurrentRadius = current
+
+      that._drawBreathCircleFrame(current, phase)
+      that._breathAnimFrameId = canvas.requestAnimationFrame(frame)
+    }
+
+    this._breathAnimFrameId = canvas.requestAnimationFrame(frame)
+  },
+
+  _stopBreathAnim: function () {
+    if (this._breathAnimFrameId && this._breathCanvas) {
+      this._breathCanvas.cancelAnimationFrame(this._breathAnimFrameId)
+      this._breathAnimFrameId = null
+    }
+  },
+
+  _drawBreathCircleFrame: function (radius, phase) {
+    var ctx = this._breathCtx
+    var w = this._breathCanvasWidth
+    var h = this._breathCanvasHeight
+    var countdown = this.data.breathCountdown
+
+    var ringColor, fillColor
+    if (phase === "hold") {
+      ringColor = "#60a5fa"
+      fillColor = "#dbeafe"
+    } else {
+      ringColor = "#4ade80"
+      fillColor = "#dcfce7"
+    }
+
+    var centerX = w / 2
+    var centerY = h / 2
+
+    ctx.clearRect(0, 0, w, h)
+
+    // 外层光晕
+    ctx.save()
+    ctx.shadowColor = ringColor
+    ctx.shadowBlur = 20
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+    ctx.fillStyle = fillColor
+    ctx.fill()
+    ctx.restore()
+
+    // 描边
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
+    ctx.strokeStyle = ringColor
+    ctx.lineWidth = Math.max(2, w * 0.02)
+    ctx.stroke()
+
+    // 内层亮色（增添立体感）
+    var innerR = radius * 0.78
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, innerR, 0, Math.PI * 2)
+    ctx.fillStyle = "#ffffff"
+    ctx.globalAlpha = 0.25
+    ctx.fill()
+    ctx.globalAlpha = 1
+
+    // ---- 在 Canvas 上绘制倒计时数字 ----
+    var phaseLabels = { inhale: "吸气", hold: "屏气", exhale: "呼气" }
+    var label = phaseLabels[phase] || ""
+
+    // 大倒计时数字
+    ctx.save()
+    ctx.font = "800 " + Math.round(w * 0.24) + "px sans-serif"
+    ctx.fillStyle = "#4CAF50"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.fillText(String(countdown), centerX, centerY - w * 0.04)
+    ctx.restore()
+
+    // 阶段标签（吸气/屏气/呼气）
+    ctx.save()
+    ctx.font = "700 " + Math.round(w * 0.07) + "px sans-serif"
+    ctx.fillStyle = "#5b6b7a"
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.fillText(label, centerX, centerY + w * 0.12)
+    ctx.restore()
   },
 
   // ===== 任务操作 =====
@@ -1167,5 +1248,92 @@ Page({
 
   handleWarningAlertClose: function () {
     this.setData({ showWarningAlert: false, warningMessage: "" })
+  },
+
+  // ===== 今日训练任务 =====
+
+  handleGoTasks: function () {
+    wx.navigateTo({ url: "/pages/plan-detail/index" })
+  },
+
+  // ===== 数据闭环：读取训练方案页的训练进度 =====
+
+  // 方案页 exercise id → 打卡页任务名称对照表
+  _EXERCISE_NAME_MAP: {
+    "breathing": "缩唇腹式呼吸",
+    "walking": "平地行走",
+    "cough": "有效咳嗽排痰",
+  },
+
+  _syncPlanTrainingProgress: function () {
+    var exerciseProgress = wx.getStorageSync("exerciseProgress") || {}
+    var tasks = this.data.tasks
+
+    // 没有任务就不同步
+    if (!tasks || tasks.length === 0) return
+
+    // 逐项匹配：方案页 exercise id 的名称 → 打卡页 task name
+    var nameMap = this._EXERCISE_NAME_MAP
+    var guideIds = ["breathing", "walking", "cough"]
+    var anyChanged = false
+
+    for (var g = 0; g < guideIds.length; g++) {
+      var gid = guideIds[g]
+      var prog = exerciseProgress[gid]
+      if (!prog) continue
+
+      var exerciseName = nameMap[gid]
+      var completedSets = prog.completedSets || 0
+      var elapsedSeconds = prog.elapsedSeconds || 0
+      // 计算训练时长，但每项最多 45 分钟（防跨天累积导致天文数字）
+      var elapsedMin = Math.min(Math.round(elapsedSeconds / 60), 45)
+
+      // 在打卡页 tasks 里找同名的任务
+      for (var t = 0; t < tasks.length; t++) {
+        if (tasks[t].name === exerciseName) {
+          // 如果方案页已完成至少1组，打卡页对应任务也标为已完成
+          if (completedSets >= 1 && !tasks[t].checked) {
+            tasks[t].checked = true
+            tasks[t].actualMinutes = String(elapsedMin || tasks[t].targetMinutes)
+            anyChanged = true
+          }
+          // 如果方案页有计时数据但没完成组数，也把时长填进去（但 cap 到 45）
+          if (elapsedMin > 0 && !tasks[t].actualMinutes) {
+            tasks[t].actualMinutes = String(elapsedMin)
+            anyChanged = true
+          }
+          break
+        }
+      }
+    }
+
+    if (anyChanged) {
+      this.setData({ tasks: tasks })
+      this.updateCheckState()
+    }
+
+    // 更新总训练时长：从 tasks 的 actualMinutes 累加（不再用 planTrainingMinutes，防跨天累积）
+    var todayMin = 0
+    for (var t = 0; t < tasks.length; t++) {
+      if (tasks[t].checked && tasks[t].actualMinutes) {
+        todayMin += Number(tasks[t].actualMinutes) || 0
+      }
+    }
+    if (todayMin > 0) {
+      this.setData({ todayTrainingMinutes: todayMin })
+    }
+  },
+
+  // 更新勾选状态汇总：遍历 tasks → 计算 checkedCount + allChecked
+  updateCheckState: function () {
+    var tasks = this.data.tasks
+    var checkedCount = 0
+    for (var i = 0; i < tasks.length; i++) {
+      if (tasks[i].checked) checkedCount++
+    }
+    this.setData({
+      checkedCount: checkedCount,
+      allChecked: checkedCount === tasks.length && tasks.length > 0,
+    })
   },
 })

@@ -25,12 +25,25 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { AISummary, ApiResponse, Assessment, DYSPNEA_LABELS, ExerciseItem, Patient, PrescriptionGenerateResponse, RECOVERY_STAGE_LABELS, RecoveryStage, REHAB_LEVEL_INFO, RehabLevelResponse, RehabPlan, TrainingLog, WarningRecord, WARNING_TYPE_LABELS, WarningType } from "../types";
+import ChatPanel from "./ChatPanel";
+import PatientOverviewModules from "./PatientOverviewModules";
 
 interface PatientDetailViewProps {
   patient: Patient;
   doctorId: number;
   onBackToList: () => void;
+  chatPanelOpen?: boolean;
+  onChatPanelOpened?: () => void;
 }
 
 type ProgressDay = {
@@ -97,7 +110,7 @@ const resolveFollowUpState = (
     };
   }
 
-  if (checkInCount7d >= 5) {
+  if (checkInCount7d >= 4) {
     return {
       riskLevel: "low",
       label: "训练稳定",
@@ -109,7 +122,7 @@ const resolveFollowUpState = (
     };
   }
 
-  if (checkInCount7d >= 3) {
+  if (checkInCount7d >= 2) {
     return {
       riskLevel: "medium",
       label: "需要关注",
@@ -136,6 +149,8 @@ export default function PatientDetailView({
   patient,
   doctorId,
   onBackToList,
+  chatPanelOpen,
+  onChatPanelOpened,
 }: PatientDetailViewProps) {
   const requestVersionRef = useRef(0);
   const [rightPanelWidth, setRightPanelWidth] = useState(() => {
@@ -177,6 +192,10 @@ export default function PatientDetailView({
   const [plans, setPlans] = useState<RehabPlan[]>([]);
   const [progress30d, setProgress30d] = useState<ProgressDay[]>([]);
   const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
+  const [doctorInput, setDoctorInput] = useState<string>("");
+  const [isAiSummaryGenerating, setIsAiSummaryGenerating] = useState(false);
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [aiSummaryGenerateError, setAiSummaryGenerateError] = useState("");
 
   const [logsLoading, setLogsLoading] = useState(true);
   const [plansLoading, setPlansLoading] = useState(true);
@@ -235,6 +254,7 @@ export default function PatientDetailView({
 
   // AI 处方生成工作流
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [prescriptionDoctorInput, setPrescriptionDoctorInput] = useState("");
   const [aiPrescription, setAiPrescription] = useState<PrescriptionGenerateResponse | null>(null);
   const [aiGenerateError, setAiGenerateError] = useState("");
   const [editableTitle, setEditableTitle] = useState("");
@@ -259,6 +279,16 @@ export default function PatientDetailView({
   const [hoveredSetsDay, setHoveredSetsDay] = useState<string | null>(null);
   const [showAvgLine, setShowAvgLine] = useState(false);
   const [showStreakBand, setShowStreakBand] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+
+  // 从未读消息入口进入时自动打开 ChatPanel
+  useEffect(() => {
+    if (chatPanelOpen) {
+      setShowChat(true);
+      onChatPanelOpened?.();
+    }
+  }, [chatPanelOpen, onChatPanelOpened]);
+
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     overview: true,
     aiSummary: false,
@@ -690,7 +720,50 @@ export default function PatientDetailView({
     }
   };
 
+  const handleGenerateAiSummary = async () => {
+    if (doctorInput.trim().length < 10) return;
+    setIsAiSummaryGenerating(true);
+    setAiSummaryGenerateError("");
+    try {
+      const response = await fetch("/api/ai-summaries/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: patient.id, doctor_input: doctorInput.trim() }),
+      });
+      const json = await response.json();
+      if (!response.ok || json.code !== 200) {
+        setAiSummaryGenerateError(json.message || "AI 小结生成失败，请稍后重试。");
+        return;
+      }
+      setAiSummary(json.data);
+    } catch {
+      setAiSummaryGenerateError("无法连接后端服务，AI 小结生成失败。");
+    } finally {
+      setIsAiSummaryGenerating(false);
+    }
+  };
+
+  const handleDispatchSummary = async () => {
+    if (!aiSummary) return;
+    setIsDispatching(true);
+    try {
+      const response = await fetch(`/api/ai-summaries/dispatch?summary_id=${aiSummary.id}`, {
+        method: "POST",
+      });
+      const json = await response.json();
+      if (!response.ok || json.code !== 200) {
+        return;
+      }
+      setAiSummary(json.data);
+    } catch {
+      // 静默失败，按钮保持可重试
+    } finally {
+      setIsDispatching(false);
+    }
+  };
+
   const handleAiGeneratePrescription = async () => {
+    if (prescriptionDoctorInput.trim().length < 10) return;
     setIsAiGenerating(true);
     setAiGenerateError("");
     setAiPrescription(null);
@@ -699,7 +772,7 @@ export default function PatientDetailView({
       const response = await fetch("/api/prescriptions/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patient_id: patient.id }),
+        body: JSON.stringify({ patient_id: patient.id, doctor_input: prescriptionDoctorInput.trim() }),
       });
       const json: ApiResponse<PrescriptionGenerateResponse> = await response.json();
 
@@ -987,40 +1060,44 @@ export default function PatientDetailView({
   };
 
   return (
-    <div className="space-y-4 text-slate-800">
+    <>
+      <div className="space-y-4 text-slate-800">
       {/* 顶部信息栏 + 提示行 */}
       <div className="rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] p-4">
         <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button
+          <Button
             onClick={onBackToList}
-            className="h-9 w-9 rounded border border-[#D9E2EC] bg-white text-[#5B6B7A] hover:bg-[#F4F7FA] shrink-0"
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 rounded border-[#D9E2EC] bg-white text-[#5B6B7A] hover:bg-[#F4F7FA] shrink-0"
             title="返回患者列表"
           >
-            <ArrowLeft className="mx-auto h-5 w-5" />
-          </button>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <h2 className="text-base font-bold text-[#111827]">{patient.name}</h2>
-          <span className="rounded px-2 py-0.5 text-xs text-[#6B7280] bg-[#F3F4F6]">
+          <Badge variant="outline" className="text-xs text-[#6B7280] bg-[#F3F4F6] border-[#D1D5DB]">
             ID {patient.id}
-          </span>
-          <span className="rounded px-2 py-0.5 text-xs font-bold border-l-[4px] border-l-[#FE5F55] bg-[#FEF2F2] text-[#D95C5C]">
+          </Badge>
+          <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-bold ${followUpState.riskLevel==="low"?"bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3] border-l-[4px] border-l-[#5B9B7A]":followUpState.riskLevel==="medium"?"bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2] border-l-[4px] border-l-[#D9A441]":"bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2] border-l-[4px] border-l-[#D95C5C]"}`}>
             {followUpState.label}
-          </span>
+          </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 min-w-[176px] justify-end">
-          <button
+          <Button
             onClick={onBackToList}
-            className="rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
+            variant="outline"
+            className="rounded-lg border-[#D9E2EC] text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
           >
             返回列表
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setIsPlanModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-[#2B7A78] px-3 py-2 text-sm font-medium text-white hover:bg-[#236B69]"
+            className="flex items-center gap-2 rounded-lg bg-[#2B7A78] text-sm font-medium text-white hover:bg-[#236B69]"
           >
             <Plus className="h-4 w-4" />
             下发方案
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1031,10 +1108,13 @@ export default function PatientDetailView({
           </p>
           <div className="flex items-center gap-2 shrink-0">
             <span className="invisible rounded-lg px-1 py-2 text-sm font-medium">返回列表</span>
-            <a href="#" className="flex items-center gap-1.5 text-sm text-[#2B7A78] hover:underline">
+            <button
+              onClick={() => setShowChat(true)}
+              className="flex items-center gap-1.5 text-sm text-[#2B7A78] hover:underline cursor-pointer"
+            >
               <Mail className="h-4 w-4" />
               联系患者
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -1122,7 +1202,7 @@ export default function PatientDetailView({
             </div>
 
             {progressLoading ? (
-              <div className="h-48 rounded-xl bg-[#F4F7FA] animate-pulse" />
+              <Skeleton className="h-48 rounded-xl" />
             ) : progressError ? (
               <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -1406,420 +1486,354 @@ export default function PatientDetailView({
       />
 
       <div className="space-y-5">
-        <section className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
-        <button
-          onClick={() => toggleSection("overview")}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-[#4F7A94]" />
-            <h3 className="text-base font-semibold text-[#243447]">患者概览</h3>
-            <span className="text-xs text-[#8A97A6]">健康档案 · 康复等级 · 评估 · 状态</span>
-          </div>
-          {expandedSections.overview ? (
-            <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
-          )}
-        </button>
-        {expandedSections.overview && (
-          <div className="px-5 pb-5 space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {/* 健康档案卡片 */}
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] text-[#8A97A6]">健康档案</p>
-                  <button
-                    onClick={handleOpenProfileModal}
-                    className="inline-flex items-center gap-1 text-[11px] text-[#2F5D7C] hover:text-[#4F7A94]"
-                  >
-                    <Edit3 className="h-3 w-3" />
-                    编辑
-                  </button>
-                </div>
-                <div className="mt-2 space-y-1.5 text-sm text-[#243447]">
-                  <div className="flex justify-between">
-                    <span className="text-[#5B6B7A]">重症肺炎恢复期</span>
-                    <span className="font-medium">
-                      {patient.is_post_pneumonia === true ? "是" : patient.is_post_pneumonia === false ? "否" : "未填写"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#5B6B7A]">出院时间</span>
-                    <span className="font-medium">{patient.discharge_date ? formatDate(patient.discharge_date) : "未填写"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#5B6B7A]">恢复阶段</span>
-                    <span className="font-medium">
-                      {patient.recovery_stage ? RECOVERY_STAGE_LABELS[patient.recovery_stage] : "未填写"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#5B6B7A]">长期吸烟</span>
-                    <span className="font-medium">
-                      {patient.is_long_term_smoker === true ? "是" : patient.is_long_term_smoker === false ? "否" : "未填写"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#5B6B7A]">慢性呼吸疾病</span>
-                    <span className="font-medium">
-                      {patient.has_chronic_respiratory_disease === true ? "是" : patient.has_chronic_respiratory_disease === false ? "否" : "未填写"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#5B6B7A]">心血管疾病</span>
-                    <span className="font-medium">
-                      {patient.has_cardiovascular_disease === true ? "是" : patient.has_cardiovascular_disease === false ? "否" : "未填写"}
-                    </span>
-                  </div>
-                </div>
-                {patient.recovery_stage && (
-                  <div className="mt-3">
-                    <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${
-                      patient.recovery_stage === "early"
-                        ? "bg-[#FDF2F2] text-[#D95C5C] border-[#F8D2D2]"
-                        : patient.recovery_stage === "mid"
-                          ? "bg-[#FDF8EE] text-[#D9A441] border-[#F8E1C2]"
-                          : "bg-[#EEFDF5] text-[#5B9B7A] border-[#D5F5E3]"
-                    }`}>
-                      {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
-                    </span>
-                  </div>
-                )}
+        <Collapsible open={expandedSections.overview} onOpenChange={() => toggleSection("overview")}>
+        <Card className="overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-[#4F7A94]" />
+                <h3 className="text-base font-semibold text-[#243447]">患者概览</h3>
+                <span className="text-xs text-[#8A97A6]">健康档案 · 康复等级 · 评估 · 状态</span>
               </div>
+              {expandedSections.overview ? (
+                <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <PatientOverviewModules
+              patient={patient}
+              latestAssessment={latestAssessment}
+              assessmentLoading={assessmentLoading}
+              rehabLevelDetail={rehabLevelDetail}
+              rehabLevelLoading={rehabLevelLoading}
+              followUpLabel={followUpState.label}
+              followUpNote={followUpState.note}
+              followUpActionLabel={followUpState.actionLabel}
+              latestLog={latestLog}
+              latestPlan={latestPlan}
+              hasPlans={hasPlans}
+              plansLoading={plansLoading}
+              plansError={plansError}
+              onOpenAssessmentModal={handleOpenAssessmentModal}
+              onOpenProfileModal={handleOpenProfileModal}
+              onFollowUpAction={handleFollowUpAction}
+              formatDate={formatDate}
+              formatDateTime={formatDateTime}
+            />
+          </CollapsibleContent>
+        </Card>
+        </Collapsible>
 
-              {/* 康复等级卡片 */}
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <p className="text-[11px] text-[#8A97A6]">康复能力等级</p>
-                {rehabLevelLoading ? (
-                  <div className="mt-2 h-10 rounded bg-[#F4F7FA] animate-pulse" />
-                ) : rehabLevelDetail ? (
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="rounded-md border px-2 py-0.5 text-xs font-semibold"
-                        style={{
-                          color: REHAB_LEVEL_INFO[rehabLevelDetail.rehab_level]?.color,
-                          backgroundColor: REHAB_LEVEL_INFO[rehabLevelDetail.rehab_level]?.bgColor,
-                          borderColor: REHAB_LEVEL_INFO[rehabLevelDetail.rehab_level]?.borderColor,
-                        }}
-                      >
-                        {rehabLevelDetail.level_label}
-                      </span>
-                      <span className="text-sm font-semibold text-[#243447]">{rehabLevelDetail.level_name}</span>
-                    </div>
-                    <p className="text-xs text-[#5B6B7A]">
-                      推荐训练：<span className="font-medium text-[#243447]">{rehabLevelDetail.recommended_training}</span>
-                    </p>
-                    <p className="text-[10px] text-[#8A97A6]">基于最新评估数据自动计算</p>
-                  </div>
+        <Collapsible open={expandedSections.aiSummary} onOpenChange={() => toggleSection("aiSummary")}>
+        <Card className="overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-[#4F7A94]" />
+                <h3 className="text-base font-semibold text-[#243447]">最新 AI 小结</h3>
+                {aiSummary ? (
+                  <Badge variant="success" className="text-[10px]">已完成</Badge>
+                ) : aiLoading ? null : doctorInput.trim().length >= 10 ? (
+                  <Badge variant="default" className="bg-[#5C8FD9] text-white border-0 text-[10px]">待生成</Badge>
                 ) : (
-                  <p className="mt-2 text-xs text-[#8A97A6]">需完成评估后自动生成</p>
+                  <Badge variant="outline" className="text-[10px]">待输入</Badge>
                 )}
-              </div>
-
-              {/* 最新评估卡片 */}
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] text-[#8A97A6]">最新康复评估</p>
-                  <button
-                    onClick={handleOpenAssessmentModal}
-                    className="inline-flex items-center gap-1 text-[11px] text-[#2F5D7C] hover:text-[#4F7A94]"
-                  >
-                    <Plus className="h-3 w-3" />
-                    新增评估
-                  </button>
-                </div>
-                {assessmentLoading ? (
-                  <div className="mt-2 h-8 rounded bg-[#F4F7FA] animate-pulse" />
-                ) : latestAssessment ? (
-                  <div className="mt-2 space-y-1.5 text-sm text-[#243447]">
-                    <div className="grid grid-cols-2 gap-2">
-                      {latestAssessment.heart_rate !== null && (
-                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
-                          <p className="text-[10px] text-[#8A97A6]">心率</p>
-                          <p className="text-sm font-semibold">{latestAssessment.heart_rate} <span className="text-[10px] font-normal text-[#8A97A6]">bpm</span></p>
-                        </div>
-                      )}
-                      {latestAssessment.spo2 !== null && (
-                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
-                          <p className="text-[10px] text-[#8A97A6]">血氧</p>
-                          <p className="text-sm font-semibold">{latestAssessment.spo2}<span className="text-[10px] font-normal text-[#8A97A6]">%</span></p>
-                        </div>
-                      )}
-                      {latestAssessment.dyspnea_score !== null && (
-                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
-                          <p className="text-[10px] text-[#8A97A6]">呼吸困难</p>
-                          <p className="text-sm font-semibold">{latestAssessment.dyspnea_score}/5</p>
-                        </div>
-                      )}
-                      {latestAssessment.fatigue_score !== null && (
-                        <div className="rounded-md border border-[#E7EDF3] bg-white px-2 py-1.5 text-center">
-                          <p className="text-[10px] text-[#8A97A6]">疲劳</p>
-                          <p className="text-sm font-semibold">{latestAssessment.fatigue_score}/10</p>
-                        </div>
-                      )}
-                    </div>
-                    {latestAssessment.dyspnea_score !== null && (
-                      <p className="text-xs text-[#5B6B7A]">呼吸困难：{DYSPNEA_LABELS[latestAssessment.dyspnea_score]}</p>
-                    )}
-                    <p className="text-[10px] text-[#8A97A6]">评估时间：{formatDateTime(latestAssessment.created_at)}</p>
-                  </div>
-                ) : (
-                  <p className="mt-2 text-xs text-[#8A97A6]">暂无评估记录，点击上方按钮新增</p>
-                )}
-              </div>
-
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] text-[#8A97A6]">当前状态</p>
-                    <p className="mt-2 text-sm font-semibold text-[#243447]">{followUpState.label}</p>
-                  </div>
-                  <span className={`rounded-md border px-2 py-0.5 text-[11px] font-medium ${followUpState.badgeClassName}`}>
-                    {followUpState.label}
+                {aiSummary && (
+                  <span className="text-[10px] text-[#8A97A6]">
+                    {aiSummary.summary_week_start} ~ {aiSummary.summary_week_end}
                   </span>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-[#5B6B7A]">{followUpState.note}</p>
-              </div>
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <p className="text-[11px] text-[#8A97A6]">跟进建议</p>
-                <p className="mt-2 text-sm font-semibold text-[#243447]">{followUpState.actionLabel}</p>
-                <p className="mt-2 text-sm leading-6 text-[#5B6B7A]">{followUpState.actionDescription}</p>
-                {!hasPlans && !plansLoading && !plansError && (
-                  <div className="mt-3 rounded-lg border border-[#F8D2D2] bg-[#FDF2F2] px-3 py-2 text-sm text-[#B44545]">
-                    当前患者暂无训练方案，建议优先完成方案下发。
-                  </div>
                 )}
-                <button
-                  onClick={handleFollowUpAction}
-                  className="mt-3 inline-flex items-center rounded-lg bg-[#2F5D7C] px-3 py-2 text-sm font-medium text-white hover:bg-[#4F7A94]"
-                >
-                  {followUpState.actionLabel}
-                </button>
               </div>
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <p className="text-[11px] text-[#8A97A6]">最近训练记录</p>
-                <p className="mt-1 text-sm font-semibold text-[#243447]">
-                  {latestLog ? formatDateTime(latestLog.created_at) : "暂无记录"}
-                </p>
-              </div>
-              <div className="rounded-lg border border-[#D9E2EC] bg-[#F8FAFC] p-4">
-                <p className="text-[11px] text-[#8A97A6]">最新方案</p>
-                <p className="mt-1 text-sm font-semibold text-[#243447]">
-                  {latestPlan ? latestPlan.title : "暂无方案"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
-          <section className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
-        <button
-          onClick={() => toggleSection("aiSummary")}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-[#4F7A94]" />
-            <h3 className="text-base font-semibold text-[#243447]">最新 AI 小结</h3>
-            {aiSummary && (
-              <span className="rounded-md bg-[#EDE9FE] px-2 py-0.5 text-[10px] font-medium text-[#7C3AED]">
-                {aiSummary.summary_week_start} ~ {aiSummary.summary_week_end}
-              </span>
-            )}
-          </div>
-          {expandedSections.aiSummary ? (
-            <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
-          )}
-        </button>
-        {expandedSections.aiSummary && (
-          <div className="px-5 pb-5">
-            {aiLoading ? (
-              <div className="space-y-2">
-                <div className="h-4 rounded bg-[#F4F7FA] animate-pulse" />
-                <div className="h-4 rounded bg-[#F4F7FA] animate-pulse" />
-                <div className="h-4 rounded bg-[#F4F7FA] animate-pulse" />
-              </div>
-            ) : aiError ? (
-              <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{aiError}</span>
-              </div>
-            ) : !aiSummary ? (
-              <div className="rounded-xl border border-dashed border-[#D9E2EC] p-4 text-sm text-[#5B6B7A]">
-                当前暂无 AI 周报，后续生成后会展示在这里。
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="text-xs text-[#8A97A6]">生成时间：{formatDateTime(aiSummary.created_at)}</div>
-                <div className="whitespace-pre-line rounded-xl border border-[#D9E2EC] bg-[#F8FAFC] p-4 text-sm leading-6 text-[#243447]">
-                  {aiSummary.content}
+              {expandedSections.aiSummary ? (
+                <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-5 pb-5 space-y-4">
+              {aiLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-20 rounded-xl" />
+                  <Skeleton className="h-32 rounded-xl" />
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
+              ) : aiError ? (
+                <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{aiError}</span>
+                </div>
+              ) : (
+                <>
+                  {/* ── 第一步：医生关键建议（必填） ── */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-[#2F5D7C] text-white flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
+                        <span className="text-sm font-semibold text-[#243447]">医生关键建议</span>
+                        <span className="text-[10px] text-[#D95C5C] font-medium">必填</span>
+                      </div>
+                      {aiSummary && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setDoctorInput(aiSummary.doctor_input || ""); }}
+                          className="h-6 px-2 text-[10px] text-[#2F5D7C] hover:bg-[#EEF3F7] cursor-pointer"
+                        >
+                          恢复已有输入
+                        </Button>
+                      )}
+                    </div>
+                    <textarea
+                      value={doctorInput}
+                      onChange={(e) => { setDoctorInput(e.target.value); setAiSummaryGenerateError(""); }}
+                      placeholder="请输入您对本周康复情况的关键判断和建议，例如：本周重点关注血氧波动，患者反映爬楼后气促加重，需评估是否调整训练强度...（最少 10 字）"
+                      rows={3}
+                      className="w-full rounded-lg border border-[#D9E2EC] bg-[#F4F7FA] px-3 py-2.5 text-sm text-[#243447] outline-none transition-all placeholder:text-[#8A97A6] focus:border-[#2F5D7C] focus:bg-white focus:ring-1 focus:ring-[#2F5D7C]/20 resize-none"
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] ${doctorInput.trim().length >= 10 ? "text-[#5B9B7A]" : "text-[#8A97A6]"}`}>
+                        {doctorInput.trim().length >= 10 ? "✓ 已满足最低要求" : `还需输入 ${10 - doctorInput.trim().length} 字`}
+                      </span>
+                      <Button
+                        onClick={handleGenerateAiSummary}
+                        disabled={doctorInput.trim().length < 10 || isAiSummaryGenerating}
+                        className="bg-[#2F5D7C] text-white hover:bg-[#4F7A94] disabled:opacity-50 text-xs cursor-pointer"
+                      >
+                        {isAiSummaryGenerating ? (
+                          <>
+                            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            AI 生成中...
+                          </>
+                        ) : aiSummary ? "重新生成" : "生成综合建议"}
+                      </Button>
+                    </div>
+                    {aiSummaryGenerateError && (
+                      <div className="flex items-start gap-2 rounded-lg border border-[#F8D2D2] bg-[#FDF2F2] p-3 text-xs text-[#D95C5C]">
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{aiSummaryGenerateError}</span>
+                      </div>
+                    )}
+                  </div>
 
-          {/* 预警中心 */}
-          <section className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
-        <button
-          onClick={() => toggleSection("warnings")}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#D9A441]" />
-            <h3 className="text-base font-semibold text-[#243447]">安全预警</h3>
-            {warnings.length > 0 && (
-              <span className="rounded-full bg-[#FDF2F2] px-2 py-0.5 text-[10px] font-bold text-[#D95C5C]">
-                {warnings.filter((w) => !w.is_resolved).length} 未处理
-              </span>
-            )}
-          </div>
-          {expandedSections.warnings ? (
-            <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
-          )}
-        </button>
-        {expandedSections.warnings && (
-          <div className="px-5 pb-5">
-            <p className="text-sm text-[#5B6B7A] mb-3">评估提交时自动检测，心率&gt;120 / 血氧&lt;92% / 疲劳&gt;8 / 呼吸困难≥4 触发预警。</p>
+                  {/* ── 综合建议（生成后展示） ── */}
+                  {aiSummary && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-5 rounded-full bg-[#2F5D7C] text-white flex items-center justify-center text-[10px] font-bold shrink-0">2</div>
+                        <span className="text-sm font-semibold text-[#243447]">综合建议</span>
+                        <span className="text-[10px] text-[#8A97A6]">生成时间：{formatDateTime(aiSummary.created_at)}</span>
+                      </div>
 
-            {warningsLoading ? (
-              <div className="h-12 rounded-xl bg-[#F4F7FA] animate-pulse" />
-            ) : warnings.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#D9E2EC] p-4 text-center text-sm text-[#5B6B7A]">
-                暂无预警记录
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {warnings.map((w) => {
-                  const typeInfo = WARNING_TYPE_LABELS[w.warning_type as WarningType];
-                  return (
-                    <div key={w.id} className={`rounded-xl border p-4 ${w.is_resolved ? "border-[#D9E2EC] bg-[#F8FAFC] opacity-60" : "border-[#F8D2D2] bg-[#FDF2F2]"}`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="rounded-md border px-2 py-0.5 text-[11px] font-medium"
-                              style={{
-                                color: typeInfo?.color || "#D95C5C",
-                                backgroundColor: typeInfo?.bgColor || "#FDF2F2",
-                                borderColor: typeInfo?.borderColor || "#F8D2D2",
-                              }}
-                            >
-                              {typeInfo?.label || w.warning_type}
-                            </span>
-                            {w.is_resolved && (
-                              <span className="rounded-md border border-[#D5F5E3] bg-[#EEFDF5] px-2 py-0.5 text-[11px] font-medium text-[#5B9B7A]">
-                                已处理
-                              </span>
-                            )}
+                      <Card className="bg-[#F8FAFC] border-[#D9E2EC]">
+                        <CardContent className="p-4">
+                          <div className="whitespace-pre-line text-sm leading-7 text-[#243447]">
+                            {aiSummary.content.split('\n\n').map((paragraph, i) => (
+                              <p key={i} className={i > 0 ? 'mt-3' : ''}>{paragraph}</p>
+                            ))}
                           </div>
-                          <p className="text-sm text-[#243447]">{w.message}</p>
-                          <p className="text-xs text-[#8A97A6]">{formatDateTime(w.created_at)}</p>
-                        </div>
-                        {!w.is_resolved && (
-                          <button
-                            onClick={() => handleResolveWarning(w.id)}
-                            disabled={resolvingWarningId === w.id}
-                            className="shrink-0 rounded-lg border border-[#D9E2EC] px-3 py-1.5 text-xs font-medium text-[#5B6B7A] hover:bg-[#F4F7FA] disabled:opacity-60"
+                          <div className="mt-3 pt-3 border-t border-[#E7EDF3]">
+                            <p className="text-[10px] text-[#8A97A6]">
+                              基于医生判断生成
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* ── 一键下发 ── */}
+                      <div className="flex items-center justify-end">
+                        {aiSummary.dispatched_at ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-[#5B9B7A] font-medium">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            已下发 · {formatDateTime(aiSummary.dispatched_at)}
+                          </span>
+                        ) : (
+                          <Button
+                            onClick={handleDispatchSummary}
+                            disabled={isDispatching}
+                            className="bg-[#5B9B7A] text-white hover:bg-[#3E7B61] disabled:opacity-50 text-xs cursor-pointer"
                           >
-                            {resolvingWarningId === w.id ? "处理中..." : "标记已处理"}
-                          </button>
+                            {isDispatching ? (
+                              <>
+                                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                下发中...
+                              </>
+                            ) : (
+                              "一键下发至患者"
+                            )}
+                          </Button>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-          <section id="patient-plans-section" className="rounded-xl border border-[#D9E2EC] bg-white overflow-hidden">
-        <button
-          onClick={() => toggleSection("planHistory")}
-          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4 text-[#4F7A94]" />
-            <h3 className="text-base font-semibold text-[#243447]">训练方案历史</h3>
-            <span className="text-xs text-[#8A97A6]">{plans.length} 个方案</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => { e.stopPropagation(); setIsPlanModalOpen(true); }}
-              className="rounded-lg border border-[#D9E2EC] px-3 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
-            >
-              新增方案
-            </button>
-            {expandedSections.planHistory ? (
-              <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
-            )}
-          </div>
-        </button>
-        {expandedSections.planHistory && (
-          <div className="px-5 pb-5 space-y-4">
-            <div className={`rounded-xl border px-4 py-3 ${planStatusSummary.toneClassName}`}>
-              <p className="text-[11px] opacity-80">方案状态</p>
-              <p className="mt-1 text-sm font-semibold">{planStatusSummary.title}</p>
-              <p className="mt-2 text-sm leading-6">{planStatusSummary.description}</p>
-              <p className="mt-2 text-xs font-medium">{planStatusSummary.actionLabel}</p>
+                  )}
+                </>
+              )}
             </div>
+          </CollapsibleContent>
+        </Card>
+        </Collapsible>
 
-            {planSuccessMessage && (
-              <div className="rounded-xl border border-[#D5F5E3] bg-[#EEFDF5] px-4 py-3 text-sm text-[#3E7B61]">
-                {planSuccessMessage}
+        <Collapsible open={expandedSections.warnings} onOpenChange={() => toggleSection("warnings")}>
+        <Card className="overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-[#D9A441]" />
+                <h3 className="text-base font-semibold text-[#243447]">安全预警</h3>
+                {warnings.length > 0 && (
+                  <Badge variant="destructive" className="text-[10px]">
+                    {warnings.filter((w) => !w.is_resolved).length} 未处理
+                  </Badge>
+                )}
               </div>
-            )}
+              {expandedSections.warnings ? (
+                <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-5 pb-5">
+              {warningsLoading ? (
+                <Skeleton className="h-12 rounded-xl" />
+              ) : warnings.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[#D9E2EC] p-4 text-center text-sm text-[#5B6B7A]">
+                  暂无预警记录
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {warnings.map((w) => {
+                    const typeInfo = WARNING_TYPE_LABELS[w.warning_type as WarningType];
+                    return (
+                      <Card
+                        key={w.id}
+                        className={`border-l-4 ${w.is_resolved ? "border-l-[#D9E2EC] opacity-60" : "border-l-[#D95C5C]"}`}
+                      >
+                        <div className="flex items-start justify-between gap-3 p-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="rounded-md border px-2 py-0.5 text-[11px] font-medium"
+                                style={{
+                                  color: typeInfo?.color || "#D95C5C",
+                                  backgroundColor: typeInfo?.bgColor || "#FDF2F2",
+                                  borderColor: typeInfo?.borderColor || "#F8D2D2",
+                                }}
+                              >
+                                {typeInfo?.label || w.warning_type}
+                              </span>
+                              {w.is_resolved && (
+                                <Badge variant="success" className="text-[10px]">已处理</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-[#243447]">{w.message}</p>
+                            <p className="text-[11px] text-[#8A97A6]">{formatDateTime(w.created_at)}</p>
+                          </div>
+                          {!w.is_resolved && (
+                            <Button
+                              onClick={() => handleResolveWarning(w.id)}
+                              disabled={resolvingWarningId === w.id}
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0 border-[#D9E2EC] text-xs font-medium text-[#5B6B7A] hover:bg-[#F4F7FA] disabled:opacity-60 cursor-pointer"
+                            >
+                              {resolvingWarningId === w.id ? "处理中..." : "标记已处理"}
+                            </Button>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Card>
+        </Collapsible>
 
-            {plansLoading ? (
-              <div className="space-y-2">
-                <div className="h-20 rounded-xl bg-[#F4F7FA] animate-pulse" />
-                <div className="h-20 rounded-xl bg-[#F4F7FA] animate-pulse" />
+        <Collapsible open={expandedSections.planHistory} onOpenChange={() => toggleSection("planHistory")}>
+        <Card id="patient-plans-section" className="overflow-hidden">
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+              <div className="flex items-center gap-2">
+                <Heart className="h-4 w-4 text-[#4F7A94]" />
+                <h3 className="text-base font-semibold text-[#243447]">训练方案历史</h3>
+                <Badge variant="outline" className="text-[10px]">{plans.length} 个方案</Badge>
+                {plans.length > 0 && (
+                  <Badge variant="success" className="text-[10px]">方案正常</Badge>
+                )}
               </div>
-            ) : plansError ? (
-              <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{plansError}</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={(e) => { e.stopPropagation(); setIsPlanModalOpen(true); }}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#D9E2EC] text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA] cursor-pointer"
+                >
+                  新增方案
+                </Button>
+                {expandedSections.planHistory ? (
+                  <ChevronUp className="h-4 w-4 text-[#8A97A6]" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-[#8A97A6]" />
+                )}
               </div>
-            ) : plans.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#D9E2EC] p-8 text-center text-sm text-[#5B6B7A]">
-                当前还没有下发过训练方案。
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {plans.map((plan, index) => (
-                  <div key={plan.id} className="rounded-xl border border-[#D9E2EC] bg-[#FBFCFD] p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[#243447]">{plan.title}</p>
-                        <p className="mt-1 text-xs text-[#8A97A6]">
-                          医生 {plan.doctor_id} · {formatDateTime(plan.created_at)}
-                        </p>
-                      </div>
-                      {index === 0 && (
-                        <span className="rounded-full bg-[#2F5D7C] px-2 py-0.5 text-xs text-white">最新</span>
-                      )}
-                    </div>
-                    <div className="mt-3 whitespace-pre-line text-sm leading-6 text-[#5B6B7A]">
-                      {plan.content}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="px-5 pb-5 space-y-3">
+              {planSuccessMessage && (
+                <div className="rounded-xl border border-[#D5F5E3] bg-[#EEFDF5] px-4 py-3 text-sm text-[#3E7B61]">
+                  {planSuccessMessage}
+                </div>
+              )}
+
+              {plansLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-20 rounded-xl" />
+                  <Skeleton className="h-20 rounded-xl" />
+                </div>
+              ) : plansError ? (
+                <div className="flex items-start gap-2 rounded-xl border border-[#F8D2D2] bg-[#FDF2F2] p-4 text-sm text-[#D95C5C]">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{plansError}</span>
+                </div>
+              ) : plans.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-[#D9E2EC] p-8 text-center text-sm text-[#5B6B7A]">
+                  当前还没有下发过训练方案。
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {plans.map((plan, index) => (
+                    <Card key={plan.id} className={index === 0 ? "border-l-4 border-l-[#2F5D7C]" : ""}>
+                      <CardHeader className="flex flex-row items-start justify-between py-3 px-4 border-b border-med-divider">
+                        <div>
+                          <CardTitle className="text-sm font-semibold text-[#243447]">{plan.title}</CardTitle>
+                          <CardDescription className="mt-0.5 text-[11px] text-[#8A97A6]">
+                            医生 {plan.doctor_id} · {formatDateTime(plan.created_at)}
+                          </CardDescription>
+                        </div>
+                        {index === 0 && (
+                          <Badge className="bg-[#2F5D7C] text-white border-0 text-[10px]">最新</Badge>
+                        )}
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <div className="whitespace-pre-line text-sm leading-6 text-[#5B6B7A]">
+                          {plan.content}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Card>
+        </Collapsible>
         </div>
 
       {isPlanModalOpen && (
@@ -1854,33 +1868,53 @@ export default function PatientDetailView({
                 </div>
               )}
 
-              {/* AI 生成按钮 */}
+              {/* ── 第一步：医生关键处方判断（必填）── */}
               {!aiPrescription && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border-2 border-dashed border-[#2F5D7C] bg-[#F4F7FA] p-6 text-center space-y-3">
-                    <Brain className="mx-auto h-8 w-8 text-[#2F5D7C]" />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-5 rounded-full bg-[#2F5D7C] text-white flex items-center justify-center text-[10px] font-bold shrink-0">1</div>
+                      <span className="text-sm font-semibold text-[#243447]">医生关键处方判断</span>
+                      <span className="text-[10px] text-[#D95C5C] font-medium">必填</span>
+                    </div>
+                    <textarea
+                      value={prescriptionDoctorInput}
+                      onChange={(e) => { setPrescriptionDoctorInput(e.target.value); setAiGenerateError(""); }}
+                      placeholder="请输入您对该患者的训练处方关键判断，例如：应在腹式呼吸基础上增加上肢力量训练，注意控制心率不超过110bpm...（最少 10 字）"
+                      rows={3}
+                      className="w-full rounded-lg border border-[#D9E2EC] bg-[#F4F7FA] px-3 py-2.5 text-sm text-[#243447] outline-none transition-all placeholder:text-[#8A97A6] focus:border-[#2F5D7C] focus:bg-white focus:ring-1 focus:ring-[#2F5D7C]/20 resize-none"
+                    />
+                  </div>
+
+                  <div className="rounded-xl border-2 border-dashed border-[#2F5D7C] bg-[#F4F7FA] p-5 text-center space-y-3">
+                    <Brain className="mx-auto h-7 w-7 text-[#2F5D7C]" />
                     <p className="text-sm font-medium text-[#243447]">AI 智能生成训练处方</p>
                     <p className="text-xs text-[#5B6B7A]">
-                      根据患者康复等级、健康档案和最新评估数据，自动生成个性化训练方案
+                      基于您的关键判断，结合患者康复等级、健康档案和最新评估数据，AI 将补充完整个性化训练方案
                     </p>
-                    <button
-                      type="button"
-                      onClick={handleAiGeneratePrescription}
-                      disabled={isAiGenerating}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#2F5D7C] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
-                    >
-                      {isAiGenerating ? (
-                        <>
-                          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                          AI 生成中...
-                        </>
-                      ) : (
-                        <>
-                          <Brain className="h-4 w-4" />
-                          AI 生成处方
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] ${prescriptionDoctorInput.trim().length >= 10 ? "text-[#5B9B7A]" : "text-[#8A97A6]"}`}>
+                        {prescriptionDoctorInput.trim().length >= 10 ? "✓ 已满足最低要求" : `还需输入 ${10 - prescriptionDoctorInput.trim().length} 字`}
+                      </span>
+                      <Button
+                        type="button"
+                        onClick={handleAiGeneratePrescription}
+                        disabled={prescriptionDoctorInput.trim().length < 10 || isAiGenerating}
+                        className="inline-flex items-center gap-2 rounded-lg bg-[#2F5D7C] text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
+                      >
+                        {isAiGenerating ? (
+                          <>
+                            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            AI 生成中...
+                          </>
+                        ) : (
+                          <>
+                            <Brain className="h-4 w-4" />
+                            AI 生成处方
+                          </>
+                        )}
+                      </Button>
+                    </div>
                     {aiGenerateError && (
                       <p className="text-sm text-[#D95C5C]">{aiGenerateError}</p>
                     )}
@@ -1963,14 +1997,15 @@ export default function PatientDetailView({
                   </div>
 
                   {/* 重新生成 */}
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={handleAiGeneratePrescription}
                     disabled={isAiGenerating}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9E2EC] px-3 py-1.5 text-xs font-medium text-[#2F5D7C] hover:bg-[#F4F7FA] disabled:opacity-60"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-[#D9E2EC] text-xs font-medium text-[#2F5D7C] hover:bg-[#F4F7FA] disabled:opacity-60"
                   >
                     {isAiGenerating ? "重新生成中..." : "重新生成"}
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -2006,21 +2041,22 @@ export default function PatientDetailView({
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setIsPlanModalOpen(false)}
-                  className="rounded-lg border border-[#D9E2EC] px-4 py-2 text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
+                  className="rounded-lg border-[#D9E2EC] text-sm font-medium text-[#5B6B7A] hover:bg-[#F4F7FA]"
                   disabled={isSubmittingPlan}
                 >
                   取消
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="rounded-lg bg-[#2F5D7C] px-4 py-2 text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
+                  className="rounded-lg bg-[#2F5D7C] text-sm font-medium text-white hover:bg-[#4F7A94] disabled:opacity-60"
                   disabled={isSubmittingPlan || (!newPlanTitle.trim() || !newPlanContent.trim())}
                 >
                   {isSubmittingPlan ? "提交中..." : "审核通过并下发"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -2828,5 +2864,7 @@ export default function PatientDetailView({
         </div>
       )}
     </div>
+    <ChatPanel patientName={patient.name} patientId={patient.id} open={showChat} onOpenChange={setShowChat} />
+    </>
   );
 }

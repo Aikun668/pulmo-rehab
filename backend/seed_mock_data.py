@@ -221,6 +221,7 @@ def seed_ai_summary(db, patient_id: int, config: dict):
         patient_id=patient_id,
         summary_week_start=week_start,
         summary_week_end=week_end,
+        doctor_input=config.get("doctor_input", "常规周度随访，无特别关注点"),
         content=config["summary_content"],
         created_at=datetime.combine(week_end, datetime.min.time(), tzinfo=timezone.utc),
     )
@@ -272,75 +273,52 @@ patient_14_config = {
     "training": {
         "base_duration": 18,
         "base_sets": 4,
-        "train_frequency": 5,  # 周一到周五
+        "train_frequency": 0,  # 无近期训练 → 需尽快跟进
         "trend": "improving",
     },
     "assessments": {
         "hr_base": 88,
-        "spo2_base": 95,
-        "dyspnea_base": 3,
-        "fatigue_base": 6,
+        "spo2_base": 94,
+        "dyspnea_base": 2,
+        "fatigue_base": 4,
     },
     "plans": {
-        "old_plan_title": "呼吸康复第一周方案（基础适应期）",
-        "old_plan_content": "1. 腹式呼吸训练：每日2次，每次10分钟\n2. 缩唇呼吸：每日2次，每次5分钟\n3. 注意训练前后监测血氧和心率\n4. 如出现明显气短应立即停止",
-        "new_plan_title": "呼吸康复进阶方案（中期强化）",
-        "new_plan_content": "1. 腹式呼吸训练：每日2次，每次15分钟\n2. 缩唇呼吸：每日2次，每次8分钟\n3. 深吸气训练：每日1次，每次10分钟\n4. 呼吸节奏控制练习：每日1次\n5. 训练前后监测生命体征，保持血氧>92%",
+        "old_plan_title": "中度恢复呼吸训练方案",
+        "old_plan_content": "1. 腹式呼吸：每日2次，每次10分钟\n2. 深吸气训练：每日1次，每次5分钟\n3. 呼吸节奏控制：每日1次，每次8分钟",
+        "new_plan_title": "强化呼吸训练方案",
+        "new_plan_content": "1. 腹式呼吸：每日2次，每次12分钟\n2. 深吸气训练：每日2次，每次8分钟\n3. 呼吸节奏控制：每日1次，每次10分钟\n4. 轻度有氧步行：每日1次，每次15分钟",
         "exercises": [
             {
                 "name": "腹式呼吸训练",
-                "purpose": "增强膈肌力量，改善呼吸效率",
-                "duration": "每次15分钟，每日2次",
-                "steps": ["仰卧或坐位放松", "一手放腹部一手放胸部", "经鼻吸气使腹部隆起", "缩唇缓慢呼气腹部回缩"],
-                "precautions": ["吸气与呼气时间比1:2", "避免胸部起伏"],
-            },
-            {
-                "name": "缩唇呼吸训练",
-                "purpose": "延长呼气时间，防止气道塌陷",
-                "duration": "每次8分钟，每日2次",
-                "steps": ["经鼻吸气2秒", "缩唇如吹口哨状", "缓慢呼气4-6秒", "保持呼气时间为吸气2倍"],
-                "precautions": ["呼气力度不宜过大", "感到头晕应休息"],
-            },
-            {
-                "name": "深吸气训练",
-                "purpose": "扩张肺泡，改善肺通气",
-                "duration": "每次10分钟，每日1次",
-                "steps": ["坐位放松肩部", "缓慢深吸气至肺总量", "屏气2-3秒", "缓慢呼出"],
-                "precautions": ["不要过度用力", "屏气时间不宜过长"],
+                "purpose": "核心呼吸模式重建",
+                "duration": "每次12分钟，每日2次",
+                "steps": ["仰卧位放松", "一手放腹部", "鼻子缓慢吸气鼓腹", "缩唇缓慢呼气收腹"],
+                "precautions": ["避免过度用力", "呼吸频率保持平稳"],
             },
         ],
-        "adjustment_note": "患者近两周训练依从性良好，各项指标呈改善趋势，本次在原方案基础上增加深吸气训练，适度延长单次训练时长。",
+        "adjustment_note": "患者训练依从性好，呼吸功能改善明显，本周小幅提升训练强度。增加深吸气训练频次，并加入轻度有氧步行以进一步促进心肺功能恢复。",
     },
     "summary": {
         "summary_content": """【本周康复小结】
 
 ■ 训练执行情况
-本周完成训练 5 天，累计训练时长 92 分钟，较上周增长 12%。训练依从性良好，患者已逐步适应进阶方案。
+本周完成训练 5 天，累计训练时长 120 分钟。患者训练依从性非常好，每次训练均能按方案完成。
 
 ■ 生理指标变化
-- 心率：从 88 bpm 下降至 82 bpm，恢复趋势良好
-- 血氧：从 95% 提升至 97%，接近正常范围
-- 呼吸困难评分：从 3 分降至 2 分（轻微气短）
-- 疲劳评分：从 6 分降至 4 分（轻度疲劳）
+- 心率：84 bpm，较上周明显改善
+- 血氧：94%，稳定在正常范围
+- 呼吸困难评分：2 分（轻度）
+- 疲劳评分：4 分（轻度疲劳）
 
 ■ 康复评估
-患者处于恢复中期，整体呈改善趋势。腹式呼吸和缩唇呼吸动作规范，深吸气训练已开始适应。建议继续保持当前训练频率，下周可考虑适度增加训练强度。
+患者处于稳步恢复期，整体康复进展良好。心肺耐力和呼吸肌力量均有提升。可适当增加训练强度和有氧运动。
 
-■ 注意事项
-1. 继续监测训练前后血氧和心率
-2. 如训练中出现血氧<92%或心率>120，应立即停止
-3. 保持每日训练记录，便于后续方案调整""",
+■ 建议
+1. 维持当前训练节奏
+2. 可开始简单有氧运动（散步等）
+3. 重点关注运动耐受力的提升""",
     },
-    "warnings": [
-        {
-            "type": WarningType.SPO2_LOW,
-            "value": 91,
-            "threshold": 92,
-            "message": "血氧饱和度 91%，低于安全阈值 92%，建议暂停训练并观察",
-            "resolved": True,
-            "days_ago": 20,
-        },
-    ],
+    "warnings": [],
 }
 
 # ==================== 患者 15：测试患者2号 ====================
@@ -355,16 +333,16 @@ patient_15_config = {
         "rehab_level": 2,
     },
     "training": {
-        "base_duration": 12,
-        "base_sets": 3,
+        "base_duration": 18,
+        "base_sets": 4,
         "train_frequency": 4,  # 周一到周四
-        "trend": "fluctuating",
+        "trend": "improving",
     },
     "assessments": {
-        "hr_base": 95,
-        "spo2_base": 93,
-        "dyspnea_base": 4,
-        "fatigue_base": 7,
+        "hr_base": 85,
+        "spo2_base": 95,
+        "dyspnea_base": 2,
+        "fatigue_base": 4,
     },
     "plans": {
         "old_plan_title": "重症肺炎出院后呼吸康复初始方案",
@@ -507,16 +485,16 @@ patient_17_config = {
         "rehab_level": 3,
     },
     "training": {
-        "base_duration": 15,
-        "base_sets": 3,
+        "base_duration": 20,
+        "base_sets": 4,
         "train_frequency": 4,  # 周一到周四
         "trend": "improving",
     },
     "assessments": {
-        "hr_base": 85,
-        "spo2_base": 94,
-        "dyspnea_base": 2,
-        "fatigue_base": 5,
+        "hr_base": 80,
+        "spo2_base": 96,
+        "dyspnea_base": 1,
+        "fatigue_base": 3,
     },
     "plans": {
         "old_plan_title": "慢性呼吸疾病基础肺康复方案",
@@ -581,7 +559,7 @@ patient_18_config = {
     "training": {
         "base_duration": 10,
         "base_sets": 2,
-        "train_frequency": 3,  # 周一三五
+        "train_frequency": 1,  # 极少训练 → 需尽快跟进
         "trend": "starting",
     },
     "assessments": {
@@ -787,7 +765,7 @@ def main():
         seed_training_logs(db, 14, patient_14_config["training"])
         seed_assessments(db, 14, patient_14_config["assessments"])
         seed_rehab_plans(db, 14, doctor_id, patient_14_config["plans"])
-        seed_ai_summary(db, 14, patient_14_config["summary"])
+        # seed_ai_summary(db, 14, patient_14_config["summary"])
         seed_warnings(db, 14, patient_14_config)
 
         # 患者 15
@@ -796,7 +774,7 @@ def main():
         seed_training_logs(db, 15, patient_15_config["training"])
         seed_assessments(db, 15, patient_15_config["assessments"])
         seed_rehab_plans(db, 15, doctor_id, patient_15_config["plans"])
-        seed_ai_summary(db, 15, patient_15_config["summary"])
+        # seed_ai_summary(db, 15, patient_15_config["summary"])
         seed_warnings(db, 15, patient_15_config)
 
         # 患者 16
@@ -805,7 +783,7 @@ def main():
         seed_training_logs(db, 16, patient_16_config["training"])
         seed_assessments(db, 16, patient_16_config["assessments"])
         seed_rehab_plans(db, 16, doctor_id, patient_16_config["plans"])
-        seed_ai_summary(db, 16, patient_16_config["summary"])
+        # seed_ai_summary(db, 16, patient_16_config["summary"])
         seed_warnings(db, 16, patient_16_config)
 
         # 患者 17
@@ -814,7 +792,7 @@ def main():
         seed_training_logs(db, 17, patient_17_config["training"])
         seed_assessments(db, 17, patient_17_config["assessments"])
         seed_rehab_plans(db, 17, doctor_id, patient_17_config["plans"])
-        seed_ai_summary(db, 17, patient_17_config["summary"])
+        # seed_ai_summary(db, 17, patient_17_config["summary"])
         seed_warnings(db, 17, patient_17_config)
 
         # 患者 18
@@ -823,7 +801,7 @@ def main():
         seed_training_logs(db, 18, patient_18_config["training"])
         seed_assessments(db, 18, patient_18_config["assessments"])
         seed_rehab_plans(db, 18, doctor_id, patient_18_config["plans"])
-        seed_ai_summary(db, 18, patient_18_config["summary"])
+        # seed_ai_summary(db, 18, patient_18_config["summary"])
         seed_warnings(db, 18, patient_18_config)
 
         # 患者 19
@@ -832,7 +810,7 @@ def main():
         seed_training_logs(db, 19, patient_19_config["training"])
         seed_assessments(db, 19, patient_19_config["assessments"])
         seed_rehab_plans(db, 19, doctor_id, patient_19_config["plans"])
-        seed_ai_summary(db, 19, patient_19_config["summary"])
+        # seed_ai_summary(db, 19, patient_19_config["summary"])
         seed_warnings(db, 19, patient_19_config)
 
         print("\n" + "=" * 60)

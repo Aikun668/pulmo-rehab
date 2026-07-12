@@ -1,0 +1,9 @@
+<view class="tab-bar">
+  <view class="tab-bar__item {{selected === index ? 'tab-bar__item--active' : ''}}" wx:for="{{list}}" wx:key="pagePath" data-path="{{item.pagePath}}" data-index="{{index}}" bindtap="handleTabTap" hover-class="tab-bar__item--hover" hover-stay-time="200">
+    <image class="tab-bar__icon" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit"></image>
+    <!-- 角标 -->
+    <view class="tab-bar__badge" wx:if="{{item.badge > 0}}">{{item.badge}}</view>
+    <view class="tab-bar__dot" wx:if="{{item.dot && item.badge <= 0}}"></view>
+    <text class="tab-bar__text">{{item.text}}</text>
+  </view>
+</view>
