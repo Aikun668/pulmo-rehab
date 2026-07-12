@@ -1,4 +1,4 @@
-<navigation-bar title="康复知识" back="{{true}}" color="#1F2937" background="#F5F7FA"></navigation-bar>
+<navigation-bar title="康复知识" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
 
 <view class="page">
   <!-- 等级标签 -->

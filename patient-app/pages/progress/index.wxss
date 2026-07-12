@@ -1,9 +1,5 @@
 .page {
-  padding: 16rpx;
-  background: #F5F7FA;
-  height: 100vh;
-  overflow: hidden;
-  box-sizing: border-box;
+  padding: 24rpx;
 }
 
 .summary-card,
@@ -94,363 +90,53 @@
   border-bottom: 4rpx solid #2563eb;
 }
 
-/* ===== 2×2 豆腐块指标卡 ===== */
-.metric-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-top: 32rpx;
-  padding: 0 32rpx;
-  gap: 24rpx;
+/* ===== 训练柱状图 ===== */
+.chart-scroll {
+  width: 100%;
+  margin-top: 28rpx;
 }
 
-.metric-tile {
-  width: calc(50% - 24rpx);
-  box-sizing: border-box;
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 24rpx 16rpx 20rpx;
+.bar-list {
+  display: flex;
+  align-items: flex-end;
+  gap: 16rpx;
+  min-width: max-content;
+}
+
+.bar-item {
+  width: 52rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06), 0 2rpx 4rpx rgba(0, 0, 0, 0.04);
-  border: none;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.metric-tile:active {
-  transform: translateY(-4rpx);
-  box-shadow: 0 16rpx 32rpx rgba(0, 0, 0, 0.1), 0 8rpx 8rpx rgba(0, 0, 0, 0.04);
-}
-
-/* 豆腐块无顶部色条 */
-.metric-tile--blue {}
-.metric-tile--amber {}
-.metric-tile--green {}
-.metric-tile--purple {}
-
-.metric-tile__illustration {
-  width: 48rpx;
-  height: 48rpx;
+.bar-item__column {
+  width: 100%;
+  height: 180rpx;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  margin-top: 8rpx;
-  opacity: 0.7;
 }
 
-.metric-tile__data {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.metric-tile__value {
-  font-size: 36rpx;
-  font-weight: 800;
-  color: #1f2937;
-  line-height: 1.1;
-}
-
-.metric-tile__label {
-  margin-top: 4rpx;
-  font-size: 22rpx;
-  color: #8a9aad;
-}
-
-/* ===== CSS 插图：时钟（蓝色3D风格） ===== */
-.illust-clock {
-  position: relative;
-  width: 40rpx;
-  height: 40rpx;
-}
-
-.illust-clock__shadow {
-  position: absolute;
-  bottom: -1rpx;
-  left: 4rpx;
+.bar-item__bar {
   width: 32rpx;
-  height: 6rpx;
-  background: rgba(59, 130, 246, 0.12);
-  border-radius: 50%;
-  filter: blur(2rpx);
+  min-height: 8rpx;
+  border-radius: 16rpx 16rpx 0 0;
 }
 
-.illust-clock__face {
-  position: absolute;
-  top: 2rpx;
-  left: 2rpx;
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #DBEAFE, #EFF6FF);
-  border: 2rpx solid #3B82F6;
-  box-shadow: 2rpx 2rpx 0 #BFDBFE, 0 4rpx 10rpx rgba(59, 130, 246, 0.15);
+.bar-item__bar--active {
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
 }
 
-.illust-clock__hand-long {
-  position: absolute;
-  top: 10rpx;
-  left: 18rpx;
-  width: 2rpx;
-  height: 12rpx;
-  background: #3B82F6;
-  border-radius: 1rpx;
-  transform-origin: top center;
-  transform: rotate(60deg);
+.bar-item__bar--idle {
+  background: #d9e2ec;
 }
 
-.illust-clock__hand-short {
-  position: absolute;
-  top: 15rpx;
-  left: 18rpx;
-  width: 2rpx;
-  height: 7rpx;
-  background: #1D4ED8;
-  border-radius: 1rpx;
-  transform-origin: top center;
-  transform: rotate(-30deg);
-}
-
-.illust-clock__dot {
-  position: absolute;
-  top: 18rpx;
-  left: 18rpx;
-  width: 4rpx;
-  height: 4rpx;
-  background: #3B82F6;
-  border-radius: 50%;
-  z-index: 2;
-}
-
-.illust-clock__marks {
-  position: absolute;
-  top: 5rpx;
-  left: 8rpx;
-  width: 24rpx;
-  height: 24rpx;
-}
-
-.illust-clock__mark {
-  width: 2rpx;
-  height: 4rpx;
-  background: #93C5FD;
-  border-radius: 1rpx;
-  position: absolute;
-}
-
-.illust-clock__mark:nth-child(1) { top: 0; left: 10rpx; }
-.illust-clock__mark:nth-child(2) { bottom: 0; left: 10rpx; }
-.illust-clock__mark:nth-child(3) { top: 10rpx; left: 0; }
-.illust-clock__mark:nth-child(4) { top: 10rpx; right: 0; }
-
-/* ===== CSS 插图：奖杯（琥珀色3D风格） ===== */
-.illust-trophy {
-  position: relative;
-  width: 40rpx;
-  height: 44rpx;
-}
-
-.illust-trophy__shadow {
-  position: absolute;
-  bottom: -1rpx;
-  left: 8rpx;
-  width: 24rpx;
-  height: 5rpx;
-  background: rgba(245, 158, 11, 0.12);
-  border-radius: 50%;
-  filter: blur(2rpx);
-}
-
-.illust-trophy__cup {
-  position: absolute;
-  top: 3rpx;
-  left: 8rpx;
-  width: 26rpx;
-  height: 22rpx;
-  background: linear-gradient(135deg, #FDE68A, #F59E0B);
-  border-radius: 4rpx 4rpx 12rpx 12rpx;
-  border: 1rpx solid #D97706;
-  box-shadow: 2rpx 2rpx 0 #FDE68A, 0 4rpx 8rpx rgba(245, 158, 11, 0.15);
-}
-
-.illust-trophy__neck {
-  position: absolute;
-  top: 23rpx;
-  left: 15rpx;
-  width: 10rpx;
-  height: 4rpx;
-  background: #D97706;
-  border-radius: 1rpx;
-}
-
-.illust-trophy__base {
-  position: absolute;
-  top: 26rpx;
-  left: 10rpx;
-  width: 20rpx;
-  height: 6rpx;
-  background: linear-gradient(135deg, #F59E0B, #D97706);
-  border-radius: 2rpx;
-  border: 1rpx solid #B45309;
-}
-
-.illust-trophy__star {
-  position: absolute;
-  top: 8rpx;
-  left: 14rpx;
-  width: 10rpx;
-  height: 10rpx;
-  background: #FFFFFF;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1rpx 3rpx rgba(245, 158, 11, 0.2);
-}
-
-/* ===== CSS 插图：连续打卡日历（绿色3D风格） ===== */
-.illust-streak {
-  position: relative;
-  width: 40rpx;
-  height: 44rpx;
-}
-
-.illust-streak__shadow {
-  position: absolute;
-  bottom: -1rpx;
-  left: 6rpx;
-  width: 28rpx;
-  height: 5rpx;
-  background: rgba(16, 185, 129, 0.12);
-  border-radius: 50%;
-  filter: blur(2rpx);
-}
-
-.illust-streak__calendar {
-  position: absolute;
-  top: 6rpx;
-  left: 6rpx;
-  width: 28rpx;
-  height: 32rpx;
-  background: linear-gradient(135deg, #D1FAE5, #ECFDF5);
-  border-radius: 4rpx;
-  border: 1rpx solid #10B981;
-  box-shadow: 2rpx 2rpx 0 #A7F3D0, 0 4rpx 8rpx rgba(16, 185, 129, 0.12);
-}
-
-.illust-streak__header {
-  position: absolute;
-  top: 4rpx;
-  left: 6rpx;
-  width: 28rpx;
-  height: 8rpx;
-  background: #10B981;
-  border-radius: 4rpx 4rpx 0 0;
-}
-
-.illust-streak__days {
-  position: absolute;
-  top: 14rpx;
-  left: 8rpx;
-  width: 24rpx;
-  display: flex;
-  gap: 2rpx;
-}
-
-.illust-streak__day {
-  width: 4rpx;
-  height: 4rpx;
-  border-radius: 1rpx;
-}
-
-.illust-streak__day--on {
-  background: #10B981;
-  box-shadow: 0 1rpx 2rpx rgba(16, 185, 129, 0.2);
-}
-
-.illust-streak__day--off {
-  background: #D1FAE5;
-}
-
-.illust-streak__flame {
-  position: absolute;
-  top: 0;
-  right: 1rpx;
-  width: 8rpx;
-  height: 8rpx;
-  background: linear-gradient(to top, #F59E0B, #EF4444);
-  border-radius: 4rpx 4rpx 2rpx 2rpx;
-  box-shadow: 0 2rpx 4rpx rgba(239, 68, 68, 0.2);
-}
-
-/* ===== CSS 插图：能量电池（紫色3D风格） ===== */
-.illust-energy {
-  position: relative;
-  width: 40rpx;
-  height: 40rpx;
-}
-
-.illust-energy__shadow {
-  position: absolute;
-  bottom: -1rpx;
-  left: 6rpx;
-  width: 28rpx;
-  height: 5rpx;
-  background: rgba(139, 92, 246, 0.12);
-  border-radius: 50%;
-  filter: blur(2rpx);
-}
-
-.illust-energy__body {
-  position: absolute;
-  top: 8rpx;
-  left: 6rpx;
-  width: 28rpx;
-  height: 26rpx;
-  border: 2rpx solid #8B5CF6;
-  border-radius: 6rpx;
-  background: linear-gradient(135deg, #EDE9FE, #F5F3FF);
-  box-shadow: 2rpx 2rpx 0 #DDD6FE, 0 4rpx 8rpx rgba(139, 92, 246, 0.12);
-}
-
-.illust-energy__fill {
-  position: absolute;
-  top: 12rpx;
-  left: 10rpx;
-  width: 20rpx;
-  height: 18rpx;
-  background: linear-gradient(135deg, #C4B5FD, #8B5CF6);
-  border-radius: 2rpx;
-  opacity: 0.7;
-}
-
-.illust-energy__head {
-  position: absolute;
-  top: 16rpx;
-  right: 1rpx;
-  width: 5rpx;
-  height: 10rpx;
-  background: #8B5CF6;
-  border-radius: 0 3rpx 3rpx 0;
-  box-shadow: 1rpx 1rpx 0 #DDD6FE;
-}
-
-.illust-energy__wave {
-  position: absolute;
-  top: 22rpx;
-  left: 14rpx;
-  width: 10rpx;
-  height: 1rpx;
-  background: #FFFFFF;
-  border-radius: 2rpx;
-  opacity: 0.8;
-}
-
-.illust-energy__wave--2 {
-  top: 26rpx;
-  left: 16rpx;
-  width: 6rpx;
+.bar-item__value,
+.bar-item__label {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  color: #5b6b7a;
 }
 
 /* ===== 趋势图 ===== */
@@ -540,11 +226,6 @@
 }
 
 .trend-point--hr {
-  background: #3b82f6;
-  box-shadow: 0 0 8rpx rgba(59, 130, 246, 0.4);
-}
-
-.trend-point--training {
   background: #3b82f6;
   box-shadow: 0 0 8rpx rgba(59, 130, 246, 0.4);
 }

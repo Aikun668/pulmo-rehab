@@ -15,15 +15,7 @@ import {
   Bell,
   ChevronRight
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
 import { RecentPatient } from "../types";
-
-export interface HeaderStats {
-  total: number;
-  needsAttention: number;
-  checkedInToday: number;
-}
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -35,8 +27,6 @@ interface LayoutWrapperProps {
   onNavigateToList: () => void;
   recentPatients: RecentPatient[];
   onSelectRecentPatient: (patientId: number) => void;
-  onNavigateFromMessage?: (patientId: number) => void;
-  headerStats: HeaderStats;
 }
 
 export default function LayoutWrapper({
@@ -49,8 +39,6 @@ export default function LayoutWrapper({
   onNavigateToList,
   recentPatients,
   onSelectRecentPatient,
-  onNavigateFromMessage,
-  headerStats,
 }: LayoutWrapperProps) {
   const [timeStr, setTimeStr] = useState<string>("");
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -107,15 +95,13 @@ export default function LayoutWrapper({
       >
         <div>
           {/* Institution Header Design */}
-          <div className="pl-1.5 pr-4 py-5 border-b border-med-divider flex items-center gap-2">
-            <img
-              src="/src/assets/images/logo.png"
-              alt="Logo"
-              className="h-14 w-14 rounded object-contain shrink-0 -mt-1"
-            />
+          <div className="p-5 border-b border-med-divider flex items-center gap-3">
+            <div className="h-9 w-9 bg-[#F4F7FA] border border-med-border rounded flex items-center justify-center shrink-0">
+              <Activity className="h-5 w-5 text-med-primary" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-med-text-primary">肺康云康复管理平台</h1>
-              <span className="text-[10px] font-mono text-med-text-secondary bg-[#F4F7FA] border border-med-border px-1.5 py-0.5 rounded font-medium block mt-0.5 w-max">
+              <h1 className="text-xs font-bold tracking-tight text-med-text-primary">肺康复临床协作平台</h1>
+              <span className="text-[9px] font-mono text-med-text-secondary bg-[#F4F7FA] border border-med-border px-1.5 py-0.5 rounded font-medium block mt-0.5 w-max">
                 多中心研究医生端
               </span>
             </div>
@@ -123,48 +109,47 @@ export default function LayoutWrapper({
 
           {/* Navigation Links */}
           <nav className="p-3 space-y-1">
-            <Button
+            <button
               onClick={onNavigateToList}
-              variant={currentRoute === "patients" || currentRoute === "patient-detail" ? "secondary" : "ghost"}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-xs font-medium justify-start ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded text-xs font-medium transition-all ${
                 currentRoute === "patients" || currentRoute === "patient-detail"
-                  ? "bg-[#F4F7FA] text-med-primary font-semibold border border-med-border shadow-none"
-                  : "text-med-text-secondary hover:bg-[#F4F7FA] hover:text-med-text-primary border border-transparent"
+                  ? "bg-[#F4F7FA] text-med-primary font-semibold cursor-default border border-med-border"
+                  : "text-med-text-secondary hover:bg-[#F4F7FA] hover:text-med-text-primary cursor-pointer border border-transparent"
               }`}
             >
               <Users className={`h-4 w-4 shrink-0 ${currentRoute === "patients" || currentRoute === "patient-detail" ? "text-med-primary" : "text-med-text-meta"}`} />
               <span>门诊患者康复随访</span>
-            </Button>
+            </button>
 
             {/* 快捷统计 */}
             <div className="mt-4 px-3">
-              <div className="text-[10px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
+              <div className="text-[9px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
                 今日工作概览
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-[#F4F7FA] border border-med-border rounded-lg p-2">
+                <div className="bg-[#F4F7FA] border border-med-border rounded-lg p-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
                     <CalendarCheck className="h-3 w-3 text-med-primary" />
                     <span className="text-[10px] text-med-text-secondary">待随访</span>
                   </div>
-                  <span className="text-base font-bold text-med-text-primary">12</span>
+                  <span className="text-lg font-bold text-med-text-primary">12</span>
                 </div>
-                <div className="bg-[#F4F7FA] border border-med-border rounded-lg p-2">
+                <div className="bg-[#F4F7FA] border border-med-border rounded-lg p-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
                     <UserPlus className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] text-med-text-secondary">本周新增</span>
                   </div>
-                  <span className="text-base font-bold text-med-text-primary">5</span>
+                  <span className="text-lg font-bold text-med-text-primary">5</span>
                 </div>
               </div>
             </div>
 
             {/* 系统提醒 */}
             <div className="mt-4 px-3">
-              <div className="text-[10px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
+              <div className="text-[9px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
                 系统提醒
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5">
                 <div className="flex items-start gap-1.5">
                   <Bell className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
                   <div>
@@ -177,70 +162,26 @@ export default function LayoutWrapper({
               </div>
             </div>
 
-            {/* 未读消息 */}
-            <div className="mt-4 px-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-med-text-meta uppercase tracking-wider">
-                  未读消息
-                </span>
-                <div className="relative">
-                  <Bell className="h-4 w-4 text-med-text-meta" />
-                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center h-3 w-3 rounded-full bg-[#D95C5C] text-[8px] font-bold text-white leading-none">
-                    2
-                  </span>
-                </div>
-              </div>
-              <div className="bg-white border border-[#D9E2EC] rounded-lg shadow-sm overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => onNavigateFromMessage?.(15)}
-                  className="w-full flex items-start gap-2 px-2.5 py-2 hover:bg-[#F4F7FA] transition-colors cursor-pointer text-left border-b border-[#E7EDF3] last:border-b-0"
-                >
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#2F5D7C] shrink-0 mt-1.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-med-text-primary truncate">赵六</p>
-                    <p className="text-[10px] text-med-text-secondary truncate">医生您好，昨天训练后胸口有些闷...</p>
-                  </div>
-                  <span className="text-[9px] text-med-text-meta shrink-0 mt-0.5">3分钟前</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigateFromMessage?.(18)}
-                  className="w-full flex items-start gap-2 px-2.5 py-2 hover:bg-[#F4F7FA] transition-colors cursor-pointer text-left"
-                >
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#2F5D7C] shrink-0 mt-1.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-med-text-primary truncate">孙七</p>
-                    <p className="text-[10px] text-med-text-secondary truncate">训练感觉还可以，就是呼吸还有点...</p>
-                  </div>
-                  <span className="text-[9px] text-med-text-meta shrink-0 mt-0.5">10分钟前</span>
-                </button>
-              </div>
-            </div>
-
             {/* 最近访问 */}
             <div className="mt-4 px-3">
-              <div className="text-[10px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
+              <div className="text-[9px] font-bold text-med-text-meta uppercase tracking-wider mb-2">
                 最近访问
               </div>
               {recentPatients.length > 0 ? (
-                <div className="bg-white border border-[#D9E2EC] rounded-lg shadow-sm overflow-hidden">
+                <div className="space-y-1">
                   {recentPatients.map((patient) => (
                     <button
                       key={patient.id}
-                      type="button"
                       onClick={() => onSelectRecentPatient(patient.id)}
-                      className="w-full flex items-center gap-2 px-2.5 py-1.5 hover:bg-[#F4F7FA] transition-colors cursor-pointer text-left border-b border-[#E7EDF3] last:border-b-0"
+                      className="w-full flex items-center justify-between px-2.5 py-2 rounded-md bg-white border border-med-border hover:bg-[#F4F7FA] transition-all group cursor-pointer"
                     >
-                      <span className="text-[11px] text-med-text-secondary font-normal truncate flex-1">
-                        {patient.name}
-                      </span>
-                      <ChevronRight className="h-3 w-3 text-med-text-meta shrink-0" />
+                      <span className="text-[11px] text-med-text-primary font-medium">{patient.name}</span>
+                      <ChevronRight className="h-3 w-3 text-med-text-meta group-hover:text-med-primary transition-colors" />
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="bg-white border border-[#D9E2EC] rounded-lg shadow-sm px-2.5 py-3 text-[11px] text-med-text-secondary text-center">
+                <div className="px-2.5 py-3 rounded-md bg-[#F4F7FA] border border-med-border text-[11px] text-med-text-secondary text-center">
                   暂无最近访问记录
                 </div>
               )}
@@ -252,11 +193,9 @@ export default function LayoutWrapper({
         <div className="p-3 border-t border-med-divider bg-[#F4F7FA]/50 space-y-2">
           <div className="bg-white p-3 rounded-lg border border-med-border shadow-sm">
             <div className="flex items-center gap-2">
-              <img
-                src="/src/assets/images/doctor-avatar.png"
-                alt="医生头像"
-                className="h-8 w-8 rounded-md object-cover shrink-0 border border-med-border"
-              />
+              <div className="h-8 w-8 bg-[#EEF3F7] text-med-primary rounded-md flex items-center justify-center font-bold shrink-0 text-xs text-center border border-med-border">
+                医师
+              </div>
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-med-text-primary truncate">{doctorName}</p>
                 <p className="text-[10px] font-mono text-med-text-meta truncate mt-0.5">教工 ID: {doctorId}</p>
@@ -268,14 +207,13 @@ export default function LayoutWrapper({
             </div>
           </div>
 
-          <Button
+          <button
             onClick={onLogout}
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 border-med-border hover:bg-[#F4F7FA] text-med-text-secondary hover:text-med-text-primary rounded-lg text-xs font-medium bg-white shadow-sm cursor-pointer h-auto"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-med-border hover:bg-[#F4F7FA] text-med-text-secondary hover:text-med-text-primary rounded-lg text-xs font-medium transition-all bg-white shadow-sm cursor-pointer"
           >
             <LogOut className="h-3.5 w-3.5 shrink-0 text-med-text-meta" />
             <span>注销当前登录</span>
-          </Button>
+          </button>
         </div>
       </aside>
 
@@ -302,20 +240,10 @@ export default function LayoutWrapper({
                 </span>
               </>
             ) : currentRoute === "patients" ? (
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs px-3 py-1 font-medium">
-                  患者 {headerStats.total}
-                </Badge>
-                {headerStats.needsAttention > 0 && (
-                  <Badge variant="destructive" className="text-xs px-3 py-1 font-medium">
-                    需关注 {headerStats.needsAttention}
-                  </Badge>
-                )}
-                <Badge variant="outline" className="text-xs px-3 py-1 font-medium text-emerald-600 border-emerald-200 bg-emerald-50">
-                  今日打卡 {headerStats.checkedInToday}
-                </Badge>
-              </div>
-            ) : null}
+              <span className="text-med-primary font-bold">患者随访看板</span>
+            ) : (
+              <span className="text-slate-500 italic">临床登录入口</span>
+            )}
           </div>
 
           {/* Clinically Reliable Header Controls */}
@@ -335,7 +263,7 @@ export default function LayoutWrapper({
         </header>
 
         {/* Dynamic Sandbox Main Content */}
-        <main className="flex-1 py-6 pl-8 pr-6 overflow-y-auto max-w-[1500px] w-full mx-auto">
+        <main className="flex-1 p-6 overflow-y-auto max-w-[1500px] w-full mx-auto">
           {children}
         </main>
       </section>

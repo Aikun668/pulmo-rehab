@@ -1,14 +1,17 @@
-<navigation-bar title="" back="{{false}}" color="#1F2937" background="#F5F6F8">
+<navigation-bar title="我的" back="{{false}}" color="#1F2937" background="#F5F6F8">
+  <view slot="right" class="nav-right" bindtap="handleSettings">
+    <text class="nav-right__icon">⚙</text>
+  </view>
 </navigation-bar>
 
 <view class="page">
   <!-- 上半区：用户信息 -->
   <view class="profile-hero">
     <view class="profile-hero__avatar">
-      <text class="profile-hero__avatar-text">{{avatarSurname}}</text>
+      <text class="profile-hero__avatar-text">{{userName[0] || '?'}}</text>
     </view>
-    <view class="profile-hero__name">{{greetingText}}</view>
-    <view class="profile-hero__role">患者用户 · {{userName}}</view>
+    <view class="profile-hero__name">{{userName}}</view>
+    <view class="profile-hero__role">患者用户</view>
   </view>
 
   <!-- 下半区：功能列表 -->
@@ -34,14 +37,6 @@
         <text class="menu-item__icon">📊</text>
       </view>
       <text class="menu-item__label">训练记录</text>
-      <text class="menu-item__arrow">›</text>
-    </view>
-
-    <view class="menu-item" data-key="settings" bindtap="handleMenuTap">
-      <view class="menu-item__icon-wrap menu-item__icon-wrap--purple">
-        <text class="menu-item__icon">⚙</text>
-      </view>
-      <text class="menu-item__label">设置</text>
       <text class="menu-item__arrow">›</text>
     </view>
 

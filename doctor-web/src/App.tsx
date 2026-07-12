@@ -3,19 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import LoginView from "./components/LoginView";
-import LandingPage from "./components/LandingPage";
 import LayoutWrapper from "./components/LayoutWrapper";
 import PatientsListView from "./components/PatientsListView";
 import PatientDetailView from "./components/PatientDetailView";
 import { ApiResponse, Patient, RecentPatient } from "./types";
 
-type AppRoute = "landing" | "patients" | "patient-detail";
+type AppRoute = "login" | "patients" | "patient-detail";
 
 export default function App() {
-  const [currentRoute, setCurrentRoute] = useState<AppRoute>("landing");
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [currentRoute, setCurrentRoute] = useState<AppRoute>("login");
   const [activePatientId, setActivePatientId] = useState<number | null>(null);
   const [doctorId, setDoctorId] = useState<number>(0);
   const [doctorName, setDoctorName] = useState<string>("");
@@ -30,7 +28,6 @@ export default function App() {
       return [];
     }
   });
-  const [chatPanelOpen, setChatPanelOpen] = useState(false);
 
   const handleLogout = () => {
     setDoctorId(0);
@@ -38,8 +35,7 @@ export default function App() {
     setActivePatientId(null);
     setPatients([]);
     setPatientsError("");
-    setCurrentRoute("landing");
-    setShowLoginModal(false);
+    setCurrentRoute("login");
 
     localStorage.removeItem("doc_id");
     localStorage.removeItem("doc_name");
@@ -93,7 +89,6 @@ export default function App() {
     setActivePatientId(null);
     setPatientsError("");
     setCurrentRoute("patients");
-    setShowLoginModal(false);
 
     localStorage.setItem("doc_id", String(docId));
     localStorage.setItem("doc_name", docName);
@@ -129,12 +124,6 @@ export default function App() {
     localStorage.setItem("active_patient_id", String(patientId));
   };
 
-  // 从未读消息入口进入：导航到患者详情 + 自动打开 ChatPanel
-  const handleNavigateFromMessage = (patientId: number) => {
-    setChatPanelOpen(true);
-    handleSelectPatient(patientId);
-  };
-
   useEffect(() => {
     const storedDocId = localStorage.getItem("doc_id");
     const storedDocName = localStorage.getItem("doc_name");
@@ -142,15 +131,6 @@ export default function App() {
     const storedActivePatientId = localStorage.getItem("active_patient_id");
 
     if (!storedDocId || !storedDocName) {
-      // 开发阶段：无缓存时自动以默认医生登录，跳过 Landing
-      const defaultDocId = 13;
-      const defaultDocName = "测试医生";
-      setDoctorId(defaultDocId);
-      setDoctorName(defaultDocName);
-      setCurrentRoute("patients");
-      localStorage.setItem("doc_id", String(defaultDocId));
-      localStorage.setItem("doc_name", defaultDocName);
-      localStorage.setItem("current_route", "patients");
       return;
     }
 
@@ -200,45 +180,10 @@ export default function App() {
 
   const activePatient = patients.find((patient) => patient.id === activePatientId);
 
-  // ---- 未登录 → 直接显示登录页 ----
-  const headerStats = useMemo(() => {
-    const now = Date.now();
-    const DAY_MS = 24 * 60 * 60 * 1000;
-    return {
-      total: patients.length,
-      needsAttention: patients.filter(
-        (p) => p.stats.has_unresolved_warnings || (p.rehab_level ?? 99) <= 2
-      ).length,
-      checkedInToday: patients.filter((p) => {
-        if (!p.stats.last_check_in_at) return false;
-        return now - new Date(p.stats.last_check_in_at).getTime() < DAY_MS;
-      }).length,
-    };
-  }, [patients]);
-
-  if (currentRoute === "landing") {
-    return (
-      <>
-        <LandingPage onNavigateToLogin={() => setShowLoginModal(true)} />
-        {showLoginModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
-            <div
-              className="absolute inset-0"
-              onClick={() => setShowLoginModal(false)}
-            />
-            <div className="relative z-10 w-full max-w-[440px]">
-              <LoginView
-                onLoginSuccess={handleLoginSuccess}
-                variant="modal"
-              />
-            </div>
-          </div>
-        )}
-      </>
-    );
+  if (currentRoute === "login") {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // ---- 已登录 → 工作台 ----
   return (
     <LayoutWrapper
       doctorId={doctorId}
@@ -249,8 +194,6 @@ export default function App() {
       onNavigateToList={handleNavigateToList}
       recentPatients={recentPatients}
       onSelectRecentPatient={handleSelectRecentPatient}
-      onNavigateFromMessage={handleNavigateFromMessage}
-      headerStats={headerStats}
     >
       <div className="space-y-6">
         {currentRoute === "patients" && (
@@ -268,8 +211,6 @@ export default function App() {
             patient={activePatient}
             doctorId={doctorId}
             onBackToList={handleNavigateToList}
-            chatPanelOpen={chatPanelOpen}
-            onChatPanelOpened={() => setChatPanelOpen(false)}
           />
         ) : currentRoute === "patient-detail" ? (
           <div className="bg-white border border-slate-200 rounded-xl p-8 text-center space-y-3">

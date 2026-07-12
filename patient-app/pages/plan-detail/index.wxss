@@ -1,9 +1,5 @@
 .page {
   padding: 24rpx;
-  padding-bottom: 40rpx;
-  background: #F5F7FA;
-  min-height: 100vh;
-  box-sizing: border-box;
 }
 
 .section-title {
@@ -64,266 +60,54 @@
   color: #5b6b7a;
 }
 
-/* ===== 训练动作指导卡片 ===== */
+.state-card--error {
+  color: #c65b5b;
+}
+
+/* 训练动作指导卡片 */
 .guide-card {
   margin-top: 16rpx;
   border-radius: 20rpx;
   background: #ffffff;
   border: 1rpx solid #e3ebf5;
   box-shadow: 0 8rpx 24rpx rgba(31, 41, 55, 0.04);
-  /* overflow: hidden 保证 border-radius 圆角生效，配合 hidden 替代 wx:if 内容不会溢出 */
   overflow: hidden;
-}
-
-.guide-card--done {
-  border-color: #86efac;
-  background: #f0fdf4;
-}
-
-.guide-card--exceeded {
-  border-color: #fcd34d;
-  background: #fffbeb;
 }
 
 .guide-card__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 24rpx 16rpx;
+  padding: 24rpx 24rpx;
 }
 
 .guide-card__header-left {
   flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.guide-card__done-badge {
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 50%;
-  background: #4CAF50;
-  color: #ffffff;
-  font-size: 22rpx;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12rpx;
-  flex-shrink: 0;
-}
-
-.guide-card__done-badge--exceeded {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
 .guide-card__name {
   font-size: 28rpx;
   font-weight: 600;
   color: #243447;
-  margin-right: 16rpx;
 }
 
 .guide-card__target {
+  margin-top: 6rpx;
   font-size: 22rpx;
   color: #8a9aad;
 }
 
-.guide-card__toggle {
-  font-size: 22rpx;
-  font-weight: 500;
-  color: #4CAF50;
-  padding: 6rpx 20rpx;
-  border: 1rpx solid rgba(76, 175, 80, 0.25);
-  border-radius: 12rpx;
-  background: rgba(76, 175, 80, 0.06);
-  flex-shrink: 0;
-}
-
-/* ===== 量化进度区域 ===== */
-.guide-card__progress {
-  padding: 0 24rpx 16rpx;
-}
-
-.guide-card__progress-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10rpx;
-}
-
-.guide-card__progress-item {
-  display: flex;
-  align-items: baseline;
-}
-
-.guide-card__progress-label {
+.guide-card__arrow {
   font-size: 22rpx;
   color: #8a9aad;
-  margin-right: 8rpx;
+  transition: transform 0.2s;
+  transform: rotate(0deg);
 }
 
-/* 计时中圆点指示器 — 始终占位，动态 class 切换背景色，不改变布局 */
-.guide-card__timer-dot {
-  width: 12rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  background: transparent;
-  margin-right: 6rpx;
-  flex-shrink: 0;
+.guide-card__arrow--up {
+  transform: rotate(180deg);
 }
 
-.guide-card__timer-dot--active {
-  background: #10B981;
-}
-
-.guide-card__progress-value {
-  font-size: 30rpx;
-  font-weight: 800;
-  color: #4CAF50;
-  min-width: 60rpx;
-  /* 不加 transition，防止颜色切换时的过渡动画与 setData 渲染冲突导致闪烁 */
-}
-
-.guide-card__progress-value--active {
-  color: #10B981;
-}
-
-.guide-card__progress-value--exceeded {
-  color: #d97706;
-}
-
-.guide-card__progress-target {
-  font-size: 20rpx;
-  color: #8a9aad;
-}
-
-/* 进度条 */
-.guide-card__bar-track {
-  width: 100%;
-  height: 8rpx;
-  background: #e3ebf5;
-  border-radius: 4rpx;
-  overflow: hidden;
-}
-
-.guide-card__bar-fill {
-  height: 100%;
-  border-radius: 4rpx;
-  transition: width 0.35s ease;
-  min-width: 0;
-}
-
-.guide-card__bar-fill--normal {
-  background: linear-gradient(90deg, #4CAF50, #66BB6A);
-}
-
-.guide-card__bar-fill--done {
-  background: linear-gradient(90deg, #10B981, #34D399);
-}
-
-.guide-card__bar-fill--exceeded {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-}
-
-/* 超额标签 */
-.guide-card__exceeded-tag {
-  display: inline-flex;
-  align-items: center;
-  margin-top: 8rpx;
-  padding: 4rpx 16rpx;
-  font-size: 20rpx;
-  font-weight: 700;
-  color: #92400e;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border-radius: 8rpx;
-  border: 1rpx solid #fcd34d;
-}
-
-/* ===== 操作按钮区 ===== */
-.guide-card__actions {
-  padding: 8rpx 24rpx 20rpx;
-}
-
-.guide-card__actions-primary {
-  display: flex;
-  gap: 16rpx;
-}
-
-.guide-card__actions-secondary {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 12rpx;
-  gap: 16rpx;
-}
-
-/* 主操作按钮（view 标签，不是 button） */
-.guide-card__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24rpx;
-  font-weight: 600;
-  padding: 14rpx 36rpx;
-  border-radius: 20rpx;
-  box-sizing: border-box;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.guide-card__btn--timer {
-  background: #4CAF50;
-  color: #ffffff;
-  box-shadow: 0 4rpx 14rpx rgba(76, 175, 80, 0.3);
-}
-
-.guide-card__btn--timer:active {
-  background: #388E3C;
-  transform: scale(0.97);
-}
-
-.guide-card__btn--pause {
-  background: #f97316;
-  color: #ffffff;
-  box-shadow: 0 4rpx 14rpx rgba(249, 115, 22, 0.3);
-}
-
-.guide-card__btn--pause:active {
-  background: #ea580c;
-  transform: scale(0.97);
-}
-
-.guide-card__btn--set {
-  background: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
-  border: 1rpx solid rgba(76, 175, 80, 0.25);
-}
-
-.guide-card__btn--set:active {
-  background: rgba(76, 175, 80, 0.2);
-  transform: scale(0.97);
-}
-
-/* 重置 — 低调文字链接 */
-.guide-card__btn-reset {
-  font-size: 22rpx;
-  color: #9ca3af;
-  padding: 6rpx 16rpx;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.guide-card__btn-reset:active {
-  color: #ef4444;
-}
-
-.guide-card__status-text {
-  font-size: 23rpx;
-  font-weight: 700;
-  color: #10B981;
-}
-
-/* ===== 展开详情（hidden 控制，不销毁 DOM） ===== */
 .guide-card__body {
   padding: 0 24rpx 24rpx;
   border-top: 1rpx solid #f0f4f8;
@@ -397,26 +181,4 @@
   line-height: 1.6;
   color: #6b7280;
   text-align: center;
-}
-
-/* ===== 底部保存提示条 ===== */
-.save-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 32rpx;
-  padding: 16rpx 24rpx;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  border-radius: 14rpx;
-  border: 1rpx solid #a7f3d0;
-}
-
-.save-hint__icon {
-  font-size: 24rpx;
-  margin-right: 8rpx;
-}
-
-.save-hint__text {
-  font-size: 21rpx;
-  color: #065f46;
 }

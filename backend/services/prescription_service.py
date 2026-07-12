@@ -23,9 +23,9 @@ class PrescriptionService:
         self.db = db
         self.deepseek_client = deepseek_client
 
-    def generate(self, patient: User, doctor_input: str) -> dict:
+    def generate(self, patient: User) -> dict:
         """
-        为指定患者生成 AI 训练处方（趋势感知版 + 医生判断驱动）。
+        为指定患者生成 AI 训练处方（趋势感知版）。
 
         返回格式：
         {
@@ -43,7 +43,7 @@ class PrescriptionService:
         }
         """
         payload = self._build_payload(patient)
-        result = self.deepseek_client.generate_prescription(payload, doctor_input)
+        result = self.deepseek_client.generate_prescription(payload)
         return result
 
     def _build_payload(self, patient: User) -> dict:

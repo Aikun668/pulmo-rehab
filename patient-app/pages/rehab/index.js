@@ -25,6 +25,24 @@ function formatDateTime(value) {
   return `更新于 ${month}-${day} ${hours}:${minutes}`
 }
 
+function createPlanPreview(plan) {
+  if (!plan) {
+    return {
+      title: "当前暂无训练方案",
+      description: "医生暂未下发训练方案，建议先查看30天进度并等待方案更新。",
+      updatedAt: "暂无更新时间",
+      hasPlan: false,
+    }
+  }
+
+  return {
+    title: plan.title,
+    description: plan.content,
+    updatedAt: formatDateTime(plan.created_at),
+    hasPlan: true,
+  }
+}
+
 function buildProgressSummary(days) {
   const trainedDays = days.filter((item) => item.duration_minutes > 0).length
   const totalDuration = days.reduce((sum, item) => sum + item.duration_minutes, 0)
@@ -47,33 +65,29 @@ function buildStatsFromDays(days) {
 
 function createAiPreview(summary) {
   if (!summary) {
-    return "暂无医生建议，继续打卡后医生将为您制定康复指导。"
+    return "当前暂无 AI 康复小结，可继续完成训练打卡并等待后续生成。"
   }
 
-  return truncateText(summary.doctor_input || summary.content, 34)
+  return truncateText(summary.content, 34)
 }
 
 Page({
   data: {
     patientId: 0,
     doctorId: null,
-    planSubtitle: "正在同步训练方案…",
+    latestPlanTitle: "正在同步训练方案",
+    latestPlanDescription: "正在读取医生最新下发的训练方案，请稍候。",
+    latestPlanUpdatedAt: "请稍候",
     hasPlan: false,
     isLoadingPlan: true,
-    // 兜底模拟数据（与首页/打卡页对齐：患者1≈12min/天,30天≈17天训练,完成率57%）
-    trainedDays: "17",
-    completionRate: "57%",
-    totalDuration: "204",
-    progressSummary: "近30天已训练 17 天，累计 204 分钟。",
-    aiSummaryPreview: "正在同步康复指导…",
+    trainedDays: "--",
+    completionRate: "--",
+    totalDuration: "--",
+    progressSummary: "正在同步30天进度摘要。",
+    aiSummaryPreview: "正在同步最新 AI 康复小结。",
   },
 
   onShow() {
-    // 自定义 tabBar：设置选中状态（康复tab = index 3）
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 3 })
-    }
-
     this.setData({ patientId: auth.getPatientId(), doctorId: auth.getDoctorId() })
     this.loadLatestPlan()
     this.loadProgressSummary()
@@ -104,26 +118,23 @@ Page({
             ? data.data
             : []
         const latestPlan = plans[0] || null
+        const preview = createPlanPreview(latestPlan)
 
-        if (latestPlan) {
-          this.setData({
-            planSubtitle: formatDateTime(latestPlan.created_at),
-            hasPlan: true,
-            isLoadingPlan: false,
-          })
-        } else {
-          this.setData({
-            planSubtitle: "暂无方案，继续打卡后医生将为您制定",
-            hasPlan: false,
-            isLoadingPlan: false,
-          })
-        }
+        this.setData({
+          latestPlanTitle: preview.title,
+          latestPlanDescription: preview.description,
+          latestPlanUpdatedAt: preview.updatedAt,
+          hasPlan: preview.hasPlan,
+          isLoadingPlan: false,
+        })
       },
       fail: () => {
         this.setData({
           isLoadingPlan: false,
           hasPlan: false,
-          planSubtitle: "暂无方案，继续打卡后医生将为您制定",
+          latestPlanTitle: "暂无训练方案",
+          latestPlanDescription: "医生尚未下发训练方案，建议先完成训练打卡，医生将更有依据为您制定方案。",
+          latestPlanUpdatedAt: "",
         })
       },
     })
@@ -147,21 +158,19 @@ Page({
             ? data.data.days
             : []
 
-        // API返回空数据时保留mock兜底，避免显示"--"
         const stats = buildStatsFromDays(days)
-        if (stats.trainedDays !== "--" && stats.completionRate !== "--" && stats.totalDuration !== "--") {
-          this.setData({
-            progressSummary: buildProgressSummary(days),
-            trainedDays: stats.trainedDays,
-            completionRate: stats.completionRate,
-            totalDuration: stats.totalDuration,
-          })
-        } else {
-          // 空数据 → 保持兜底模拟数据不变
-        }
+
+        this.setData({
+          progressSummary: buildProgressSummary(days),
+          trainedDays: stats.trainedDays,
+          completionRate: stats.completionRate,
+          totalDuration: stats.totalDuration,
+        })
       },
       fail: () => {
-        // API 失败时保持兜底模拟数据不变（与首页/打卡页一致）
+        this.setData({
+          progressSummary: "暂无训练记录，开始训练后将在这里展示进度。",
+        })
       },
     })
   },
@@ -188,7 +197,7 @@ Page({
       },
       fail: () => {
         this.setData({
-          aiSummaryPreview: "暂无康复指导，继续打卡后将自动生成",
+          aiSummaryPreview: "暂无 AI 康复小结，继续完成训练打卡后将自动生成。",
         })
       },
     })
@@ -196,7 +205,7 @@ Page({
 
   handleOpenPlanDetail() {
     wx.navigateTo({
-      url: "/pages/plan-analysis/index",
+      url: "/pages/plan-detail/index",
     })
   },
 
@@ -206,9 +215,9 @@ Page({
     })
   },
 
-  handleOpenAiGuidance() {
+  handleOpenAiSummary() {
     wx.navigateTo({
-      url: "/pages/ai-guidance/index",
+      url: "/pages/ai-summary/index",
     })
   },
 
