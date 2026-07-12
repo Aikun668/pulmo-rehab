@@ -14,6 +14,7 @@ function getApiBase() {
 /**
  * 封装 wx.request，自动带 Authorization header 和动态 API_BASE
  * 用法和 wx.request 一样，额外自动注入 token
+ * 401 自动重登机制：接口返回 401 时自动调用 dev-login 并重试原请求
  */
 function request(opts) {
   var token = getToken()
@@ -25,7 +26,77 @@ function request(opts) {
   if (!opts.url.startsWith("http")) {
     opts.url = getApiBase() + opts.url
   }
+
+  // 保存原始回调
+  var originalSuccess = opts.success || null
+  var originalFail = opts.fail || null
+  var originalComplete = opts.complete || null
+  var hasRetried = opts._hasRetried || false
+
+  opts.success = function (res) {
+    if (res.statusCode === 401 && !hasRetried) {
+      // token 过期，自动重登后重试
+      _retryAfterReLogin(opts, originalSuccess, originalFail, originalComplete)
+      return
+    }
+    if (originalSuccess) {
+      originalSuccess(res)
+    }
+  }
+
+  opts.fail = function (err) {
+    if (originalFail) {
+      originalFail(err)
+    }
+  }
+
+  opts.complete = function (res) {
+    if (res.statusCode !== 401 || hasRetried) {
+      if (originalComplete) {
+        originalComplete(res)
+      }
+    }
+  }
+
   wx.request(opts)
+}
+
+/**
+ * 401 后自动重登，然后重试原请求（仅重试一次）
+ */
+function _retryAfterReLogin(originalOpts, originalSuccess, originalFail, originalComplete) {
+  var patientId = getPatientId() || 17
+
+  login(patientId).then(function () {
+    // 重登成功，用新 token 重新发起原请求
+    var newOpts = {}
+    for (var key in originalOpts) {
+      if (key !== "success" && key !== "fail" && key !== "complete" && key !== "_hasRetried") {
+        newOpts[key] = originalOpts[key]
+      }
+    }
+    newOpts._hasRetried = true
+    newOpts.success = originalSuccess
+    newOpts.fail = originalFail
+    newOpts.complete = originalComplete
+
+    // 注入新 token
+    var newToken = getToken()
+    newOpts.header = newOpts.header || {}
+    if (newToken) {
+      newOpts.header["Authorization"] = "Bearer " + newToken
+    }
+
+    wx.request(newOpts)
+  }).catch(function () {
+    // 重登失败，走原始 fail 回调
+    if (originalFail) {
+      originalFail({ errMsg: "auto re-login failed after 401" })
+    }
+    if (originalComplete) {
+      originalComplete({ statusCode: 401 })
+    }
+  })
 }
 
 function login(patientId) {

@@ -1,0 +1,465 @@
+/* ===== 页面基础 ===== */
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: #F5F7FA;
+  padding-bottom: 120rpx;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== 康复状态摘要 ===== */
+.status-card {
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 40rpx 24rpx;
+  margin: 24rpx 24rpx 0;
+  box-shadow: 0 0 0 2rpx #BFDBFE, 0 8rpx 32rpx rgba(96, 165, 250, 0.10), 0 4rpx 16rpx rgba(0, 0, 0, 0.10);
+}
+
+.status-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.status-card__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.status-card__icon {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12rpx;
+}
+
+/* ===== CSS 图标：康复等级柱状 ===== */
+.icon-level {
+  width: 36rpx;
+  height: 36rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4rpx;
+}
+
+.icon-level__bar {
+  width: 8rpx;
+  height: 36rpx;
+  background: #93C5FD;
+  border-radius: 4rpx;
+}
+
+.icon-level__bar--mid {
+  height: 24rpx;
+  background: #60A5FA;
+}
+
+.icon-level__bar--short {
+  height: 14rpx;
+  background: #DBEAFE;
+}
+
+/* ===== CSS 图标：小日历 ===== */
+.icon-calendar-sm {
+  width: 32rpx;
+  height: 36rpx;
+  position: relative;
+}
+
+.icon-calendar-sm__header {
+  width: 32rpx;
+  height: 8rpx;
+  background: #60A5FA;
+  border-radius: 4rpx 4rpx 0 0;
+  position: absolute;
+  top: 0;
+}
+
+.icon-calendar-sm__body {
+  width: 32rpx;
+  height: 28rpx;
+  background: #DBEAFE;
+  border: 2rpx solid #60A5FA;
+  border-radius: 0 0 4rpx 4rpx;
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14rpx;
+  font-weight: 700;
+  color: #60A5FA;
+}
+
+/* ===== CSS 图标：完成率半圆 ===== */
+.icon-rate-sm {
+  width: 36rpx;
+  height: 36rpx;
+  position: relative;
+}
+
+.icon-rate-sm__circle {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 3rpx solid #60A5FA;
+  background: #DBEAFE;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.icon-rate-sm__fill {
+  position: absolute;
+  top: 3rpx;
+  left: 3rpx;
+  width: 30rpx;
+  height: 15rpx;
+  background: #60A5FA;
+  border-radius: 30rpx 30rpx 0 0;
+}
+
+.status-card__value {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #1F2937;
+  line-height: 1.2;
+}
+
+/* 康复等级文字：缩小避免过宽 */
+.status-card__value--level {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 2rpx;
+}
+
+/* 近7天训练：双行排布 */
+.status-card__value--dual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  line-height: 1.3;
+}
+
+.status-card__value--dual text {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.status-card__label {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-top: 12rpx;
+}
+
+.status-card__divider {
+  width: 1rpx;
+  height: 80rpx;
+  background: #F3F4F6;
+}
+
+/* ===== 分组标题 ===== */
+.section-title {
+  display: flex;
+  align-items: center;
+  margin: 40rpx 0 24rpx 24rpx;
+}
+
+.section-title__bar {
+  width: 4rpx;
+  height: 28rpx;
+  background: #60A5FA;
+  border-radius: 2rpx;
+  margin-right: 12rpx;
+}
+
+.section-title__text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ===== AI指导内容卡片 ===== */
+.guidance-card {
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin: 0 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.10), 0 12rpx 32rpx rgba(0, 0, 0, 0.06);
+}
+
+.guidance-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.guidance-card__badge {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #60A5FA;
+  background: #DBEAFE;
+  border-radius: 8rpx;
+  padding: 4rpx 12rpx;
+}
+
+.guidance-card__time {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.guidance-card__intro {
+  font-size: 28rpx;
+  color: #4B5563;
+  line-height: 1.6;
+  margin-bottom: 24rpx;
+}
+
+.guidance-card__list {
+  margin-bottom: 24rpx;
+}
+
+.guidance-card__item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16rpx;
+}
+
+.guidance-card__num {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #DBEAFE;
+  color: #60A5FA;
+  font-size: 22rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+
+.guidance-card__text {
+  font-size: 28rpx;
+  color: #1F2937;
+  line-height: 1.6;
+}
+
+.guidance-card__summary {
+  font-size: 26rpx;
+  color: #6B7280;
+  line-height: 1.6;
+  padding: 20rpx 24rpx;
+  background: #EFF6FF;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+/* ===== 详细指导展开收起 ===== */
+.guidance-card__detail-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: 26rpx;
+  color: #60A5FA;
+  padding: 16rpx 0;
+  margin-top: 8rpx;
+}
+
+.guidance-card__detail-arrow {
+  width: 16rpx;
+  height: 16rpx;
+  border-right: 3rpx solid #60A5FA;
+  border-bottom: 3rpx solid #60A5FA;
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+
+.guidance-card__detail-arrow--up {
+  transform: rotate(-135deg);
+}
+
+.guidance-card__detail {
+  padding-top: 16rpx;
+}
+
+/* ===== 快捷问题 ===== */
+.quick-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin: 0 24rpx;
+}
+
+.quick-question {
+  font-size: 26rpx;
+  color: #60A5FA;
+  background: #DBEAFE;
+  border-radius: 24rpx;
+  padding: 12rpx 24rpx;
+  line-height: 1.4;
+  transition: all 0.1s;
+}
+
+.quick-question:active {
+  opacity: 0.8;
+  background: #BFDBFE;
+}
+
+/* ===== 对话区域 ===== */
+.chat-area {
+  margin: 24rpx 24rpx 0;
+}
+
+.chat-msg {
+  margin-bottom: 24rpx;
+}
+
+.chat-msg__row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.chat-msg__row--user {
+  flex-direction: row-reverse;
+}
+
+.chat-msg__avatar {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-msg__avatar--ai {
+  background: linear-gradient(135deg, #93C5FD, #60A5FA);
+  margin-right: 16rpx;
+}
+
+.chat-msg__avatar--user {
+  background: #DBEAFE;
+  margin-left: 16rpx;
+}
+
+/* AI头像：蓝色圆+AI字 */
+.avatar-ai {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 2rpx;
+}
+
+/* 用户头像：蓝色圆+小人 */
+.avatar-user {
+  position: relative;
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.avatar-user__head {
+  position: absolute;
+  top: 2rpx;
+  left: 12rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #60A5FA;
+}
+
+.avatar-user__body {
+  position: absolute;
+  bottom: 2rpx;
+  left: 6rpx;
+  width: 28rpx;
+  height: 18rpx;
+  border-radius: 14rpx 14rpx 0 0;
+  background: #93C5FD;
+}
+
+.chat-msg__bubble {
+  max-width: 70%;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
+  border-radius: 20rpx;
+}
+
+.chat-msg__bubble--ai {
+  background: #FFFFFF;
+  color: #1F2937;
+  border-radius: 4rpx 20rpx 20rpx 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(96, 165, 250, 0.06);
+}
+
+.chat-msg__bubble--user {
+  background: #F3F4F6;
+  color: #1F2937;
+  border-radius: 20rpx 4rpx 20rpx 20rpx;
+}
+
+.chat-msg__newline {
+  height: 12rpx;
+}
+
+/* ===== 输入区 ===== */
+.input-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background: #FFFFFF;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+
+.input-bar__field {
+  flex: 1;
+  height: 72rpx;
+  background: #F5F7FA;
+  border-radius: 36rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #1F2937;
+}
+
+.input-bar__send {
+  width: 120rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: #DBEAFE;
+  color: #9CA3AF;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 16rpx;
+  transition: all 0.1s;
+}
+
+.input-bar__send--active {
+  background: #60A5FA;
+  color: #FFFFFF;
+}
+
+.input-bar__send--active:active {
+  background: #3B82F6;
+}

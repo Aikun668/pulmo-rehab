@@ -1,7 +1,7 @@
-<navigation-bar title="训练方案" back="{{true}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+<navigation-bar title="训练方案" back="{{true}}" color="#1F2937" background="#F5F7FA"></navigation-bar>
 
 <view class="page">
-  <!-- 方案数据区域：加载态 / 错误态 / 有方案 / 无方案 -->
+  <!-- 方案数据区域 -->
   <view class="state-card" wx:if="{{isLoading}}">正在同步训练方案，请稍候...</view>
   <block wx:elif="{{latestPlan}}">
     <view class="section-title">最新方案</view>
@@ -10,7 +10,6 @@
       <view class="card__desc">{{latestPlan.content}}</view>
       <view class="card__meta">最近更新：{{latestPlan.createdAt}}</view>
     </view>
-
     <view class="section-title section-title--history" wx:if="{{historyPlans.length}}">历史方案</view>
     <block wx:for="{{historyPlans}}" wx:key="id">
       <view class="card">
@@ -20,21 +19,87 @@
       </view>
     </block>
   </block>
-  <view class="state-card state-card--error" wx:elif="{{errorMessage}}">网络异常，训练方案暂时无法加载，请稍后再试。</view>
-  <view class="state-card" wx:else>暂无训练方案，医生尚未下发。建议先完成训练打卡，医生将更有依据为您制定方案。</view>
+  <view class="state-card" wx:else>暂无训练方案，建议先完成训练打卡，医生将更有依据为您制定方案。</view>
 
-  <!-- 训练动作指导：始终展示，不依赖方案接口 -->
+  <!-- 训练动作指导 + 量化 -->
   <view class="section-title section-title--guide">训练动作指导</view>
+
   <block wx:for="{{exerciseGuides}}" wx:key="id">
-    <view class="guide-card">
-      <view class="guide-card__header" bindtap="handleToggleGuide" data-index="{{index}}">
+    <view class="guide-card {{item.isCompleted ? (item.exceededSets > 0 ? 'guide-card--exceeded' : 'guide-card--done') : ''}}">
+      <!-- 卡片头部 -->
+      <view class="guide-card__header" catchtap="handleToggleGuide" data-index="{{index}}">
         <view class="guide-card__header-left">
+          <!-- 已达标徽章 — hidden 代替 wx:if，防 DOM 重建闪烁 -->
+          <view class="guide-card__done-badge {{item.exceededSets > 0 ? 'guide-card__done-badge--exceeded' : ''}}" hidden="{{!item.isCompleted}}">
+            {{item.exceededSets > 0 ? '★' : '✓'}}
+          </view>
           <view class="guide-card__name">{{item.name}}</view>
           <view class="guide-card__target">{{item.target}}</view>
         </view>
-        <view class="guide-card__arrow {{item.expanded ? 'guide-card__arrow--up' : ''}}">&#x25BC;</view>
+        <view class="guide-card__toggle">{{item.expanded ? '收起 ▾' : '展开 ▸'}}</view>
       </view>
-      <view class="guide-card__body" wx:if="{{item.expanded}}">
+
+      <!-- 量化进度（始终可见，不受展开/收起影响） -->
+      <view class="guide-card__progress">
+        <view class="guide-card__progress-row">
+          <view class="guide-card__progress-item">
+            <text class="guide-card__progress-label">时长</text>
+            <!-- 计时中圆点 — 动态 class 切换背景色，始终占位不改变布局 -->
+            <view class="guide-card__timer-dot {{item.isTimerRunning ? 'guide-card__timer-dot--active' : ''}}"></view>
+            <text class="guide-card__progress-value {{item.isTimerRunning ? 'guide-card__progress-value--active' : ''}}">{{item.elapsedDisplay}}</text>
+            <text class="guide-card__progress-target">/{{item.targetMinutes}}分钟</text>
+          </view>
+          <view class="guide-card__progress-item">
+            <text class="guide-card__progress-label">组数</text>
+            <text class="guide-card__progress-value {{item.exceededSets > 0 ? 'guide-card__progress-value--exceeded' : ''}}">{{item.completedSets}}</text>
+            <text class="guide-card__progress-target">/{{item.targetSets}}组</text>
+          </view>
+        </view>
+        <view class="guide-card__bar-track">
+          <view class="guide-card__bar-fill guide-card__bar-fill--{{item.exceededSets > 0 ? 'exceeded' : (item.isCompleted ? 'done' : 'normal')}}" style="width: {{item.progressPercent}}%;"></view>
+        </view>
+        <!-- 超额标签 — hidden 代替 wx:if -->
+        <view class="guide-card__exceeded-tag" hidden="{{!(item.exceededSets > 0)}}">
+          超额完成 +{{item.exceededSets}} 组
+        </view>
+      </view>
+
+      <!-- 操作按钮区 — 全部用 hidden 代替 wx:if -->
+      <view class="guide-card__actions">
+        <!-- 主操作行 -->
+        <view class="guide-card__actions-primary">
+          <!-- 计时/暂停 — 合为一个按钮，只改 class 和文字，不切换 hidden，杜绝布局重排闪烁 -->
+          <view
+            class="guide-card__btn {{item.isTimerRunning ? 'guide-card__btn--pause' : 'guide-card__btn--timer'}}"
+            data-index="{{index}}"
+            catchtap="handleTimerToggle"
+          >{{item.isTimerRunning ? '⏸ 暂停' : '▶ 计时'}}</view>
+
+          <!-- 完成1组 -->
+          <view
+            class="guide-card__btn guide-card__btn--set"
+            data-index="{{index}}"
+            catchtap="handleCompleteSet"
+          >✓ 完成1组</view>
+        </view>
+
+        <!-- 辅助操作行 -->
+        <view class="guide-card__actions-secondary">
+          <!-- 已完成状态 — hidden 代替 wx:if -->
+          <text class="guide-card__status-text" hidden="{{!(item.isCompleted && item.exceededSets <= 0)}}">已完成 ✓</text>
+
+          <!-- 重置 — hidden 代替 wx:if -->
+          <view
+            class="guide-card__btn-reset"
+            hidden="{{!(item.elapsedSeconds > 0 || item.completedSets > 0)}}"
+            data-index="{{index}}"
+            catchtap="handleResetExercise"
+          >重置</view>
+        </view>
+      </view>
+
+      <!-- 展开详情 — hidden 代替 wx:if，防收起时 DOM 销毁导致计时闪烁 -->
+      <view class="guide-card__body" hidden="{{!item.expanded}}">
         <view class="guide-card__steps">
           <view class="guide-card__step-label">动作步骤</view>
           <view class="guide-card__step" wx:for="{{item.steps}}" wx:for-item="step" wx:for-index="stepIdx" wx:key="stepIdx">
@@ -50,4 +115,10 @@
     </view>
   </block>
   <view class="guide-disclaimer">以上为基础肺康复训练指导，具体训练方案请遵循医嘱</view>
+
+  <!-- 底部安全退出提示条 -->
+  <view class="save-hint">
+    <text class="save-hint__icon">💡</text>
+    <text class="save-hint__text">中途离开会自动保存当前训练进度</text>
+  </view>
 </view>

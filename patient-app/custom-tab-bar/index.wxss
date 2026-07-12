@@ -1,0 +1,79 @@
+.tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 50px;
+  background: #ffffff;
+  border-top: 1rpx solid #e5e7eb;
+  padding-bottom: env(safe-area-inset-bottom);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.tab-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  position: relative;
+  padding: 4px 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.tab-bar__item--hover {
+  opacity: 0.6;
+}
+
+.tab-bar__icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 2px;
+}
+
+.tab-bar__text {
+  font-size: 10px;
+  color: #7A8A9A;
+  line-height: 1.2;
+}
+
+/* 选中态：文字蓝色 + 图标阴影 */
+.tab-bar__item--active .tab-bar__text {
+  color: #2563EB;
+  font-weight: 600;
+}
+
+.tab-bar__item--active .tab-bar__icon {
+  filter: drop-shadow(0 4rpx 8rpx rgba(37, 99, 235, 0.5));
+}
+
+/* 角标 */
+.tab-bar__badge {
+  position: absolute;
+  top: -2px;
+  right: 12px;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #ef4444;
+  border-radius: 8px;
+  padding: 0 4px;
+}
+
+/* 小红点 */
+.tab-bar__dot {
+  position: absolute;
+  top: 2px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+}

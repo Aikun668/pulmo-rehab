@@ -58,7 +58,7 @@ def generate_prescription(
     service = PrescriptionService(db, deepseek_client)
 
     try:
-        result = service.generate(patient)
+        result = service.generate(patient, body.doctor_input)
     except Exception as exc:
         logger.exception("Failed to generate prescription for patient_id=%s: %s", patient.id, exc)
         raise HTTPException(
