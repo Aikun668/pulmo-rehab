@@ -2,14 +2,18 @@
   "pages": [
     "pages/home/index",
     "pages/check-in/index",
+    "pages/chat/index",
     "pages/rehab/index",
     "pages/plan-detail/index",
     "pages/progress/index",
     "pages/ai-summary/index",
+    "pages/ai-guidance/index",
     "pages/profile/index",
-    "pages/knowledge/index"
+    "pages/knowledge/index",
+    "pages/plan-analysis/index"
   ],
   "tabBar": {
+    "custom": true,
     "color": "#7A8A9A",
     "selectedColor": "#2563EB",
     "backgroundColor": "#FFFFFF",
@@ -26,6 +30,12 @@
         "text": "打卡",
         "iconPath": "images/tabbar/checkin.png",
         "selectedIconPath": "images/tabbar/checkin-active.png"
+      },
+      {
+        "pagePath": "pages/chat/index",
+        "text": "消息",
+        "iconPath": "images/tabbar/chat.png",
+        "selectedIconPath": "images/tabbar/chat-active.png"
       },
       {
         "pagePath": "pages/rehab/index",

@@ -26,8 +26,8 @@ App({
     if (auth.checkLogin()) {
       return
     }
-    // 未登录 — 开发阶段自动用 patient_id=1 登录
-    auth.login(1).catch(function (err) {
+    // 未登录 — 开发阶段自动用 patient_id=17（赵六）登录，与后端seed数据对齐
+    auth.login(17).catch(function (err) {
       console.error("自动登录失败:", err)
     })
   },

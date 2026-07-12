@@ -1,0 +1,798 @@
+/* ===== 页面基础 ===== */
+.page {
+  min-height: 100vh;
+  background: #F5F7FA;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== 顶部导航栏 ===== */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #FFFFFF;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.nav-bar__back {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-bar__back-icon {
+  font-size: 40rpx;
+  color: #1F2937;
+  font-weight: 300;
+}
+
+.nav-bar__title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-left: 12rpx;
+}
+
+/* ===== 加载状态 ===== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 200rpx;
+}
+
+.loading-spinner {
+  width: 48rpx;
+  height: 48rpx;
+  border: 4rpx solid #E5E7EB;
+  border-top: 4rpx solid #3B82F6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #9CA3AF;
+  margin-top: 24rpx;
+}
+
+/* ===== 主内容 ===== */
+.content {
+  padding: 24rpx 24rpx 0;
+}
+
+.content-bottom-spacer {
+  height: 160rpx;
+}
+
+/* ===== 方案总览卡 ===== */
+.overview-card {
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  margin-bottom: 24rpx;
+  overflow: hidden;
+}
+
+/* 顶部彩色条 */
+.overview-card__accent {
+  height: 8rpx;
+  width: 100%;
+}
+
+.overview-card__header {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx 0;
+}
+
+.overview-card__level-badge {
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  margin-right: 12rpx;
+}
+
+.overview-card__level-text {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.overview-card__source-tag {
+  padding: 4rpx 12rpx;
+  background: #EFF6FF;
+  border-radius: 8rpx;
+  border: 2rpx solid #BFDBFE;
+}
+
+.overview-card__source-text {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: #3B82F6;
+}
+
+.overview-card__title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1F2937;
+  display: block;
+  padding: 12rpx 32rpx 0;
+}
+
+.overview-card__advice {
+  font-size: 26rpx;
+  color: #6B7280;
+  display: block;
+  padding: 8rpx 32rpx 0;
+  margin-bottom: 20rpx;
+}
+
+/* 三格指标区 */
+.overview-card__metrics {
+  display: flex;
+  align-items: stretch;
+  padding: 20rpx 24rpx 28rpx;
+  border-top: 2rpx solid #F3F4F6;
+}
+
+.overview-card__metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 8rpx 0;
+}
+
+.overview-card__metric-sep {
+  width: 1rpx;
+  background: #F3F4F6;
+  margin: 8rpx 0;
+}
+
+/* 今日进度迷你进度条 */
+.overview-card__metric-bar {
+  width: 80%;
+  height: 6rpx;
+  background: #F3F4F6;
+  border-radius: 3rpx;
+  overflow: hidden;
+  margin-bottom: 8rpx;
+}
+
+.overview-card__metric-bar-fill {
+  height: 100%;
+  border-radius: 3rpx;
+  transition: width 0.3s;
+}
+
+.overview-card__metric-value {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1F2937;
+  text-align: center;
+}
+
+.overview-card__metric-unit {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: #9CA3AF;
+}
+
+.overview-card__metric-label {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 4rpx;
+}
+
+/* ===== 分组标题 ===== */
+.section-title {
+  display: flex;
+  align-items: center;
+  margin: 32rpx 0 16rpx;
+}
+
+.section-title__bar {
+  width: 6rpx;
+  height: 28rpx;
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+}
+
+.section-title__text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.section-title__hint {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-left: 12rpx;
+}
+
+/* ===== 方案解读：紧凑卡片 ===== */
+.analysis-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.analysis-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 一行摘要 */
+.analysis-card__row {
+  display: flex;
+  align-items: center;
+}
+
+.analysis-card__index {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  margin-right: 12rpx;
+}
+
+.analysis-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.analysis-card__name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+  display: block;
+}
+
+.analysis-card__summary {
+  font-size: 24rpx;
+  color: #6B7280;
+  display: block;
+  margin-top: 2rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analysis-card__toggle {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analysis-card__toggle-icon {
+  font-size: 28rpx;
+  color: #9CA3AF;
+  transition: transform 0.2s;
+}
+
+.analysis-card__toggle--expanded .analysis-card__toggle-icon {
+  color: #10B981;
+}
+
+/* 折叠区域 */
+.analysis-card__collapsed {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.analysis-card__collapsed--show {
+  max-height: 800rpx;
+}
+
+.analysis-card__section {
+  margin-top: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.analysis-card__section-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #10B981;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.analysis-card__section-content {
+  font-size: 26rpx;
+  color: #4B5563;
+  line-height: 1.6;
+  display: block;
+}
+
+.analysis-card__section-content--progression {
+  font-size: 24rpx;
+  color: #6B7280;
+  line-height: 1.5;
+}
+
+.analysis-card__precautions {
+  background: #FEF3C7;
+  border-radius: 16rpx;
+  padding: 16rpx;
+  margin-top: 12rpx;
+}
+
+.analysis-card__precautions-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #D97706;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.analysis-card__precautions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-card__precautions-item {
+  font-size: 24rpx;
+  color: #92400E;
+  line-height: 1.5;
+  display: block;
+}
+
+/* ===== 达成目标 ===== */
+.goal-card {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 里程碑路线图 */
+.goal-card__timeline {
+  position: relative;
+  height: 72rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.goal-card__timeline-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14rpx;
+  height: 6rpx;
+  background: #E5E7EB;
+  border-radius: 3rpx;
+}
+
+.goal-card__timeline-fill {
+  position: absolute;
+  left: 0;
+  top: 14rpx;
+  height: 6rpx;
+  border-radius: 3rpx;
+  transition: width 0.3s;
+}
+
+.goal-card__node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.goal-card__node-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background: #E5E7EB;
+  border: 4rpx solid #FFFFFF;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.08);
+}
+
+.goal-card__node-num {
+  font-size: 20rpx;
+  color: #9CA3AF;
+  font-weight: 500;
+  margin-top: 6rpx;
+}
+
+.goal-card__node-num--current {
+  color: #10B981;
+  font-weight: 700;
+  font-size: 22rpx;
+}
+
+/* 当前等级 */
+.goal-card__current {
+  margin-bottom: 20rpx;
+}
+
+.goal-card__current-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.goal-card__current-badge {
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-right: 8rpx;
+}
+
+.goal-card__current-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.goal-card__body-changes {
+  background: #F0FDF4;
+  border-radius: 16rpx;
+  padding: 14rpx 18rpx;
+  margin-bottom: 12rpx;
+}
+
+.goal-card__body-changes-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #10B981;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.goal-card__body-changes-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 6rpx;
+}
+
+.goal-card__body-changes-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  margin-right: 8rpx;
+  margin-top: 10rpx;
+}
+
+.goal-card__body-changes-text {
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.goal-card__daily-life {
+  display: flex;
+  align-items: flex-start;
+  background: #F9FAFB;
+  border-radius: 12rpx;
+  padding: 10rpx 14rpx;
+}
+
+.goal-card__daily-life-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #6B7280;
+  margin-right: 8rpx;
+}
+
+.goal-card__daily-life-text {
+  font-size: 26rpx;
+  color: #4B5563;
+  line-height: 1.5;
+  flex: 1;
+}
+
+/* 下一步目标 */
+.goal-card__next {
+  background: #EFF6FF;
+  border-radius: 16rpx;
+  padding: 14rpx 18rpx;
+  margin-bottom: 16rpx;
+}
+
+.goal-card__next-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+
+.goal-card__next-arrow {
+  font-size: 26rpx;
+  color: #3B82F6;
+  margin-right: 6rpx;
+}
+
+.goal-card__next-badge {
+  padding: 4rpx 10rpx;
+  background: #DBEAFE;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #2563EB;
+  margin-right: 6rpx;
+}
+
+.goal-card__next-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #3B82F6;
+}
+
+.goal-card__next-desc {
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.5;
+}
+
+/* 终极目标 */
+.goal-card__ultimate {
+  background: #FEF3C7;
+  border-radius: 16rpx;
+  padding: 14rpx 18rpx;
+}
+
+.goal-card__ultimate-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6rpx;
+}
+
+.goal-card__ultimate-star {
+  font-size: 26rpx;
+  color: #F59E0B;
+  margin-right: 6rpx;
+}
+
+.goal-card__ultimate-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #D97706;
+}
+
+.goal-card__ultimate-desc {
+  font-size: 26rpx;
+  color: #92400E;
+  line-height: 1.5;
+}
+
+/* ===== 近7天训练回顾 ===== */
+.history-card {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.history-card__stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 24rpx;
+}
+
+.history-card__stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.history-card__stat-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.history-card__stat-label {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 4rpx;
+}
+
+.history-card__stat-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background: #F3F4F6;
+}
+
+/* ===== 7天柱状图 ===== */
+.history-card__chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 240rpx;
+  padding-top: 8rpx;
+  position: relative;
+}
+
+/* 目标虚线 */
+.history-card__target-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2rpx dashed #F59E0B;
+  opacity: 0.5;
+  z-index: 1;
+}
+
+.history-card__bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc((100% - 24rpx) / 7);
+  height: 100%;
+  position: relative;
+}
+
+.history-card__bar-col {
+  width: 32rpx;
+  border-radius: 8rpx 8rpx 0 0;
+  position: absolute;
+  bottom: 48rpx;
+  min-height: 16rpx;
+  transition: height 0.3s;
+}
+
+.history-card__bar-label {
+  position: absolute;
+  bottom: 16rpx;
+  font-size: 20rpx;
+  color: #9CA3AF;
+}
+
+.history-card__bar-value {
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #1F2937;
+  position: absolute;
+  bottom: 60rpx;
+}
+
+.history-card__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 160rpx;
+}
+
+.history-card__empty-text {
+  font-size: 26rpx;
+  color: #9CA3AF;
+}
+
+/* ===== 最近训练结果 ===== */
+.result-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.result-card__date {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-bottom: 12rpx;
+  display: block;
+}
+
+/* 三格带色块 */
+.result-card__grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-bottom: 16rpx;
+}
+
+.result-card__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.result-card__cell-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-bottom: 8rpx;
+}
+
+.result-card__cell-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.result-card__cell-unit {
+  font-size: 20rpx;
+  color: #9CA3AF;
+}
+
+.result-card__cell-label {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 2rpx;
+}
+
+.result-card__cell-sep {
+  width: 1rpx;
+  height: 80rpx;
+  background: #F3F4F6;
+}
+
+.result-card__progress-track {
+  height: 8rpx;
+  background: #F3F4F6;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+
+.result-card__progress-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  transition: width 0.3s;
+}
+
+/* ===== 吸底 CTA ===== */
+.cta-sticky {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  padding: 16rpx 24rpx 28rpx;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cta-btn {
+  width: 100%;
+  height: 88rpx;
+  background: #2563EB;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(37, 99, 235, 0.3);
+}
+
+.cta-btn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.cta-btn__text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.cta-btn__hint {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-top: 10rpx;
+}

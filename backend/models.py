@@ -216,7 +216,13 @@ class AiSummary(Base):
     )
     summary_week_start: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     summary_week_end: Mapped[date] = mapped_column(Date, nullable=False)
+    doctor_input: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    dispatched_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        default=None,
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,

@@ -17,6 +17,12 @@ import {
   TableProperties,
   Users,
 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import { Card, CardContent } from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "./ui/table";
 
 interface PatientsListViewProps {
   patients: Patient[];
@@ -51,7 +57,7 @@ const resolveMedicalMetadata = (count7d: number, lastCheckInAt: string | null): 
       actionHint: "建议先进入详情页查看训练记录，并尽快补充训练方案。",
     };
   }
-  if (count7d >= 5) {
+  if (count7d >= 4) {
     return {
       riskLevel: "low",
       riskLabel: "训练稳定",
@@ -60,7 +66,7 @@ const resolveMedicalMetadata = (count7d: number, lastCheckInAt: string | null): 
       actionHint: "建议进入详情页复核最新方案，确认当前节奏继续保持。",
     };
   }
-  if (count7d >= 3) {
+  if (count7d >= 2) {
     return {
       riskLevel: "medium",
       riskLabel: "需要关注",
@@ -248,12 +254,12 @@ export default function PatientsListView({
 
           <div className="flex w-full flex-col gap-3 xl:max-w-md">
             <div className="relative">
-              <input
+              <Input
                 type="text"
                 placeholder="按患者姓名或 ID 搜索"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-lg border border-[#D9E2EC] bg-[#F4F7FA] py-2.5 pl-9 pr-4 text-sm text-[#243447] outline-none transition-all placeholder:text-[#8A97A6] focus:border-[#2F5D7C] focus:bg-white"
+                className="w-full rounded-lg border-[#D9E2EC] bg-[#F4F7FA] py-2.5 pl-9 pr-4 text-sm text-[#243447] placeholder:text-[#8A97A6] focus-visible:border-[#2F5D7C] focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-[#2F5D7C]/20 h-10"
               />
               <Search className="absolute left-3 top-3 h-4 w-4 text-[#8A97A6]" />
             </div>
@@ -337,16 +343,16 @@ export default function PatientsListView({
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="animate-pulse rounded-xl border border-[#D9E2EC] bg-white p-5 space-y-4">
-              <div className="h-4 w-1/3 rounded bg-[#F4F7FA]"></div>
-              <div className="h-12 rounded-xl bg-[#F4F7FA]"></div>
+            <Card key={n} className="p-5 space-y-4">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-12 rounded-xl" />
               <div className="grid grid-cols-3 gap-2">
-                <div className="h-14 rounded-xl bg-[#F4F7FA]"></div>
-                <div className="h-14 rounded-xl bg-[#F4F7FA]"></div>
-                <div className="h-14 rounded-xl bg-[#F4F7FA]"></div>
+                <Skeleton className="h-14 rounded-xl" />
+                <Skeleton className="h-14 rounded-xl" />
+                <Skeleton className="h-14 rounded-xl" />
               </div>
-              <div className="h-10 rounded-xl bg-[#F4F7FA]"></div>
-            </div>
+              <Skeleton className="h-10 rounded-xl" />
+            </Card>
           ))}
         </div>
       ) : filteredPatients.length === 0 ? (
@@ -485,13 +491,14 @@ export default function PatientsListView({
                           <Clock className="h-3.5 w-3.5 text-[#8A97A6]" />
                           <span>最近训练：{formatLastCheckIn(patient.stats.last_check_in_at)}</span>
                         </div>
-                        <button
+                        <Button
                           onClick={() => onSelectPatient(patient.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#2F5D7C] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#4F7A94]"
+                          size="sm"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#2F5D7C] text-white hover:bg-[#4F7A94]"
                         >
                           <span>查看详情</span>
                           <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   );
@@ -501,39 +508,38 @@ export default function PatientsListView({
           ))}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[#D9E2EC] bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="border-b border-[#D9E2EC] bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A]">
-                  <th className="px-4 py-3 font-semibold">患者</th>
-                  <th className="px-4 py-3 text-center font-semibold">恢复阶段</th>
-                  <th className="px-4 py-3 text-center font-semibold">康复等级</th>
-                  <th className="px-4 py-3 text-center font-semibold">近7天打卡</th>
-                  <th className="px-4 py-3 text-center font-semibold">累计时长</th>
-                  <th className="px-4 py-3 text-center font-semibold">最近训练</th>
-                  <th className="px-4 py-3 font-semibold">跟进状态</th>
-                  <th className="px-4 py-3 text-right font-semibold">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E7EDF3] text-sm text-[#243447]">
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-[#F8FAFC] hover:bg-[#F8FAFC]">
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold pl-6 pr-4">患者</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold text-center pl-6 pr-4">恢复阶段</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold text-center pl-6 pr-4">康复等级</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold text-center pl-6 pr-4">近7天打卡</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold text-center pl-6 pr-4">累计时长</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold text-center pl-6 pr-4">最近训练</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold pl-6 pr-4">跟进状态</TableHead>
+                <TableHead className="bg-[#F8FAFC] text-[11px] uppercase tracking-wide text-[#5B6B7A] font-semibold text-right pl-6 pr-4">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="text-sm text-[#243447]">
                 {filteredPatients.map(({ patient, meta }) => {
                   return (
-                    <tr key={patient.id} className="transition-colors hover:bg-[#FBFCFD]">
-                      <td className="px-4 py-4">
+                    <TableRow key={patient.id}>
+                      <TableCell className="pl-6 pr-4 py-4">
                         <p className="font-semibold text-[#243447]">{patient.name}</p>
                         <p className="mt-1 text-xs text-[#8A97A6]">患者 ID：{patient.id}</p>
-                      </td>
-                      <td className="px-4 py-4 text-center">
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4 text-center">
                         {patient.recovery_stage ? (
-                          <span className="inline-flex rounded-md border border-[#D1D5DB] bg-[#F3F4F6] px-2 py-0.5 text-[11px] font-medium text-[#6B7280]">
+                          <Badge variant="outline">
                             {RECOVERY_STAGE_LABELS[patient.recovery_stage]}
-                          </span>
+                          </Badge>
                         ) : (
                           <span className="text-xs text-[#8A97A6]">未填写</span>
                         )}
-                      </td>
-                      <td className="px-4 py-4 text-center">
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4 text-center">
                         {patient.rehab_level && REHAB_LEVEL_INFO[patient.rehab_level] ? (
                           <span
                             className="inline-flex rounded-md border px-2 py-0.5 text-[11px] font-semibold"
@@ -548,39 +554,39 @@ export default function PatientsListView({
                         ) : (
                           <span className="text-xs text-[#8A97A6]">未评估</span>
                         )}
-                      </td>
-                      <td className="px-4 py-4 text-center font-semibold text-[#243447]">
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4 text-center font-semibold text-[#243447]">
                         {patient.stats.check_in_count_7d} 次
-                      </td>
-                      <td className="px-4 py-4 text-center text-[#5B6B7A]">
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4 text-center text-[#5B6B7A]">
                         {patient.stats.total_duration_minutes} 分钟
-                      </td>
-                      <td className="px-4 py-4 text-center text-[#5B6B7A]">
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4 text-center text-[#5B6B7A]">
                         {formatLastCheckIn(patient.stats.last_check_in_at)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-medium ${meta.badgeClassName}`}>
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4">
+                        <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-bold ${meta.badgeClassName}`}>
                           {meta.riskLabel}
                         </span>
                         <p className="mt-2 max-w-sm text-xs leading-5 text-[#5B6B7A]">{meta.followUpNote}</p>
                         <p className="mt-2 max-w-sm text-xs font-medium leading-5 text-[#243447]">{meta.actionHint}</p>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <button
+                      </TableCell>
+                      <TableCell className="pl-6 pr-4 py-4 text-right">
+                        <Button
                           onClick={() => onSelectPatient(patient.id)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#2F5D7C] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[#4F7A94]"
+                          size="sm"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#2F5D7C] text-white hover:bg-[#4F7A94]"
                         >
                           <span>查看详情</span>
                           <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

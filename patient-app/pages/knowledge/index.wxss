@@ -1,6 +1,9 @@
 .page {
   padding: 24rpx;
   padding-bottom: 120rpx;
+  background: #F5F7FA;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* ===== 等级标签区 ===== */

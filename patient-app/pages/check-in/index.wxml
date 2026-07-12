@@ -1,6 +1,155 @@
-<navigation-bar title="训练打卡" back="{{false}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
+<navigation-bar title="" back="{{false}}" color="#1F2937" background="#a7f3d0"></navigation-bar>
 
 <view class="page">
+  <!-- 淡绿渐变装饰区（背景不变，内加标题行+头像） -->
+  <view class="gradient-header">
+    <view class="gradient-header__content">
+      <view class="gradient-header__left">
+        <text class="gradient-header__title">训练打卡</text>
+        <text class="gradient-header__sub">今天</text>
+      </view>
+      <view class="gradient-header__avatar">{{avatarSurname}}</view>
+    </view>
+  </view>
+
+  <!-- ① 日期 + 等级 + 今日时长 + 迷你统计 -->
+  <view class="card status-card">
+    <!-- 日期行：左日期，右最近一周箭头 -->
+    <view class="status-card__row1">
+      <text class="status-card__date">{{trainDate}}</text>
+      <view class="status-card__week-link" bindtap="handleOpenWeekly">
+        <text class="status-card__week-text">最近一周</text>
+        <text class="status-card__week-arrow">›</text>
+      </view>
+    </view>
+    <!-- 等级徽章：左对齐日期 -->
+    <view class="level-badge" wx:if="{{rehabLevel > 0}}" style="background: {{rehabLevelColor}}20; border-color: {{rehabLevelColor}};">
+      <text class="level-badge__label" style="color: {{rehabLevelColor}};">Level {{rehabLevel}}</text>
+      <text class="level-badge__sep" style="color: {{rehabLevelColor}};"> · </text>
+      <text class="level-badge__name" style="color: {{rehabLevelColor}};">{{rehabLevelName}}</text>
+    </view>
+    <!-- 主视觉：大数字+min 左下，迷你4天柱状图 右下，底部对齐 -->
+    <view class="status-card__main">
+      <view class="status-card__value-row">
+        <text class="status-card__big-num">{{todayTrainingMinutes}}</text>
+        <text class="status-card__min-unit">min</text>
+      </view>
+      <view class="mini-chart">
+        <view class="mini-chart__bar-wrap" wx:for="{{recent4Days}}" wx:key="index">
+          <view class="mini-chart__bar" style="height: {{item.heightPercent}}%; background: {{item.isToday ? '#34d399' : '#d1fae5'}};"></view>
+        </view>
+      </view>
+    </view>
+    <!-- 内嵌安全警告 -->
+    <view class="status-card__warning" wx:if="{{hasActiveWarning}}">
+      <text class="status-card__warning-icon">⚠</text>
+      <text class="status-card__warning-text">{{warningMessage}}</text>
+    </view>
+  </view>
+
+  <!-- 最近一周弹窗 -->
+  <view class="modal-overlay" wx:if="{{showWeeklyModal}}">
+    <view class="modal-card modal-card--weekly">
+      <view class="modal-card__header">
+        <view class="modal-card__title">最近一周训练时间</view>
+        <view class="modal-card__close" bindtap="handleCloseWeekly">✕</view>
+      </view>
+      <view class="weekly-chart">
+        <view class="weekly-chart__row" wx:for="{{weekly7Days}}" wx:key="index">
+          <text class="weekly-chart__day-label">{{item.dayLabel}}</text>
+          <view class="weekly-chart__bar-track">
+            <view class="weekly-chart__bar-fill" style="width: {{item.widthPercent}}%; background: {{item.isToday ? '#34d399' : '#86efac'}};"></view>
+          </view>
+          <text class="weekly-chart__day-value">{{item.minutes}}min</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- "训练"小标题 -->
+  <text class="page-subtitle page-subtitle--train">训练</text>
+
+  <!-- ② 训练前自评 -->
+  <view class="card action-card action-card--blue" bindtap="handleOpenAssessment" wx:if="{{!hasAssessedToday && !hasSubmittedToday}}">
+    <view class="action-card__icon-wrap action-card__icon-wrap--blue">
+      <text class="action-card__emoji">📋</text>
+    </view>
+    <view class="action-card__info">
+      <view class="action-card__title">训练前自评</view>
+      <view class="action-card__desc">记录当前身体状态，AI 将据此调整方案</view>
+    </view>
+    <view class="action-card__arrow action-card__arrow--blue">去评估</view>
+  </view>
+  <view class="card done-card" wx:if="{{hasAssessedToday && !hasSubmittedToday}}">
+    <text class="done-card__icon">✓</text>
+    <text class="done-card__text">今日已评估</text>
+  </view>
+
+  <!-- ③ 呼吸陪练入口 -->
+  <view class="card action-card action-card--green" bindtap="handleOpenBreathTimer" wx:if="{{rehabLevel > 0}}">
+    <view class="action-card__icon-wrap action-card__icon-wrap--green">
+      <view class="action-card__dot"></view>
+    </view>
+    <view class="action-card__info">
+      <view class="action-card__title">呼吸陪练</view>
+      <view class="action-card__desc">Level {{rehabLevel}} 专属节拍 · 共{{breathTotalRounds || 8}}轮</view>
+    </view>
+    <view class="action-card__arrow action-card__arrow--green">开始</view>
+  </view>
+
+  <!-- 呼吸计时器弹窗 -->
+  <view class="modal-overlay" wx:if="{{showBreathTimer}}">
+    <view class="modal-card modal-card--breath">
+      <view class="breath-panel__header">
+        <view class="breath-panel__title">呼吸训练 · Level {{rehabLevel}}</view>
+        <view class="breath-panel__close" bindtap="handleCloseBreathTimer">✕</view>
+      </view>
+      <view class="breath-done" wx:if="{{breathCompleted}}">
+        <view class="breath-done__icon"></view>
+        <view class="breath-done__text">呼吸训练完成！</view>
+        <view class="breath-done__time">用时 {{breathElapsedSeconds}} 秒（约 {{breathTotalMinutes}} 分钟）</view>
+        <view class="breath-done__hint">已自动填入呼吸训练时长</view>
+        <button class="breath-done__btn" bindtap="handleCloseBreathTimer">返回打卡</button>
+      </view>
+      <view class="breath-active" wx:if="{{!breathCompleted}}">
+        <view class="breath-circle-wrap">
+          <canvas type="2d" id="breathCanvas" class="breath-canvas"></canvas>
+        </view>
+        <view class="breath-progress"><text>第 {{breathRound}} / {{breathTotalRounds}} 轮</text></view>
+        <view class="breath-progress-bar">
+          <view class="breath-progress-bar__fill" style="width: {{breathRound / breathTotalRounds * 100}}%"></view>
+        </view>
+        <view class="breath-controls">
+          <button class="breath-controls__btn breath-controls__btn--reset" bindtap="handleResetBreath">重置</button>
+          <button wx:if="{{!breathRunning}}" class="breath-controls__btn breath-controls__btn--start" bindtap="handleStartBreath">开始</button>
+          <button wx:if="{{breathRunning}}" class="breath-controls__btn breath-controls__btn--pause" bindtap="handlePauseBreath">暂停</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ④ 今日任务入口（跳转子页面） -->
+  <view class="card action-card action-card--orange" bindtap="handleGoTasks" wx:if="{{tasks.length > 0 && !hasSubmittedToday}}">
+    <view class="action-card__icon-wrap action-card__icon-wrap--orange">
+      <text class="action-card__emoji">🏋</text>
+    </view>
+    <view class="action-card__info">
+      <view class="action-card__title">今日训练任务</view>
+      <view class="action-card__desc">{{tasks.length}}项 · 已完成{{checkedCount}}/{{tasks.length}}</view>
+    </view>
+    <view class="action-card__arrow action-card__arrow--orange">去完成</view>
+  </view>
+  <view class="card done-card" wx:if="{{hasSubmittedToday}}">
+    <text class="done-card__icon">✓</text>
+    <text class="done-card__text">今日训练已完成</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-hint" wx:if="{{isLoadingPrescription}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-hint__text">正在生成个性化训练方案...</text>
+  </view>
+
   <!-- 成功反馈浮层 -->
   <view class="success-overlay" wx:if="{{showSuccessFeedback}}">
     <view class="success-card">
@@ -10,182 +159,6 @@
     </view>
   </view>
 
-  <!-- 安全提示 -->
-  <view class="safety-tip">
-    <text class="safety-tip__icon">⚠</text>
-    <text class="safety-tip__text">训练中出现严重气喘、头晕或胸痛，请立即停止并联系医生</text>
-  </view>
-
-  <!-- 训练前自评入口 -->
-  <view class="assessment-entry" bindtap="handleOpenAssessment" wx:if="{{!hasAssessedToday && !hasSubmittedToday}}">
-    <view class="assessment-entry__left">
-      <view class="assessment-entry__icon">📋</view>
-      <view class="assessment-entry__info">
-        <view class="assessment-entry__title">训练前自评</view>
-        <view class="assessment-entry__desc">记录当前身体状态，AI 将据此调整方案</view>
-      </view>
-    </view>
-    <view class="assessment-entry__action">去评估</view>
-  </view>
-  <view class="assessment-done" wx:if="{{hasAssessedToday && !hasSubmittedToday}}">
-    <text class="assessment-done__icon">✓</text>
-    <text class="assessment-done__text">今日已评估</text>
-  </view>
-
-  <!-- 今日状态 + 康复等级 -->
-  <view class="status-card">
-    <view class="status-card__top">
-      <view class="status-card__left">
-        <view class="status-card__label">训练日期</view>
-        <view class="status-card__date">{{trainDate}}</view>
-      </view>
-      <view class="level-badge" wx:if="{{rehabLevel > 0}}" style="background: {{rehabLevelColor}}20; border-color: {{rehabLevelColor}};">
-        <text class="level-badge__label" style="color: {{rehabLevelColor}};">Level {{rehabLevel}}</text>
-        <text class="level-badge__name" style="color: {{rehabLevelColor}};">{{rehabLevelName}}</text>
-      </view>
-    </view>
-    <view class="status-card__summary {{hasSubmittedToday ? 'status-card__summary--done' : ''}}">{{todaySummaryText}}</view>
-  </view>
-
-  <!-- 呼吸陪练入口 -->
-  <view class="breath-entry" bindtap="handleOpenBreathTimer" wx:if="{{!showBreathTimer && rehabLevel > 0}}">
-    <view class="breath-entry__left">
-      <view class="breath-entry__icon-wrap">
-        <view class="breath-entry__dot"></view>
-      </view>
-      <view class="breath-entry__info">
-        <view class="breath-entry__title">呼吸陪练</view>
-        <view class="breath-entry__desc">Level {{rehabLevel}} 专属节拍 · 共{{breathTotalRounds || 8}}轮</view>
-      </view>
-    </view>
-    <view class="breath-entry__action">开始</view>
-  </view>
-
-  <!-- 呼吸计时器面板 -->
-  <view class="breath-panel" wx:if="{{showBreathTimer}}">
-    <view class="breath-panel__header">
-      <view class="breath-panel__title">呼吸训练 · Level {{rehabLevel}}</view>
-      <view class="breath-panel__close" bindtap="handleCloseBreathTimer">✕</view>
-    </view>
-
-    <!-- 完成状态 -->
-    <view class="breath-done" wx:if="{{breathCompleted}}">
-      <view class="breath-done__icon"></view>
-      <view class="breath-done__text">呼吸训练完成！</view>
-      <view class="breath-done__time">用时 {{breathElapsedSeconds}} 秒（约 {{breathTotalMinutes}} 分钟）</view>
-      <view class="breath-done__hint">已自动填入呼吸训练时长</view>
-      <button class="breath-done__btn" bindtap="handleCloseBreathTimer">返回打卡</button>
-    </view>
-
-    <!-- 计时进行中 -->
-    <view class="breath-active" wx:if="{{!breathCompleted}}">
-      <view class="breath-circle-wrap">
-        <view class="breath-circle breath-circle--{{breathPhase}}" style="transform: scale({{breathCircleScale}})">
-          <view class="breath-circle__countdown">{{breathCountdown}}</view>
-          <view class="breath-circle__label">
-            <text wx:if="{{breathPhase === 'inhale'}}">吸气</text>
-            <text wx:elif="{{breathPhase === 'hold'}}">屏气</text>
-            <text wx:elif="{{breathPhase === 'exhale'}}">呼气</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="breath-progress">
-        <text>第 {{breathRound}} / {{breathTotalRounds}} 轮</text>
-      </view>
-      <view class="breath-progress-bar">
-        <view class="breath-progress-bar__fill" style="width: {{breathRound / breathTotalRounds * 100}}%"></view>
-      </view>
-
-      <view class="breath-controls">
-        <button class="breath-controls__btn breath-controls__btn--reset" bindtap="handleResetBreath">重置</button>
-        <button wx:if="{{!breathRunning}}" class="breath-controls__btn breath-controls__btn--start" bindtap="handleStartBreath">开始</button>
-        <button wx:if="{{breathRunning}}" class="breath-controls__btn breath-controls__btn--pause" bindtap="handlePauseBreath">暂停</button>
-      </view>
-    </view>
-  </view>
-
-  <!-- 处方标题 -->
-  <view class="prescription-header" wx:if="{{prescriptionTitle && tasks.length > 0}}">
-    <view class="prescription-header__title">{{prescriptionTitle}}</view>
-    <view class="prescription-header__tag prescription-header__tag--{{prescriptionSource}}">
-      {{prescriptionSource === 'ai' ? 'AI 生成' : prescriptionSource === 'approved' ? '医生审核' : '推荐方案'}}
-    </view>
-  </view>
-
-  <!-- 加载中 -->
-  <view class="loading-hint" wx:if="{{isLoadingPrescription}}">
-    <view class="loading-spinner"></view>
-    <text class="loading-hint__text">正在生成个性化训练方案...</text>
-  </view>
-
-  <!-- 任务清单 -->
-  <view class="task-list" wx:if="{{tasks.length > 0}}">
-    <view class="task-list__header">今日训练任务</view>
-
-    <view class="task-item {{item.checked ? 'task-item--checked' : ''}}" wx:for="{{tasks}}" wx:key="id">
-      <view class="task-item__left" data-index="{{index}}" bindtap="handleTaskCheck">
-        <view class="task-checkbox {{item.checked ? 'task-checkbox--checked' : ''}}">
-          <text wx:if="{{item.checked}}">✓</text>
-        </view>
-      </view>
-      <view class="task-item__body">
-        <view class="task-item__name">{{item.name}}</view>
-        <view class="task-item__desc" wx:if="{{item.purpose}}">{{item.purpose}}</view>
-        <view class="task-item__target" wx:if="{{item.duration}}">{{item.duration}}</view>
-
-        <!-- 展开/折叠 -->
-        <view class="task-item__expand-btn" data-index="{{index}}" bindtap="handleToggleExpand" wx:if="{{item.steps.length > 0 || item.precautions.length > 0}}">
-          <text>{{item.expanded ? '收起详情 ▲' : '查看详情 ▼'}}</text>
-        </view>
-
-        <!-- 步骤详情（可折叠） -->
-        <view class="task-item__detail" wx:if="{{item.expanded}}">
-          <view class="task-item__steps" wx:if="{{item.steps.length > 0}}">
-            <view class="task-item__detail-label">训练步骤</view>
-            <view class="task-item__step" wx:for="{{item.steps}}" wx:for-item="step" wx:for-index="si" wx:key="si">
-              <text class="task-item__step-num">{{si + 1}}</text>
-              <text class="task-item__step-text">{{step}}</text>
-            </view>
-          </view>
-          <view class="task-item__precautions" wx:if="{{item.precautions.length > 0}}">
-            <view class="task-item__detail-label">注意事项</view>
-            <view class="task-item__precaution" wx:for="{{item.precautions}}" wx:for-item="pc" wx:for-index="pi" wx:key="pi">
-              <text class="task-item__precaution-icon">⚠</text>
-              <text class="task-item__precaution-text">{{pc}}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 勾选后出现实际时长输入 -->
-        <view class="task-item__duration" wx:if="{{item.checked}}">
-          <text class="task-item__duration-label">实际时长</text>
-          <input
-            class="task-item__duration-input"
-            type="number"
-            min="1"
-            value="{{item.actualMinutes}}"
-            data-index="{{index}}"
-            bindinput="handleDurationInput"
-            placeholder="分钟"
-          />
-          <text class="task-item__duration-unit">分钟</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 提交按钮 -->
-  <button
-    class="submit-button {{allChecked ? '' : 'submit-button--disabled'}}"
-    bindtap="handleSubmit"
-    loading="{{isSubmitting}}"
-    disabled="{{isSubmitting || !allChecked}}"
-    wx:if="{{tasks.length > 0}}"
-  >
-    {{allChecked ? '完成今日打卡' : '请先完成所有任务'}}
-  </button>
-
   <!-- 训练前自评模态框 -->
   <view class="modal-overlay" wx:if="{{showAssessment}}">
     <view class="modal-card">
@@ -193,92 +166,37 @@
         <view class="modal-card__title">训练前自评</view>
         <view class="modal-card__close" bindtap="handleCloseAssessment">✕</view>
       </view>
-
-      <!-- 呼吸困难评分 1-5 -->
       <view class="assess-field">
         <view class="assess-field__label">呼吸困难程度</view>
         <view class="assess-field__hint">1=完全没有 · 5=极度困难</view>
-        <slider
-          class="assess-slider"
-          min="0" max="4" step="1"
-          value="{{assessmentDyspnea - 1}}"
-          activeColor="#2a6bff"
-          backgroundColor="#e3ebf5"
-          block-size="24"
-          show-value="{{false}}"
-          bindchange="handleDyspneaChange"
-        />
+        <slider class="assess-slider" min="0" max="4" step="1" value="{{assessmentDyspnea - 1}}" activeColor="#4CAF50" backgroundColor="#e3ebf5" block-size="24" show-value="{{false}}" bindchange="handleDyspneaChange"/>
         <view class="assess-field__value">{{assessmentDyspnea}} / 5</view>
       </view>
-
-      <!-- 疲劳评分 1-10 -->
       <view class="assess-field">
         <view class="assess-field__label">疲劳程度</view>
         <view class="assess-field__hint">1=精力充沛 · 10=极度疲劳</view>
-        <slider
-          class="assess-slider"
-          min="0" max="9" step="1"
-          value="{{assessmentFatigue - 1}}"
-          activeColor="#2a6bff"
-          backgroundColor="#e3ebf5"
-          block-size="24"
-          show-value="{{false}}"
-          bindchange="handleFatigueChange"
-        />
+        <slider class="assess-slider" min="0" max="9" step="1" value="{{assessmentFatigue - 1}}" activeColor="#4CAF50" backgroundColor="#e3ebf5" block-size="24" show-value="{{false}}" bindchange="handleFatigueChange"/>
         <view class="assess-field__value">{{assessmentFatigue}} / 10</view>
       </view>
-
-      <!-- 心率（可选） -->
       <view class="assess-field">
         <view class="assess-field__label">心率 <text class="assess-field__optional">（选填）</text></view>
         <view class="assess-input-row">
-          <input
-            class="assess-input"
-            type="number"
-            placeholder="如 78"
-            value="{{assessmentHeartRate}}"
-            bindinput="handleHeartRateInput"
-          />
+          <input class="assess-input" type="number" placeholder="如 78" value="{{assessmentHeartRate}}" bindinput="handleHeartRateInput"/>
           <text class="assess-input__unit">bpm</text>
         </view>
       </view>
-
-      <!-- 血氧（可选） -->
       <view class="assess-field">
         <view class="assess-field__label">血氧饱和度 <text class="assess-field__optional">（选填）</text></view>
         <view class="assess-input-row">
-          <input
-            class="assess-input"
-            type="number"
-            placeholder="如 96"
-            value="{{assessmentSpo2}}"
-            bindinput="handleSpo2Input"
-          />
+          <input class="assess-input" type="number" placeholder="如 96" value="{{assessmentSpo2}}" bindinput="handleSpo2Input"/>
           <text class="assess-input__unit">%</text>
         </view>
       </view>
-
-      <!-- 备注（可选） -->
       <view class="assess-field">
         <view class="assess-field__label">备注 <text class="assess-field__optional">（选填）</text></view>
-        <textarea
-          class="assess-textarea"
-          placeholder="如有其他不适可在此记录"
-          value="{{assessmentNotes}}"
-          bindinput="handleAssessmentNotesInput"
-          maxlength="200"
-          auto-height
-        />
+        <textarea class="assess-textarea" placeholder="如有其他不适可在此记录" value="{{assessmentNotes}}" bindinput="handleAssessmentNotesInput" maxlength="200" auto-height/>
       </view>
-
-      <button
-        class="assess-submit-btn"
-        bindtap="handleSubmitAssessment"
-        loading="{{isSubmittingAssessment}}"
-        disabled="{{isSubmittingAssessment}}"
-      >
-        提交评估
-      </button>
+      <button class="assess-submit-btn" bindtap="handleSubmitAssessment" loading="{{isSubmittingAssessment}}" disabled="{{isSubmittingAssessment}}">提交评估</button>
     </view>
   </view>
 

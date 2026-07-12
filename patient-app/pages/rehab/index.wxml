@@ -1,48 +1,138 @@
-<navigation-bar title="我的康复" back="{{false}}" color="#1F2937" background="#F4F7FB"></navigation-bar>
-
 <view class="page">
-  <view class="stats-bar">
-    <view class="stats-bar__item">
-      <view class="stats-bar__value">{{trainedDays}}</view>
-      <view class="stats-bar__label">累计训练天数</view>
+  <!-- 顶部 Banner（400rpx） -->
+  <view class="rehab-banner">
+    <image class="rehab-banner__img" src="/images/profile-banner.png" mode="aspectFill"></image>
+    <view class="rehab-banner__gradient"></view>
+  </view>
+
+  <!-- 内容区：叠层效果，圆角顶部 -->
+  <view class="rehab-content">
+
+    <!-- 数据总览卡片 -->
+    <view class="stats-card">
+      <view class="stats-card__item">
+        <view class="stats-card__icon stats-card__icon--calendar">
+          <view class="icon-calendar">
+            <view class="icon-calendar__header"></view>
+            <view class="icon-calendar__body">
+              <view class="icon-calendar__day">7</view>
+            </view>
+          </view>
+        </view>
+        <view class="stats-card__value">{{trainedDays}}</view>
+        <view class="stats-card__label">累计训练天数</view>
+      </view>
+      <view class="stats-card__divider"></view>
+      <view class="stats-card__item">
+        <view class="stats-card__icon stats-card__icon--trending">
+          <view class="icon-trending">
+            <view class="icon-trending__line"></view>
+            <view class="icon-trending__arrow"></view>
+          </view>
+        </view>
+        <view class="stats-card__value">{{completionRate}}</view>
+        <view class="stats-card__label">完成率</view>
+      </view>
+      <view class="stats-card__divider"></view>
+      <view class="stats-card__item">
+        <view class="stats-card__icon stats-card__icon--clock">
+          <view class="icon-clock">
+            <view class="icon-clock__face"></view>
+            <view class="icon-clock__hand"></view>
+            <view class="icon-clock__dot"></view>
+          </view>
+        </view>
+        <view class="stats-card__value">{{totalDuration}}</view>
+        <view class="stats-card__label">累计时长(分钟)</view>
+      </view>
     </view>
-    <view class="stats-bar__divider"></view>
-    <view class="stats-bar__item">
-      <view class="stats-bar__value">{{completionRate}}</view>
-      <view class="stats-bar__label">完成率</view>
+
+    <!-- 分组标题：训练总览 -->
+    <view class="section-title">
+      <view class="section-title__bar"></view>
+      <text class="section-title__text">训练总览</text>
     </view>
-    <view class="stats-bar__divider"></view>
-    <view class="stats-bar__item">
-      <view class="stats-bar__value">{{totalDuration}}</view>
-      <view class="stats-bar__label">累计时长(分钟)</view>
+
+    <!-- 三列小卡片 -->
+    <view class="cards-row">
+      <!-- 训练方案 -->
+      <view class="mini-card" bindtap="handleOpenPlanDetail">
+        <view class="mini-card__title">我的训练方案</view>
+        <view class="mini-card__subtitle">专属康复方案定制</view>
+        <view class="mini-card__illustration">
+          <view class="illust-clipboard">
+            <view class="illust-clipboard__clip"></view>
+            <view class="illust-clipboard__paper"></view>
+            <view class="illust-clipboard__lines">
+              <view class="illust-clipboard__line"></view>
+              <view class="illust-clipboard__line"></view>
+              <view class="illust-clipboard__line illust-clipboard__line--short"></view>
+            </view>
+            <view class="illust-clipboard__pen"></view>
+          </view>
+        </view>
+        <view class="mini-card__link">查看方案详情 ›</view>
+      </view>
+
+      <!-- 30天进度 -->
+      <view class="mini-card" bindtap="handleOpenProgress">
+        <view class="mini-card__title">30天进度</view>
+        <view class="mini-card__subtitle">近30天训练情况</view>
+        <view class="mini-card__illustration">
+          <view class="illust-chart">
+            <view class="illust-chart__area"></view>
+            <view class="illust-chart__curve"></view>
+            <view class="illust-chart__dot illust-chart__dot--1"></view>
+            <view class="illust-chart__dot illust-chart__dot--2"></view>
+            <view class="illust-chart__dot illust-chart__dot--3"></view>
+            <view class="illust-chart__dot illust-chart__dot--4"></view>
+            <view class="illust-chart__baseline"></view>
+          </view>
+        </view>
+        <view class="mini-card__link">查看进度趋势 ›</view>
+      </view>
+
+      <!-- AI指导 -->
+      <view class="mini-card" bindtap="handleOpenAiGuidance">
+        <view class="mini-card__title">AI指导</view>
+        <view class="mini-card__subtitle">智能问答·随时咨询</view>
+        <view class="mini-card__illustration">
+          <view class="illust-ai-badge">
+            <view class="illust-ai-badge__shadow"></view>
+            <view class="illust-ai-badge__bg"></view>
+            <view class="illust-ai-badge__text">AI</view>
+            <view class="illust-ai-badge__sparkle"></view>
+          </view>
+        </view>
+        <view class="mini-card__link">查看AI指导 ›</view>
+      </view>
     </view>
-  </view>
 
-  <view class="card" bindtap="handleOpenPlanDetail">
-    <view class="card__title">我的训练方案</view>
-    <view class="card__desc">{{latestPlanTitle}}</view>
-    <view class="card__meta">{{latestPlanDescription}}</view>
-    <view class="card__status" wx:if="{{isLoadingPlan}}">正在同步最新方案...</view>
-    <view class="card__status" wx:elif="{{hasPlan}}">{{latestPlanUpdatedAt}}</view>
-    <view class="card__status" wx:else>医生尚未下发训练方案</view>
-    <view class="card__link">查看方案详情</view>
-  </view>
+    <!-- 分组标题：康复支持 -->
+    <view class="section-title">
+      <view class="section-title__bar"></view>
+      <text class="section-title__text">康复支持</text>
+    </view>
 
-  <view class="card" bindtap="handleOpenProgress">
-    <view class="card__title">30天进度</view>
-    <view class="card__desc">{{progressSummary}}</view>
-    <view class="card__link">查看进度趋势</view>
-  </view>
+    <!-- 知识大卡片 -->
+    <view class="big-card" bindtap="handleOpenKnowledge">
+      <view class="big-card__left">
+        <view class="big-card__title">康复知识库</view>
+        <view class="big-card__desc">按康复等级推荐呼吸训练、运动康复、饮食调理等内容</view>
+        <view class="big-card__link">查看知识库 ›</view>
+      </view>
+      <view class="big-card__right">
+        <view class="illust-book">
+          <view class="illust-book__shadow"></view>
+          <view class="illust-book__back"></view>
+          <view class="illust-book__front"></view>
+          <view class="illust-book__spine"></view>
+          <view class="illust-book__play">
+            <view class="illust-book__triangle"></view>
+          </view>
+        </view>
+      </view>
+    </view>
 
-  <view class="card" bindtap="handleOpenAiSummary">
-    <view class="card__title">AI 康复小结</view>
-    <view class="card__desc">{{aiSummaryPreview}}</view>
-    <view class="card__link">查看最新小结</view>
-  </view>
-
-  <view class="card card--knowledge" bindtap="handleOpenKnowledge">
-    <view class="card__title">康复知识</view>
-    <view class="card__desc">按您的康复等级推荐，涵盖呼吸训练、运动康复、饮食调理</view>
-    <view class="card__link">查看知识库</view>
   </view>
 </view>

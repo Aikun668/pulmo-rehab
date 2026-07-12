@@ -29,6 +29,45 @@
   --color-med-sidebar: #13293D;
   --color-med-sidebar-hover: #1B3A52;
   --color-med-sidebar-active: #244B68;
+
+  /* ── shadcn/ui CSS variable bridge ── */
+  /* These map shadcn's expected variable names to existing med-* tokens */
+  --background: var(--color-med-bg);
+  --foreground: var(--color-med-text-primary);
+  --card: var(--color-med-card);
+  --card-foreground: var(--color-med-text-primary);
+  --popover: var(--color-med-card);
+  --popover-foreground: var(--color-med-text-primary);
+  --primary: var(--color-med-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-med-hover);
+  --secondary-foreground: var(--color-med-text-primary);
+  --muted: var(--color-med-hover);
+  --muted-foreground: var(--color-med-text-meta);
+  --accent: var(--color-med-hover);
+  --accent-foreground: var(--color-med-text-primary);
+  --destructive: var(--color-med-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--color-med-border);
+  --input: var(--color-med-border);
+  --ring: var(--color-med-primary);
+  --radius: 0.75rem;
+
+  /* shadcn chart / status color slots */
+  --chart-1: var(--color-med-primary);
+  --chart-2: var(--color-med-success);
+  --chart-3: var(--color-med-warning);
+  --chart-4: var(--color-med-info);
+  --chart-5: var(--color-med-primary-md);
+}
+
+@layer base {
+  * {
+    @apply border-[var(--border)];
+  }
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)];
+  }
 }
 
 body {
